@@ -1,0 +1,208 @@
+{
+  "case_id": "E2E-RFP-04",
+  "work_type": "rfp_analysis",
+  "rfp_status": "본문 인용(고객 이메일)",
+  "summary": "보람의료재단 이메일 요구사항 대응표 작성 (정식 RFP 문서 대신 이메일 본문에 요구사항 기재, 직원이 서명 연락처를 대화에 그대로 입력)",
+  "raw": {
+    "work_case": {
+      "work_id": "W-E2E-RFP-04",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "employee_id": "E-1082",
+      "work_type": "rfp_analysis",
+      "customer_id": "CUST-BR",
+      "status": "completed",
+      "created_at": "2026-10-08T10:40:00+09:00",
+      "completed_at": "2026-10-08T11:30:00+09:00",
+      "linked_work_ids": [],
+      "rfp_status": "본문 인용(고객 이메일)",
+      "registration": {
+        "rfp_document": "이메일 본문 인용 (별도 RFP 문서 없음)",
+        "submission_deadline": "2026-10-30",
+        "evaluation_method": "미정",
+        "customer_purpose": "진료 문서 검색 효율화",
+        "required_requirements": "한글 OCR 95%, SAML SSO, 국내 보관, 온프레미스, 백업 90일"
+      },
+      "source_message": {
+        "channel": "email",
+        "received_at": "2026-10-08T10:15:00+09:00",
+        "content": "보람의료재단 정보화팀입니다. 아래 요구사항에 대한 귀사의 대응 가능 여부를 정리해 주세요.\n1. 진료 기록 스캔본의 한글 OCR 정확도가 95% 이상이어야 합니다.\n2. 병원 통합 인증(SAML)과 SSO 연동이 가능해야 합니다.\n3. 환자 관련 자료는 국내에만 보관되어야 합니다.\n4. 병원 전산실에 직접 설치(온프레미스)할 수 있어야 합니다.\n5. 파일당 1GB까지 업로드되면 좋겠습니다.\n6. 백업 데이터는 90일간 보관되어야 합니다.\n\n정보화팀 오OO 차장 (010-0000-4471, oh.oo@boram-med.example)"
+      }
+    },
+    "source_documents": [],
+    "attached_references": [
+      {
+        "doc_id": "PROD-DOCAI",
+        "version": "v3.2"
+      }
+    ],
+    "messages": [
+      {
+        "message_id": "W-E2E-RFP-04-M01",
+        "seq": 1,
+        "role": "user",
+        "content": "고객 메일 그대로 붙여넣을게. 요구사항 대응표 만들어줘. 근거는 Doc AI 제품 설명서 v3.2로.\n\n보람의료재단 정보화팀입니다. 아래 요구사항에 대한 귀사의 대응 가능 여부를 정리해 주세요.\n1. 진료 기록 스캔본의 한글 OCR 정확도가 95% 이상이어야 합니다.\n2. 병원 통합 인증(SAML)과 SSO 연동이 가능해야 합니다.\n3. 환자 관련 자료는 국내에만 보관되어야 합니다.\n4. 병원 전산실에 직접 설치(온프레미스)할 수 있어야 합니다.\n5. 파일당 1GB까지 업로드되면 좋겠습니다.\n6. 백업 데이터는 90일간 보관되어야 합니다.\n\n정보화팀 오OO 차장 (010-0000-4471, oh.oo@boram-med.example)",
+        "created_at": "2026-10-08T10:45:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-04-M02",
+        "seq": 2,
+        "role": "assistant",
+        "content": "RFP 요구사항을 정리했습니다.\n\n| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 메일 1항 | 한글 OCR 정확도 95% 이상 | 필수 | 충족 | PROD-DOCAI v3.2 §2.1 | - |\n| REQ-02 | 메일 2항 | SAML SSO 연동 | 필수 | 충족 | PROD-DOCAI v3.2 §4.1 | - |\n| REQ-03 | 메일 3항 | 국내 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |\n| REQ-04 | 메일 4항 | 온프레미스 설치 | 필수 | 대응 불가 | PROD-DOCAI v3.2 §1.2 | SaaS 전용 제품 |\n| REQ-05 | 메일 5항 | 파일당 1GB 업로드 | 선택 | 부분 충족 | PROD-DOCAI v3.2 §2.3 | 파일당 최대 200MB로 요구 미달 |\n| REQ-06 | 메일 6항 | 백업 90일 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |\n",
+        "created_at": "2026-10-08T10:49:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-04-M03",
+        "seq": 3,
+        "role": "user",
+        "content": "설명서 §5.1 보니까 백업이 30일이던데, REQ-06 다시 봐줘.",
+        "created_at": "2026-10-08T11:05:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-04-M04",
+        "seq": 4,
+        "role": "assistant",
+        "content": "REQ-06을 수정했습니다. 백업 보관 기간은 설명서상 30일이라 부분 충족으로 바꿨습니다.\n\n| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 메일 1항 | 한글 OCR 정확도 95% 이상 | 필수 | 충족 | PROD-DOCAI v3.2 §2.1 | - |\n| REQ-02 | 메일 2항 | SAML SSO 연동 | 필수 | 충족 | PROD-DOCAI v3.2 §4.1 | - |\n| REQ-03 | 메일 3항 | 국내 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |\n| REQ-04 | 메일 4항 | 온프레미스 설치 | 필수 | 대응 불가 | PROD-DOCAI v3.2 §1.2 | SaaS 전용 제품 |\n| REQ-05 | 메일 5항 | 파일당 1GB 업로드 | 선택 | 부분 충족 | PROD-DOCAI v3.2 §2.3 | 파일당 최대 200MB로 요구 미달 |\n| REQ-06 | 메일 6항 | 백업 90일 보관 | 필수 | 부분 충족 | PROD-DOCAI v3.2 §5.1 | 백업 보관 기간은 30일 |\n",
+        "created_at": "2026-10-08T11:08:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-04-M05",
+        "seq": 5,
+        "role": "user",
+        "content": "OK. 저장할게.",
+        "created_at": "2026-10-08T11:20:00+09:00"
+      }
+    ],
+    "artifact_versions": [
+      {
+        "artifact_id": "ART-E2E-RFP-04",
+        "version": "v1",
+        "author": "ai_draft",
+        "saved_at": "2026-10-08T10:49:00+09:00",
+        "content": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 메일 1항 | 한글 OCR 정확도 95% 이상 | 필수 | 충족 | PROD-DOCAI v3.2 §2.1 | - |\n| REQ-02 | 메일 2항 | SAML SSO 연동 | 필수 | 충족 | PROD-DOCAI v3.2 §4.1 | - |\n| REQ-03 | 메일 3항 | 국내 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |\n| REQ-04 | 메일 4항 | 온프레미스 설치 | 필수 | 대응 불가 | PROD-DOCAI v3.2 §1.2 | SaaS 전용 제품 |\n| REQ-05 | 메일 5항 | 파일당 1GB 업로드 | 선택 | 부분 충족 | PROD-DOCAI v3.2 §2.3 | 파일당 최대 200MB로 요구 미달 |\n| REQ-06 | 메일 6항 | 백업 90일 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |\n",
+        "spans": [
+          {
+            "span_id": "ART-E2E-RFP-04:v1:HEADER",
+            "text": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-04:v1:REQ-01",
+            "text": "| REQ-01 | 메일 1항 | 한글 OCR 정확도 95% 이상 | 필수 | 충족 | PROD-DOCAI v3.2 §2.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-04:v1:REQ-02",
+            "text": "| REQ-02 | 메일 2항 | SAML SSO 연동 | 필수 | 충족 | PROD-DOCAI v3.2 §4.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-04:v1:REQ-03",
+            "text": "| REQ-03 | 메일 3항 | 국내 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-04:v1:REQ-04",
+            "text": "| REQ-04 | 메일 4항 | 온프레미스 설치 | 필수 | 대응 불가 | PROD-DOCAI v3.2 §1.2 | SaaS 전용 제품 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-04:v1:REQ-05",
+            "text": "| REQ-05 | 메일 5항 | 파일당 1GB 업로드 | 선택 | 부분 충족 | PROD-DOCAI v3.2 §2.3 | 파일당 최대 200MB로 요구 미달 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-04:v1:REQ-06",
+            "text": "| REQ-06 | 메일 6항 | 백업 90일 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |"
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-RFP-04",
+        "version": "v2",
+        "author": "employee",
+        "saved_at": "2026-10-08T11:25:00+09:00",
+        "content": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 메일 1항 | 한글 OCR 정확도 95% 이상 | 필수 | 충족 | PROD-DOCAI v3.2 §2.1 | - |\n| REQ-02 | 메일 2항 | SAML SSO 연동 | 필수 | 충족 | PROD-DOCAI v3.2 §4.1 | - |\n| REQ-03 | 메일 3항 | 국내 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |\n| REQ-04 | 메일 4항 | 온프레미스 설치 | 필수 | 대응 불가 | PROD-DOCAI v3.2 §1.2 | SaaS 전용 제품 |\n| REQ-05 | 메일 5항 | 파일당 1GB 업로드 | 선택 | 부분 충족 | PROD-DOCAI v3.2 §2.3 | 파일당 최대 200MB로 요구 미달 |\n| REQ-06 | 메일 6항 | 백업 90일 보관 | 필수 | 부분 충족 | PROD-DOCAI v3.2 §5.1 | 백업 보관 기간은 30일 |\n",
+        "spans": [
+          {
+            "span_id": "ART-E2E-RFP-04:v2:HEADER",
+            "text": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-04:v2:REQ-01",
+            "text": "| REQ-01 | 메일 1항 | 한글 OCR 정확도 95% 이상 | 필수 | 충족 | PROD-DOCAI v3.2 §2.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-04:v2:REQ-02",
+            "text": "| REQ-02 | 메일 2항 | SAML SSO 연동 | 필수 | 충족 | PROD-DOCAI v3.2 §4.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-04:v2:REQ-03",
+            "text": "| REQ-03 | 메일 3항 | 국내 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-04:v2:REQ-04",
+            "text": "| REQ-04 | 메일 4항 | 온프레미스 설치 | 필수 | 대응 불가 | PROD-DOCAI v3.2 §1.2 | SaaS 전용 제품 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-04:v2:REQ-05",
+            "text": "| REQ-05 | 메일 5항 | 파일당 1GB 업로드 | 선택 | 부분 충족 | PROD-DOCAI v3.2 §2.3 | 파일당 최대 200MB로 요구 미달 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-04:v2:REQ-06",
+            "text": "| REQ-06 | 메일 6항 | 백업 90일 보관 | 필수 | 부분 충족 | PROD-DOCAI v3.2 §5.1 | 백업 보관 기간은 30일 |"
+          }
+        ]
+      }
+    ],
+    "reference_access_log": [
+      {
+        "user_id": "E-1082",
+        "doc_id": "PROD-DOCAI",
+        "version": "v3.2",
+        "accessed_at": "2026-10-08T11:03:00+09:00"
+      }
+    ],
+    "evidence_links": [],
+    "events": [
+      {
+        "event_id": "EV-RFP-04-1",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-RFP-04",
+        "artifact_version": "v2",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-RFP-04:v2:v2",
+        "occurred_at": "2026-10-08T11:30:00+09:00"
+      },
+      {
+        "event_id": "EV-RFP-04-C",
+        "event_type": "employee.confirmed",
+        "work_id": "W-E2E-RFP-04",
+        "occurred_at": "2026-10-08T12:40:00+09:00"
+      }
+    ],
+    "human_actions": [
+      {
+        "action_id": "HA-RFP-04-1",
+        "user_id": "E-1082",
+        "action": "confirm",
+        "at": "2026-10-08T12:40:00+09:00"
+      }
+    ],
+    "fault_injection": [],
+    "access_attempts": [
+      {
+        "attempt_id": "AC-RFP-04-1",
+        "user_id": "E-1082",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-04"
+      },
+      {
+        "attempt_id": "AC-RFP-04-2",
+        "user_id": "E-1034",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-04"
+      },
+      {
+        "attempt_id": "AC-RFP-04-3",
+        "user_id": "X-9001",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-04"
+      }
+    ]
+  }
+}

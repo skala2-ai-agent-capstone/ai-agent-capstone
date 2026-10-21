@@ -1,0 +1,247 @@
+{
+  "case_id": "E2E-IQ-04",
+  "work_type": "inquiry_reply",
+  "rfp_status": "첨부",
+  "summary": "푸른시청 RFP 후속 문의 회신 메일 작성 (OIDC 지원 계획 문의, 직원이 내부 자료의 일정을 회신에 추가)",
+  "raw": {
+    "work_case": {
+      "work_id": "W-E2E-IQ-04",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "employee_id": "E-1034",
+      "work_type": "inquiry_reply",
+      "customer_id": "CUST-PN",
+      "status": "completed",
+      "created_at": "2026-10-09T11:00:00+09:00",
+      "completed_at": "2026-10-09T11:35:00+09:00",
+      "linked_work_ids": [
+        "W-E2E-PR-05"
+      ],
+      "rfp_status": "첨부",
+      "registration": {
+        "question_original": "푸른시청 정보화담당관입니다. RFP 3.3의 SAML 연동은 지원된다고 확인했습니다. 향후 OIDC 방식도 지원할 계획이 있는지, 그리고 3.4 동시 접속 200명 규모는 검증된 수치인지 알려주세요.",
+        "question_items": [
+          "OIDC 지원 계획",
+          "동시 접속 200명 검증 여부"
+        ],
+        "related_rfp": {
+          "doc_id": "RFP-PN-2026-06",
+          "version": "v1.0",
+          "clauses": [
+            "3.3",
+            "3.4"
+          ]
+        }
+      },
+      "source_message": {
+        "channel": "email",
+        "received_at": "2026-10-09T10:40:00+09:00",
+        "content": "푸른시청 정보화담당관입니다. RFP 3.3의 SAML 연동은 지원된다고 확인했습니다. 향후 OIDC 방식도 지원할 계획이 있는지, 그리고 3.4 동시 접속 200명 규모는 검증된 수치인지 알려주세요.\n\n정보화담당관 이OO 팀장 (010-0000-7710, lee.oo@purun-city.example)"
+      }
+    },
+    "source_documents": [
+      {
+        "attachment_id": "ATT-IQ-04",
+        "doc_id": "RFP-PN-2026-06",
+        "doc_type": "rfp",
+        "version": "v1.0",
+        "grade": "대외비",
+        "uploaded_by": "E-1034",
+        "uploaded_at": "2026-10-09T10:50:00+09:00",
+        "content": "[푸른시청(가상) 문서 관리 시스템 RFP v1.0 — 발췌]\n3.3 (p.7) 행정 SSO(SAML 2.0)와 연동해야 한다.\n3.4 (p.7) 동시 접속 200명을 지원해야 한다."
+      }
+    ],
+    "attached_references": [
+      {
+        "doc_id": "PROD-DOCAI",
+        "version": "v3.2"
+      }
+    ],
+    "messages": [
+      {
+        "message_id": "W-E2E-IQ-04-M01",
+        "seq": 1,
+        "role": "user",
+        "content": "푸른시청 문의 회신 메일 초안 써줘. 근거는 Doc AI 설명서 v3.2, 질문 번호별로 3문장 이내. 확인 안 되는 건 '확인 후 회신드리겠습니다'로.\n\n푸른시청 정보화담당관입니다. RFP 3.3의 SAML 연동은 지원된다고 확인했습니다. 향후 OIDC 방식도 지원할 계획이 있는지, 그리고 3.4 동시 접속 200명 규모는 검증된 수치인지 알려주세요.",
+        "created_at": "2026-10-09T11:05:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-IQ-04-M02",
+        "seq": 2,
+        "role": "assistant",
+        "content": "회신 메일 초안입니다.\n\n[회신 메일]\n제목: 문의하신 사항 회신드립니다\n\n푸른시청(가상) 담당자님께,\n문의 주신 내용에 대해 아래와 같이 답변드립니다.\n\n1. 현재 Doc AI는 SAML 2.0 기반 SSO를 지원하며 OIDC는 지원하지 않습니다. OIDC 지원 계획은 확인 후 회신드리겠습니다.\n2. 동시 접속은 1,000명까지 검증되어 있어 200명 규모는 충분히 수용 가능합니다.\n\n추가로 궁금하신 점이 있으시면 편하게 연락 주십시오.\n영업담당 드림",
+        "created_at": "2026-10-09T11:09:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-IQ-04-M03",
+        "seq": 3,
+        "role": "user",
+        "content": "1번에 OIDC 일정도 알려주면 고객이 좋아할 것 같아. 내부 로드맵에 이렇게 되어 있어: OIDC 지원은 2027년 2분기 도입 검토(ROADMAP-2027 v0.3 기준). 이 내용 넣어서 다시 써줘.",
+        "created_at": "2026-10-09T11:18:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-IQ-04-M04",
+        "seq": 4,
+        "role": "assistant",
+        "content": "1번에 일정을 추가했습니다.\n\n[회신 메일]\n제목: 문의하신 사항 회신드립니다\n\n푸른시청(가상) 담당자님께,\n문의 주신 내용에 대해 아래와 같이 답변드립니다.\n\n1. 현재 Doc AI는 SAML 2.0 기반 SSO를 지원하며 OIDC는 현재 지원하지 않습니다. 참고로 OIDC 지원은 2027년 2분기 중 도입을 검토하고 있습니다.\n2. 동시 접속은 1,000명까지 검증되어 있어 200명 규모는 충분히 수용 가능합니다.\n\n추가로 궁금하신 점이 있으시면 편하게 연락 주십시오.\n영업담당 드림",
+        "created_at": "2026-10-09T11:21:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-IQ-04-M05",
+        "seq": 5,
+        "role": "user",
+        "content": "좋아, 저장하고 보낼게.",
+        "created_at": "2026-10-09T11:30:00+09:00"
+      }
+    ],
+    "artifact_versions": [
+      {
+        "artifact_id": "ART-E2E-IQ-04",
+        "version": "v1",
+        "author": "ai_draft",
+        "saved_at": "2026-10-09T11:09:00+09:00",
+        "content": "[회신 메일]\n제목: 문의하신 사항 회신드립니다\n\n푸른시청(가상) 담당자님께,\n문의 주신 내용에 대해 아래와 같이 답변드립니다.\n\n1. 현재 Doc AI는 SAML 2.0 기반 SSO를 지원하며 OIDC는 지원하지 않습니다. OIDC 지원 계획은 확인 후 회신드리겠습니다.\n2. 동시 접속은 1,000명까지 검증되어 있어 200명 규모는 충분히 수용 가능합니다.\n\n추가로 궁금하신 점이 있으시면 편하게 연락 주십시오.\n영업담당 드림",
+        "spans": [
+          {
+            "span_id": "ART-E2E-IQ-04:v1:L01",
+            "text": "[회신 메일]"
+          },
+          {
+            "span_id": "ART-E2E-IQ-04:v1:L02",
+            "text": "제목: 문의하신 사항 회신드립니다"
+          },
+          {
+            "span_id": "ART-E2E-IQ-04:v1:L04",
+            "text": "푸른시청(가상) 담당자님께,"
+          },
+          {
+            "span_id": "ART-E2E-IQ-04:v1:L05",
+            "text": "문의 주신 내용에 대해 아래와 같이 답변드립니다."
+          },
+          {
+            "span_id": "ART-E2E-IQ-04:v1:L07",
+            "text": "1. 현재 Doc AI는 SAML 2.0 기반 SSO를 지원하며 OIDC는 지원하지 않습니다. OIDC 지원 계획은 확인 후 회신드리겠습니다."
+          },
+          {
+            "span_id": "ART-E2E-IQ-04:v1:L08",
+            "text": "2. 동시 접속은 1,000명까지 검증되어 있어 200명 규모는 충분히 수용 가능합니다."
+          },
+          {
+            "span_id": "ART-E2E-IQ-04:v1:L10",
+            "text": "추가로 궁금하신 점이 있으시면 편하게 연락 주십시오."
+          },
+          {
+            "span_id": "ART-E2E-IQ-04:v1:L11",
+            "text": "영업담당 드림"
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-IQ-04",
+        "version": "v2",
+        "author": "employee",
+        "saved_at": "2026-10-09T11:33:00+09:00",
+        "content": "[회신 메일]\n제목: 문의하신 사항 회신드립니다\n\n푸른시청(가상) 담당자님께,\n문의 주신 내용에 대해 아래와 같이 답변드립니다.\n\n1. 현재 Doc AI는 SAML 2.0 기반 SSO를 지원하며 OIDC는 현재 지원하지 않습니다. 참고로 OIDC 지원은 2027년 2분기 중 도입을 검토하고 있습니다.\n2. 동시 접속은 1,000명까지 검증되어 있어 200명 규모는 충분히 수용 가능합니다.\n\n추가로 궁금하신 점이 있으시면 편하게 연락 주십시오.\n영업담당 드림",
+        "spans": [
+          {
+            "span_id": "ART-E2E-IQ-04:v2:L01",
+            "text": "[회신 메일]"
+          },
+          {
+            "span_id": "ART-E2E-IQ-04:v2:L02",
+            "text": "제목: 문의하신 사항 회신드립니다"
+          },
+          {
+            "span_id": "ART-E2E-IQ-04:v2:L04",
+            "text": "푸른시청(가상) 담당자님께,"
+          },
+          {
+            "span_id": "ART-E2E-IQ-04:v2:L05",
+            "text": "문의 주신 내용에 대해 아래와 같이 답변드립니다."
+          },
+          {
+            "span_id": "ART-E2E-IQ-04:v2:L07",
+            "text": "1. 현재 Doc AI는 SAML 2.0 기반 SSO를 지원하며 OIDC는 현재 지원하지 않습니다. 참고로 OIDC 지원은 2027년 2분기 중 도입을 검토하고 있습니다."
+          },
+          {
+            "span_id": "ART-E2E-IQ-04:v2:L08",
+            "text": "2. 동시 접속은 1,000명까지 검증되어 있어 200명 규모는 충분히 수용 가능합니다."
+          },
+          {
+            "span_id": "ART-E2E-IQ-04:v2:L10",
+            "text": "추가로 궁금하신 점이 있으시면 편하게 연락 주십시오."
+          },
+          {
+            "span_id": "ART-E2E-IQ-04:v2:L11",
+            "text": "영업담당 드림"
+          }
+        ]
+      }
+    ],
+    "reference_access_log": [
+      {
+        "user_id": "E-1034",
+        "doc_id": "PROD-DOCAI",
+        "version": "v3.2",
+        "accessed_at": "2026-10-09T11:15:00+09:00"
+      }
+    ],
+    "evidence_links": [
+      {
+        "link_id": "EL-IQ-04-1",
+        "span_id": "ART-E2E-IQ-04:v2:L08",
+        "doc_id": "PROD-DOCAI",
+        "version": "v3.2",
+        "location": "§7.2",
+        "created_by": "E-1034",
+        "created_at": "2026-10-09T11:28:00+09:00"
+      }
+    ],
+    "events": [
+      {
+        "event_id": "EV-IQ-04-1",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-IQ-04",
+        "artifact_version": "v2",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-IQ-04:v2:v2",
+        "occurred_at": "2026-10-09T11:35:00+09:00"
+      },
+      {
+        "event_id": "EV-IQ-04-C",
+        "event_type": "employee.confirmed",
+        "work_id": "W-E2E-IQ-04",
+        "occurred_at": "2026-10-09T12:45:00+09:00"
+      }
+    ],
+    "human_actions": [
+      {
+        "action_id": "HA-IQ-04-1",
+        "user_id": "E-1034",
+        "action": "confirm",
+        "at": "2026-10-09T12:45:00+09:00"
+      }
+    ],
+    "fault_injection": [],
+    "access_attempts": [
+      {
+        "attempt_id": "AC-IQ-04-1",
+        "user_id": "E-1034",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-IQ-04"
+      },
+      {
+        "attempt_id": "AC-IQ-04-2",
+        "user_id": "E-1021",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-IQ-04"
+      },
+      {
+        "attempt_id": "AC-IQ-04-3",
+        "user_id": "X-9001",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-IQ-04"
+      }
+    ]
+  }
+}

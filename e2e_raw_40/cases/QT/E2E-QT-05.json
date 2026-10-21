@@ -1,0 +1,257 @@
+{
+  "case_id": "E2E-QT-05",
+  "work_type": "quote",
+  "rfp_status": "첨부",
+  "summary": "가온건설 Insight Hub 20테넌트 + 전용 기술지원 36개월 견적서 작성 (RFP 6장 가격 제안 지침, 다년 3%)",
+  "raw": {
+    "work_case": {
+      "work_id": "W-E2E-QT-05",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "employee_id": "E-1071",
+      "work_type": "quote",
+      "customer_id": "CUST-GA",
+      "status": "completed",
+      "created_at": "2026-10-09T15:00:00+09:00",
+      "completed_at": "2026-10-09T15:40:00+09:00",
+      "linked_work_ids": [
+        "W-E2E-PR-04"
+      ],
+      "rfp_status": "첨부",
+      "registration": {
+        "product": "Insight Hub + 전용 기술지원",
+        "quantity": "테넌트 20개, 기술지원 1식",
+        "contract_months": 36,
+        "request_conditions": "RFP 6.1 구분 제시",
+        "budget": ""
+      }
+    },
+    "source_documents": [
+      {
+        "attachment_id": "ATT-QT-05",
+        "doc_id": "RFP-GA-2026-02",
+        "doc_type": "rfp",
+        "version": "v1.1",
+        "grade": "대외비",
+        "uploaded_by": "E-1071",
+        "uploaded_at": "2026-10-09T15:02:00+09:00",
+        "content": "[가온건설(가상) 통합 현황 분석 플랫폼 RFP v1.1 — 6장 가격 제안 지침]\n6.1 (p.13) 플랫폼 이용료와 기술지원 비용을 구분하여 제시해야 한다.\n6.2 (p.13) 계약 기간 36개월 기준으로 산출한다.\n6.3 (p.13) 모든 금액은 부가가치세 별도로 표기한다.\n제출 기한: 2026-11-06"
+      }
+    ],
+    "attached_references": [
+      {
+        "doc_id": "PRICE-2026.2",
+        "version": "2026.2"
+      },
+      {
+        "doc_id": "PRICE-2025.4",
+        "version": "2025.4"
+      }
+    ],
+    "messages": [
+      {
+        "message_id": "W-E2E-QT-05-M01",
+        "seq": 1,
+        "role": "user",
+        "content": "가온건설 견적서 작성해줘. Insight Hub 20테넌트 36개월이랑 전용 기술지원(S-10) 36개월, 다년 3%p. 가격표는 PRICE-2026.2로 하고 RFP 6.1대로 플랫폼 이용료와 기술지원을 나눠서 적어줘.\n\n[가온건설(가상) 통합 현황 분석 플랫폼 RFP v1.1 — 6장 가격 제안 지침]\n6.1 (p.13) 플랫폼 이용료와 기술지원 비용을 구분하여 제시해야 한다.\n6.2 (p.13) 계약 기간 36개월 기준으로 산출한다.\n6.3 (p.13) 모든 금액은 부가가치세 별도로 표기한다.\n제출 기한: 2026-11-06",
+        "created_at": "2026-10-09T15:05:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-05-M02",
+        "seq": 2,
+        "role": "assistant",
+        "content": "견적서 초안입니다.\n\n[견적서] Q-2026-0472 / 고객사: 가온건설(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| 데이터 분석 플랫폼 (Insight Hub) | 3,000,000원 | 20 | 36개월 | 2,160,000,000원 |\n| 전용 기술지원 | 450,000원 | 1 | 36개월 | 16,200,000원 |\n소계: 2,176,200,000원\n할인율: 3%\n합계: 2,110,914,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함",
+        "created_at": "2026-10-09T15:10:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-05-M03",
+        "seq": 3,
+        "role": "user",
+        "content": "좋아, 구분도 잘 되어 있네. 저장!",
+        "created_at": "2026-10-09T15:25:00+09:00"
+      }
+    ],
+    "artifact_versions": [
+      {
+        "artifact_id": "ART-E2E-QT-05",
+        "version": "v1",
+        "author": "ai_draft",
+        "saved_at": "2026-10-09T15:10:00+09:00",
+        "content": "[견적서] Q-2026-0472 / 고객사: 가온건설(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| 데이터 분석 플랫폼 (Insight Hub) | 3,000,000원 | 20 | 36개월 | 2,160,000,000원 |\n| 전용 기술지원 | 450,000원 | 1 | 36개월 | 16,200,000원 |\n소계: 2,176,200,000원\n할인율: 3%\n합계: 2,110,914,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함",
+        "spans": [
+          {
+            "span_id": "ART-E2E-QT-05:v1:L01",
+            "text": "[견적서] Q-2026-0472 / 고객사: 가온건설(가상)"
+          },
+          {
+            "span_id": "ART-E2E-QT-05:v1:L02",
+            "text": "적용 가격표: PRICE-2026.2"
+          },
+          {
+            "span_id": "ART-E2E-QT-05:v1:L03",
+            "text": "| 상품 | 단가 | 수량 | 기간 | 금액 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-05:v1:L05",
+            "text": "| 데이터 분석 플랫폼 (Insight Hub) | 3,000,000원 | 20 | 36개월 | 2,160,000,000원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-05:v1:L06",
+            "text": "| 전용 기술지원 | 450,000원 | 1 | 36개월 | 16,200,000원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-05:v1:L07",
+            "text": "소계: 2,176,200,000원"
+          },
+          {
+            "span_id": "ART-E2E-QT-05:v1:L08",
+            "text": "할인율: 3%"
+          },
+          {
+            "span_id": "ART-E2E-QT-05:v1:L09",
+            "text": "합계: 2,110,914,000원 (부가가치세 별도)"
+          },
+          {
+            "span_id": "ART-E2E-QT-05:v1:L10",
+            "text": "견적 유효 기간: 발행일로부터 30일"
+          },
+          {
+            "span_id": "ART-E2E-QT-05:v1:L11",
+            "text": "계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함"
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-QT-05",
+        "version": "v2",
+        "author": "employee",
+        "saved_at": "2026-10-09T15:30:00+09:00",
+        "content": "[견적서] Q-2026-0472 / 고객사: 가온건설(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| 데이터 분석 플랫폼 (Insight Hub) | 3,000,000원 | 20 | 36개월 | 2,160,000,000원 |\n| 전용 기술지원 | 450,000원 | 1 | 36개월 | 16,200,000원 |\n소계: 2,176,200,000원\n할인율: 3%\n합계: 2,110,914,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함",
+        "spans": [
+          {
+            "span_id": "ART-E2E-QT-05:v2:L01",
+            "text": "[견적서] Q-2026-0472 / 고객사: 가온건설(가상)"
+          },
+          {
+            "span_id": "ART-E2E-QT-05:v2:L02",
+            "text": "적용 가격표: PRICE-2026.2"
+          },
+          {
+            "span_id": "ART-E2E-QT-05:v2:L03",
+            "text": "| 상품 | 단가 | 수량 | 기간 | 금액 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-05:v2:L05",
+            "text": "| 데이터 분석 플랫폼 (Insight Hub) | 3,000,000원 | 20 | 36개월 | 2,160,000,000원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-05:v2:L06",
+            "text": "| 전용 기술지원 | 450,000원 | 1 | 36개월 | 16,200,000원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-05:v2:L07",
+            "text": "소계: 2,176,200,000원"
+          },
+          {
+            "span_id": "ART-E2E-QT-05:v2:L08",
+            "text": "할인율: 3%"
+          },
+          {
+            "span_id": "ART-E2E-QT-05:v2:L09",
+            "text": "합계: 2,110,914,000원 (부가가치세 별도)"
+          },
+          {
+            "span_id": "ART-E2E-QT-05:v2:L10",
+            "text": "견적 유효 기간: 발행일로부터 30일"
+          },
+          {
+            "span_id": "ART-E2E-QT-05:v2:L11",
+            "text": "계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함"
+          }
+        ]
+      }
+    ],
+    "reference_access_log": [
+      {
+        "user_id": "E-1071",
+        "doc_id": "PRICE-2026.2",
+        "version": "2026.2",
+        "accessed_at": "2026-10-09T15:08:00+09:00"
+      }
+    ],
+    "evidence_links": [],
+    "events": [
+      {
+        "event_id": "EV-QT-05-1",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-QT-05",
+        "artifact_version": "v2",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-QT-05:v2:v2",
+        "occurred_at": "2026-10-09T15:40:00+09:00"
+      },
+      {
+        "event_id": "EV-QT-05-C",
+        "event_type": "employee.confirmed",
+        "work_id": "W-E2E-QT-05",
+        "occurred_at": "2026-10-09T16:50:00+09:00"
+      }
+    ],
+    "human_actions": [
+      {
+        "action_id": "HA-QT-05-1",
+        "user_id": "E-1071",
+        "action": "confirm",
+        "at": "2026-10-09T16:50:00+09:00"
+      }
+    ],
+    "fault_injection": [],
+    "access_attempts": [
+      {
+        "attempt_id": "AC-QT-05-1",
+        "user_id": "E-1071",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-QT-05"
+      },
+      {
+        "attempt_id": "AC-QT-05-2",
+        "user_id": "E-1034",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-QT-05"
+      },
+      {
+        "attempt_id": "AC-QT-05-3",
+        "user_id": "X-9001",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-QT-05"
+      }
+    ],
+    "quote_data": {
+      "v2": {
+        "quote_no": "Q-2026-0472",
+        "price_table": "PRICE-2026.2",
+        "lines": [
+          {
+            "code": "P-300",
+            "quantity": 20,
+            "months": 36
+          },
+          {
+            "code": "S-10",
+            "quantity": 1,
+            "months": 36
+          }
+        ],
+        "discount_components": [
+          {
+            "type": "다년",
+            "pct": 3
+          }
+        ],
+        "free_items": [],
+        "exceptions": []
+      }
+    },
+    "approval_requests": []
+  }
+}

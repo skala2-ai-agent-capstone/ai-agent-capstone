@@ -1,0 +1,260 @@
+{
+  "case_id": "E2E-QT-04",
+  "work_type": "quote",
+  "rfp_status": "첨부",
+  "summary": "푸른시청 Doc AI 300명 60개월 견적서 작성 (RFP 7장 계약 조건: SLA 99.95%, 승인 요청 없이 완료)",
+  "raw": {
+    "work_case": {
+      "work_id": "W-E2E-QT-04",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "employee_id": "E-1060",
+      "work_type": "quote",
+      "customer_id": "CUST-PN",
+      "status": "completed",
+      "created_at": "2026-10-08T13:30:00+09:00",
+      "completed_at": "2026-10-08T14:15:00+09:00",
+      "linked_work_ids": [
+        "W-E2E-PR-05"
+      ],
+      "rfp_status": "첨부",
+      "registration": {
+        "product": "Doc AI",
+        "quantity": "사용자 300명",
+        "contract_months": 60,
+        "request_conditions": "SLA 월 가용성 99.95% (RFP 7.1)",
+        "budget": ""
+      }
+    },
+    "source_documents": [
+      {
+        "attachment_id": "ATT-QT-04",
+        "doc_id": "RFP-PN-2026-06",
+        "doc_type": "rfp",
+        "version": "v1.0",
+        "grade": "대외비",
+        "uploaded_by": "E-1060",
+        "uploaded_at": "2026-10-08T13:32:00+09:00",
+        "content": "[푸른시청(가상) 문서 관리 시스템 RFP v1.0 — 7장 계약 조건]\n7.1 (p.16) 월 가용성 99.95% 이상의 SLA를 적용해야 한다.\n7.2 (p.16) 계약 기간은 60개월로 한다.\n7.3 (p.17) 모든 금액은 부가가치세 별도로 표기한다.\n제출 기한: 2026-11-12\n문의: 푸른시청 정보화담당관 이OO 팀장 (010-0000-7710, lee.oo@purun-city.example)"
+      }
+    ],
+    "attached_references": [
+      {
+        "doc_id": "PRICE-2026.2",
+        "version": "2026.2"
+      },
+      {
+        "doc_id": "SALES-AI-GL-001",
+        "version": "v1.0"
+      },
+      {
+        "doc_id": "PROD-DOCAI",
+        "version": "v3.2"
+      }
+    ],
+    "messages": [
+      {
+        "message_id": "W-E2E-QT-04-M01",
+        "seq": 1,
+        "role": "user",
+        "content": "푸른시청 견적서 작성해줘. 가격표 PRICE-2026.2, Doc AI 300명 60개월, 다년 5%p만 적용. RFP 7.1대로 SLA는 월 가용성 99.95%로 계약 조건에 적어줘. 부가세 별도, 유효 기간 30일.\n\n[푸른시청(가상) 문서 관리 시스템 RFP v1.0 — 7장 계약 조건]\n7.1 (p.16) 월 가용성 99.95% 이상의 SLA를 적용해야 한다.\n7.2 (p.16) 계약 기간은 60개월로 한다.\n7.3 (p.17) 모든 금액은 부가가치세 별도로 표기한다.\n제출 기한: 2026-11-12",
+        "created_at": "2026-10-08T13:38:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-04-M02",
+        "seq": 2,
+        "role": "assistant",
+        "content": "견적서 초안입니다.\n\n[견적서] Q-2026-0467 / 고객사: 푸른시청(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| 스마트 문서 AI (Doc AI) | 25,000원 | 300 | 60개월 | 450,000,000원 |\n소계: 450,000,000원\n할인율: 5%\n합계: 427,500,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 월 단위 후불 청구, 월 가용성 99.95% SLA 적용, 제공 범위는 상기 상품에 한함",
+        "created_at": "2026-10-08T13:42:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-04-M03",
+        "seq": 3,
+        "role": "user",
+        "content": "금액 검산 완료. 합산 할인 5%니까 승인은 필요 없지? 이대로 저장할게.",
+        "created_at": "2026-10-08T13:55:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-04-M04",
+        "seq": 4,
+        "role": "assistant",
+        "content": "합산 할인율 5%는 별표 2상 승인 대상이 아닙니다.",
+        "created_at": "2026-10-08T13:56:00+09:00"
+      }
+    ],
+    "artifact_versions": [
+      {
+        "artifact_id": "ART-E2E-QT-04",
+        "version": "v1",
+        "author": "ai_draft",
+        "saved_at": "2026-10-08T13:42:00+09:00",
+        "content": "[견적서] Q-2026-0467 / 고객사: 푸른시청(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| 스마트 문서 AI (Doc AI) | 25,000원 | 300 | 60개월 | 450,000,000원 |\n소계: 450,000,000원\n할인율: 5%\n합계: 427,500,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 월 단위 후불 청구, 월 가용성 99.95% SLA 적용, 제공 범위는 상기 상품에 한함",
+        "spans": [
+          {
+            "span_id": "ART-E2E-QT-04:v1:L01",
+            "text": "[견적서] Q-2026-0467 / 고객사: 푸른시청(가상)"
+          },
+          {
+            "span_id": "ART-E2E-QT-04:v1:L02",
+            "text": "적용 가격표: PRICE-2026.2"
+          },
+          {
+            "span_id": "ART-E2E-QT-04:v1:L03",
+            "text": "| 상품 | 단가 | 수량 | 기간 | 금액 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-04:v1:L05",
+            "text": "| 스마트 문서 AI (Doc AI) | 25,000원 | 300 | 60개월 | 450,000,000원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-04:v1:L06",
+            "text": "소계: 450,000,000원"
+          },
+          {
+            "span_id": "ART-E2E-QT-04:v1:L07",
+            "text": "할인율: 5%"
+          },
+          {
+            "span_id": "ART-E2E-QT-04:v1:L08",
+            "text": "합계: 427,500,000원 (부가가치세 별도)"
+          },
+          {
+            "span_id": "ART-E2E-QT-04:v1:L09",
+            "text": "견적 유효 기간: 발행일로부터 30일"
+          },
+          {
+            "span_id": "ART-E2E-QT-04:v1:L10",
+            "text": "계약 조건: 월 단위 후불 청구, 월 가용성 99.95% SLA 적용, 제공 범위는 상기 상품에 한함"
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-QT-04",
+        "version": "v2",
+        "author": "employee",
+        "saved_at": "2026-10-08T14:10:00+09:00",
+        "content": "[견적서] Q-2026-0467 / 고객사: 푸른시청(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| 스마트 문서 AI (Doc AI) | 25,000원 | 300 | 60개월 | 450,000,000원 |\n소계: 450,000,000원\n할인율: 5%\n합계: 427,500,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 월 단위 후불 청구, 월 가용성 99.95% SLA 적용, 제공 범위는 상기 상품에 한함",
+        "spans": [
+          {
+            "span_id": "ART-E2E-QT-04:v2:L01",
+            "text": "[견적서] Q-2026-0467 / 고객사: 푸른시청(가상)"
+          },
+          {
+            "span_id": "ART-E2E-QT-04:v2:L02",
+            "text": "적용 가격표: PRICE-2026.2"
+          },
+          {
+            "span_id": "ART-E2E-QT-04:v2:L03",
+            "text": "| 상품 | 단가 | 수량 | 기간 | 금액 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-04:v2:L05",
+            "text": "| 스마트 문서 AI (Doc AI) | 25,000원 | 300 | 60개월 | 450,000,000원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-04:v2:L06",
+            "text": "소계: 450,000,000원"
+          },
+          {
+            "span_id": "ART-E2E-QT-04:v2:L07",
+            "text": "할인율: 5%"
+          },
+          {
+            "span_id": "ART-E2E-QT-04:v2:L08",
+            "text": "합계: 427,500,000원 (부가가치세 별도)"
+          },
+          {
+            "span_id": "ART-E2E-QT-04:v2:L09",
+            "text": "견적 유효 기간: 발행일로부터 30일"
+          },
+          {
+            "span_id": "ART-E2E-QT-04:v2:L10",
+            "text": "계약 조건: 월 단위 후불 청구, 월 가용성 99.95% SLA 적용, 제공 범위는 상기 상품에 한함"
+          }
+        ]
+      }
+    ],
+    "reference_access_log": [
+      {
+        "user_id": "E-1060",
+        "doc_id": "PRICE-2026.2",
+        "version": "2026.2",
+        "accessed_at": "2026-10-08T13:50:00+09:00"
+      }
+    ],
+    "evidence_links": [],
+    "events": [
+      {
+        "event_id": "EV-QT-04-1",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-QT-04",
+        "artifact_version": "v2",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-QT-04:v2:v2",
+        "occurred_at": "2026-10-08T14:15:00+09:00"
+      },
+      {
+        "event_id": "EV-QT-04-C",
+        "event_type": "employee.confirmed",
+        "work_id": "W-E2E-QT-04",
+        "occurred_at": "2026-10-08T15:25:00+09:00"
+      }
+    ],
+    "human_actions": [
+      {
+        "action_id": "HA-QT-04-1",
+        "user_id": "E-1060",
+        "action": "confirm",
+        "at": "2026-10-08T15:25:00+09:00"
+      }
+    ],
+    "fault_injection": [],
+    "access_attempts": [
+      {
+        "attempt_id": "AC-QT-04-1",
+        "user_id": "E-1060",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-QT-04"
+      },
+      {
+        "attempt_id": "AC-QT-04-2",
+        "user_id": "E-1034",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-QT-04"
+      },
+      {
+        "attempt_id": "AC-QT-04-3",
+        "user_id": "X-9001",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-QT-04"
+      }
+    ],
+    "quote_data": {
+      "v2": {
+        "quote_no": "Q-2026-0467",
+        "price_table": "PRICE-2026.2",
+        "lines": [
+          {
+            "code": "P-100",
+            "quantity": 300,
+            "months": 60
+          }
+        ],
+        "discount_components": [
+          {
+            "type": "다년",
+            "pct": 5
+          }
+        ],
+        "free_items": [],
+        "exceptions": [
+          {
+            "type": "SLA 상향",
+            "value": "월 가용성 99.95%"
+          }
+        ]
+      }
+    },
+    "approval_requests": []
+  }
+}

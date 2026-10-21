@@ -1,0 +1,285 @@
+{
+  "case_id": "E2E-QT-09",
+  "work_type": "quote",
+  "rfp_status": "없음",
+  "summary": "태광모터스 Doc AI 700명 + Insight Hub 1테넌트 24개월 견적서 작성 (RFP 없음, 두 상품, AI가 할인 구간을 잘못 적용)",
+  "raw": {
+    "work_case": {
+      "work_id": "W-E2E-QT-09",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-02",
+      "employee_id": "E-1101",
+      "work_type": "quote",
+      "customer_id": "CUST-TK",
+      "status": "completed",
+      "created_at": "2026-10-19T11:00:00+09:00",
+      "completed_at": "2026-10-19T11:50:00+09:00",
+      "linked_work_ids": [
+        "W-E2E-PR-10"
+      ],
+      "rfp_status": "없음",
+      "registration": {
+        "product": "Doc AI + Insight Hub",
+        "quantity": "사용자 700명, 테넌트 1개",
+        "contract_months": 24,
+        "request_conditions": "표준 할인만 적용",
+        "budget": ""
+      }
+    },
+    "source_documents": [],
+    "attached_references": [
+      {
+        "doc_id": "PRICE-2026.2",
+        "version": "2026.2"
+      },
+      {
+        "doc_id": "SALES-AI-GL-001",
+        "version": "v1.0"
+      }
+    ],
+    "messages": [
+      {
+        "message_id": "W-E2E-QT-09-M01",
+        "seq": 1,
+        "role": "user",
+        "content": "태광모터스 견적서 작성해줘. PRICE-2026.2, Doc AI 700명 24개월 + Insight Hub 1테넌트 24개월. 별표 2의 표준 할인 규칙대로만 적용하고 할인 근거도 알려줘. 기재 항목은 가격표 버전, 상품별 단가·수량·기간·금액, 소계, 할인율, 합계, 유효 기간 30일, 계약 조건.",
+        "created_at": "2026-10-19T11:05:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-09-M02",
+        "seq": 2,
+        "role": "assistant",
+        "content": "별표 2에 따라 다년 3%p와 수량 2%p를 합산해 5%를 적용했습니다.\n\n[견적서] Q-2026-0497 / 고객사: 태광모터스(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| 스마트 문서 AI (Doc AI) | 25,000원 | 700 | 24개월 | 420,000,000원 |\n| 데이터 분석 플랫폼 (Insight Hub) | 3,000,000원 | 1 | 24개월 | 72,000,000원 |\n소계: 492,000,000원\n할인율: 5%\n합계: 467,400,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함",
+        "created_at": "2026-10-19T11:10:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-09-M03",
+        "seq": 3,
+        "role": "user",
+        "content": "계약 기간이 24개월인데 다년 할인은 36개월 이상부터 아니야? 별표 2 확인해서 다시 계산해줘.",
+        "created_at": "2026-10-19T11:25:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-09-M04",
+        "seq": 4,
+        "role": "assistant",
+        "content": "맞습니다. 다년 할인은 36개월 이상 계약에만 적용됩니다. 수량 할인(사용자 500명 이상) 2%만 적용해 다시 계산했습니다.\n\n[견적서] Q-2026-0497 / 고객사: 태광모터스(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| 스마트 문서 AI (Doc AI) | 25,000원 | 700 | 24개월 | 420,000,000원 |\n| 데이터 분석 플랫폼 (Insight Hub) | 3,000,000원 | 1 | 24개월 | 72,000,000원 |\n소계: 492,000,000원\n할인율: 2%\n합계: 482,160,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함",
+        "created_at": "2026-10-19T11:29:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-09-M05",
+        "seq": 5,
+        "role": "user",
+        "content": "소계 492,000,000원에 2% 빼면 482,160,000원 맞네. 합산 2%라 승인도 필요 없고. 저장할게.",
+        "created_at": "2026-10-19T11:40:00+09:00"
+      }
+    ],
+    "artifact_versions": [
+      {
+        "artifact_id": "ART-E2E-QT-09",
+        "version": "v1",
+        "author": "ai_draft",
+        "saved_at": "2026-10-19T11:10:00+09:00",
+        "content": "[견적서] Q-2026-0497 / 고객사: 태광모터스(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| 스마트 문서 AI (Doc AI) | 25,000원 | 700 | 24개월 | 420,000,000원 |\n| 데이터 분석 플랫폼 (Insight Hub) | 3,000,000원 | 1 | 24개월 | 72,000,000원 |\n소계: 492,000,000원\n할인율: 5%\n합계: 467,400,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함",
+        "spans": [
+          {
+            "span_id": "ART-E2E-QT-09:v1:L01",
+            "text": "[견적서] Q-2026-0497 / 고객사: 태광모터스(가상)"
+          },
+          {
+            "span_id": "ART-E2E-QT-09:v1:L02",
+            "text": "적용 가격표: PRICE-2026.2"
+          },
+          {
+            "span_id": "ART-E2E-QT-09:v1:L03",
+            "text": "| 상품 | 단가 | 수량 | 기간 | 금액 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-09:v1:L05",
+            "text": "| 스마트 문서 AI (Doc AI) | 25,000원 | 700 | 24개월 | 420,000,000원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-09:v1:L06",
+            "text": "| 데이터 분석 플랫폼 (Insight Hub) | 3,000,000원 | 1 | 24개월 | 72,000,000원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-09:v1:L07",
+            "text": "소계: 492,000,000원"
+          },
+          {
+            "span_id": "ART-E2E-QT-09:v1:L08",
+            "text": "할인율: 5%"
+          },
+          {
+            "span_id": "ART-E2E-QT-09:v1:L09",
+            "text": "합계: 467,400,000원 (부가가치세 별도)"
+          },
+          {
+            "span_id": "ART-E2E-QT-09:v1:L10",
+            "text": "견적 유효 기간: 발행일로부터 30일"
+          },
+          {
+            "span_id": "ART-E2E-QT-09:v1:L11",
+            "text": "계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함"
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-QT-09",
+        "version": "v2",
+        "author": "employee",
+        "saved_at": "2026-10-19T11:45:00+09:00",
+        "content": "[견적서] Q-2026-0497 / 고객사: 태광모터스(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| 스마트 문서 AI (Doc AI) | 25,000원 | 700 | 24개월 | 420,000,000원 |\n| 데이터 분석 플랫폼 (Insight Hub) | 3,000,000원 | 1 | 24개월 | 72,000,000원 |\n소계: 492,000,000원\n할인율: 2%\n합계: 482,160,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함",
+        "spans": [
+          {
+            "span_id": "ART-E2E-QT-09:v2:L01",
+            "text": "[견적서] Q-2026-0497 / 고객사: 태광모터스(가상)"
+          },
+          {
+            "span_id": "ART-E2E-QT-09:v2:L02",
+            "text": "적용 가격표: PRICE-2026.2"
+          },
+          {
+            "span_id": "ART-E2E-QT-09:v2:L03",
+            "text": "| 상품 | 단가 | 수량 | 기간 | 금액 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-09:v2:L05",
+            "text": "| 스마트 문서 AI (Doc AI) | 25,000원 | 700 | 24개월 | 420,000,000원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-09:v2:L06",
+            "text": "| 데이터 분석 플랫폼 (Insight Hub) | 3,000,000원 | 1 | 24개월 | 72,000,000원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-09:v2:L07",
+            "text": "소계: 492,000,000원"
+          },
+          {
+            "span_id": "ART-E2E-QT-09:v2:L08",
+            "text": "할인율: 2%"
+          },
+          {
+            "span_id": "ART-E2E-QT-09:v2:L09",
+            "text": "합계: 482,160,000원 (부가가치세 별도)"
+          },
+          {
+            "span_id": "ART-E2E-QT-09:v2:L10",
+            "text": "견적 유효 기간: 발행일로부터 30일"
+          },
+          {
+            "span_id": "ART-E2E-QT-09:v2:L11",
+            "text": "계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함"
+          }
+        ]
+      }
+    ],
+    "reference_access_log": [
+      {
+        "user_id": "E-1101",
+        "doc_id": "SALES-AI-GL-001",
+        "version": "v1.0",
+        "accessed_at": "2026-10-19T11:22:00+09:00"
+      },
+      {
+        "user_id": "E-1101",
+        "doc_id": "PRICE-2026.2",
+        "version": "2026.2",
+        "accessed_at": "2026-10-19T11:36:00+09:00"
+      }
+    ],
+    "evidence_links": [
+      {
+        "link_id": "EL-QT-09-1",
+        "span_id": "ART-E2E-QT-09:v2:L08",
+        "doc_id": "SALES-AI-GL-001",
+        "version": "v1.0",
+        "location": "별표 2",
+        "created_by": "E-1101",
+        "created_at": "2026-10-19T11:38:00+09:00"
+      },
+      {
+        "link_id": "EL-QT-09-2",
+        "span_id": "ART-E2E-QT-09:v2:L09",
+        "doc_id": "PRICE-2026.2",
+        "version": "2026.2",
+        "location": "P-100, P-300",
+        "created_by": "E-1101",
+        "created_at": "2026-10-19T11:39:00+09:00"
+      }
+    ],
+    "events": [
+      {
+        "event_id": "EV-QT-09-1",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-QT-09",
+        "artifact_version": "v2",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-QT-09:v2:v2",
+        "occurred_at": "2026-10-19T11:50:00+09:00"
+      },
+      {
+        "event_id": "EV-QT-09-C",
+        "event_type": "employee.confirmed",
+        "work_id": "W-E2E-QT-09",
+        "occurred_at": "2026-10-19T13:00:00+09:00"
+      }
+    ],
+    "human_actions": [
+      {
+        "action_id": "HA-QT-09-1",
+        "user_id": "E-1101",
+        "action": "confirm",
+        "at": "2026-10-19T13:00:00+09:00"
+      }
+    ],
+    "fault_injection": [],
+    "access_attempts": [
+      {
+        "attempt_id": "AC-QT-09-1",
+        "user_id": "E-1101",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-QT-09"
+      },
+      {
+        "attempt_id": "AC-QT-09-2",
+        "user_id": "E-1034",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-QT-09"
+      },
+      {
+        "attempt_id": "AC-QT-09-3",
+        "user_id": "X-9001",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-QT-09"
+      }
+    ],
+    "quote_data": {
+      "v2": {
+        "quote_no": "Q-2026-0497",
+        "price_table": "PRICE-2026.2",
+        "lines": [
+          {
+            "code": "P-100",
+            "quantity": 700,
+            "months": 24
+          },
+          {
+            "code": "P-300",
+            "quantity": 1,
+            "months": 24
+          }
+        ],
+        "discount_components": [
+          {
+            "type": "수량",
+            "pct": 2
+          }
+        ],
+        "free_items": [],
+        "exceptions": []
+      }
+    },
+    "approval_requests": []
+  }
+}

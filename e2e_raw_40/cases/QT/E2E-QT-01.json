@@ -1,0 +1,395 @@
+{
+  "case_id": "E2E-QT-01",
+  "work_type": "quote",
+  "rfp_status": "없음",
+  "summary": "누리유통 Doc AI 800명 36개월 견적서 작성 (RFP 없음, 합산 할인 15%와 무상 제공 요청, 수정 후 재완료)",
+  "raw": {
+    "work_case": {
+      "work_id": "W-E2E-QT-01",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "employee_id": "E-1047",
+      "work_type": "quote",
+      "customer_id": "CUST-NR",
+      "status": "completed",
+      "created_at": "2026-10-09T08:55:00+09:00",
+      "completed_at": "2026-10-09T10:22:00+09:00",
+      "linked_work_ids": [],
+      "registration": {
+        "product": "Doc AI",
+        "quantity": "사용자 800명",
+        "contract_months": 36,
+        "request_conditions": "추가 할인 10%, 온보딩 교육 무상 제공 요청",
+        "budget": "6.2억 원 이내"
+      },
+      "rfp_status": "없음"
+    },
+    "source_documents": [],
+    "attached_references": [
+      {
+        "doc_id": "PRICE-2026.2",
+        "version": "2026.2"
+      },
+      {
+        "doc_id": "SALES-AI-GL-001",
+        "version": "v1.0"
+      }
+    ],
+    "messages": [
+      {
+        "message_id": "W-E2E-QT-01-M01",
+        "seq": 1,
+        "role": "user",
+        "content": "누리유통 견적서 작성해줘.\n- 가격표: 표준 가격표 PRICE-2026.2\n- 할인 정책(내규 별표 2): 3년 이상 계약 +3%p, 사용자 500명 이상 +2%p, 합산 할인율로 승인 단계 판단, 무상 제공은 담당 임원 승인\n- 견적 조건: Doc AI 사용자 800명 36개월, 다년 3%p + 수량 2%p + 고객 요청 추가 할인 10%, 온보딩 교육 무상\n- 기재 항목: 가격표 버전, 상품별 단가·수량·기간·할인율·소계, 합계(부가세 별도), 유효 기간 30일, 계약 조건\n\n[PRICE-2026.2]\nP-100 스마트 문서 AI (Doc AI): 25,000원 / 사용자·월\nP-200 AI 컨택센터 (Contact AI): 90,000원 / 상담석·월\nP-300 데이터 분석 플랫폼 (Insight Hub): 3,000,000원 / 테넌트·월\nS-10 전용 기술지원: 500,000원 / 월\nS-20 온보딩 교육: 2,000,000원 / 회",
+        "created_at": "2026-10-09T09:00:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-01-M02",
+        "seq": 2,
+        "role": "assistant",
+        "content": "견적서 초안입니다. 합산 할인율 15%를 적용했습니다.\n\n[견적서] Q-2026-0523 / 고객사: 누리유통(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| 스마트 문서 AI (Doc AI) | 25,000원 | 800 | 36개월 | 720,000,000원 |\n| 온보딩 교육 | 무상 | 1 | 1회 | 0원 |\n소계: 720,000,000원\n할인율: 15%\n합계: 621,000,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함",
+        "created_at": "2026-10-09T09:04:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-01-M03",
+        "seq": 3,
+        "role": "user",
+        "content": "합계 다시 계산해봐. 720,000,000원의 85%면 612,000,000원 아니야?",
+        "created_at": "2026-10-09T09:10:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-01-M04",
+        "seq": 4,
+        "role": "assistant",
+        "content": "맞습니다. 계산 오류였습니다. 합계를 612,000,000원으로 수정했습니다.\n\n[견적서] Q-2026-0523 / 고객사: 누리유통(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| 스마트 문서 AI (Doc AI) | 25,000원 | 800 | 36개월 | 720,000,000원 |\n| 온보딩 교육 | 무상 | 1 | 1회 | 0원 |\n소계: 720,000,000원\n할인율: 15%\n합계: 612,000,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함",
+        "created_at": "2026-10-09T09:12:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-01-M05",
+        "seq": 5,
+        "role": "user",
+        "content": "오케이 저장.",
+        "created_at": "2026-10-09T09:15:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-01-M06",
+        "seq": 6,
+        "role": "user",
+        "content": "아 맞다, 합산 15%랑 온보딩 교육 무상이 별표 2 승인 대상인지 확인해줘.",
+        "created_at": "2026-10-09T10:10:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-01-M07",
+        "seq": 7,
+        "role": "assistant",
+        "content": "합산 할인율 15%는 '5% 초과~15% 이하' 구간이라 소속 팀장 승인 대상이고, 온보딩 교육 무상 제공은 예외 조건으로 담당 임원 승인 대상입니다. 두 항목을 승인 요청에 표시하시고, 고객용 견적서에는 승인 기준을 쓰지 않으시면 됩니다.",
+        "created_at": "2026-10-09T10:12:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-01-M08",
+        "seq": 8,
+        "role": "user",
+        "content": "승인 요청 올렸어. 견적서 다시 저장할게.",
+        "created_at": "2026-10-09T10:18:00+09:00"
+      }
+    ],
+    "artifact_versions": [
+      {
+        "artifact_id": "ART-E2E-QT-01",
+        "version": "v1",
+        "author": "ai_draft",
+        "saved_at": "2026-10-09T09:04:00+09:00",
+        "content": "[견적서] Q-2026-0523 / 고객사: 누리유통(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| 스마트 문서 AI (Doc AI) | 25,000원 | 800 | 36개월 | 720,000,000원 |\n| 온보딩 교육 | 무상 | 1 | 1회 | 0원 |\n소계: 720,000,000원\n할인율: 15%\n합계: 621,000,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함",
+        "spans": [
+          {
+            "span_id": "ART-E2E-QT-01:v1:L01",
+            "text": "[견적서] Q-2026-0523 / 고객사: 누리유통(가상)"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v1:L02",
+            "text": "적용 가격표: PRICE-2026.2"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v1:L03",
+            "text": "| 상품 | 단가 | 수량 | 기간 | 금액 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v1:L05",
+            "text": "| 스마트 문서 AI (Doc AI) | 25,000원 | 800 | 36개월 | 720,000,000원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v1:L06",
+            "text": "| 온보딩 교육 | 무상 | 1 | 1회 | 0원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v1:L07",
+            "text": "소계: 720,000,000원"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v1:L08",
+            "text": "할인율: 15%"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v1:L09",
+            "text": "합계: 621,000,000원 (부가가치세 별도)"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v1:L10",
+            "text": "견적 유효 기간: 발행일로부터 30일"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v1:L11",
+            "text": "계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함"
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-QT-01",
+        "version": "v2",
+        "author": "employee",
+        "saved_at": "2026-10-09T09:16:00+09:00",
+        "content": "[견적서] Q-2026-0523 / 고객사: 누리유통(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| 스마트 문서 AI (Doc AI) | 25,000원 | 800 | 36개월 | 720,000,000원 |\n| 온보딩 교육 | 무상 | 1 | 1회 | 0원 |\n소계: 720,000,000원\n할인율: 15%\n합계: 612,000,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함",
+        "spans": [
+          {
+            "span_id": "ART-E2E-QT-01:v2:L01",
+            "text": "[견적서] Q-2026-0523 / 고객사: 누리유통(가상)"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v2:L02",
+            "text": "적용 가격표: PRICE-2026.2"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v2:L03",
+            "text": "| 상품 | 단가 | 수량 | 기간 | 금액 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v2:L05",
+            "text": "| 스마트 문서 AI (Doc AI) | 25,000원 | 800 | 36개월 | 720,000,000원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v2:L06",
+            "text": "| 온보딩 교육 | 무상 | 1 | 1회 | 0원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v2:L07",
+            "text": "소계: 720,000,000원"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v2:L08",
+            "text": "할인율: 15%"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v2:L09",
+            "text": "합계: 612,000,000원 (부가가치세 별도)"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v2:L10",
+            "text": "견적 유효 기간: 발행일로부터 30일"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v2:L11",
+            "text": "계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함"
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-QT-01",
+        "version": "v3",
+        "author": "employee",
+        "saved_at": "2026-10-09T10:20:00+09:00",
+        "content": "[견적서] Q-2026-0523 / 고객사: 누리유통(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| 스마트 문서 AI (Doc AI) | 25,000원 | 800 | 36개월 | 720,000,000원 |\n| 온보딩 교육 | 무상 | 1 | 1회 | 0원 |\n소계: 720,000,000원\n할인율: 15%\n합계: 612,000,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함",
+        "spans": [
+          {
+            "span_id": "ART-E2E-QT-01:v3:L01",
+            "text": "[견적서] Q-2026-0523 / 고객사: 누리유통(가상)"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v3:L02",
+            "text": "적용 가격표: PRICE-2026.2"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v3:L03",
+            "text": "| 상품 | 단가 | 수량 | 기간 | 금액 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v3:L05",
+            "text": "| 스마트 문서 AI (Doc AI) | 25,000원 | 800 | 36개월 | 720,000,000원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v3:L06",
+            "text": "| 온보딩 교육 | 무상 | 1 | 1회 | 0원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v3:L07",
+            "text": "소계: 720,000,000원"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v3:L08",
+            "text": "할인율: 15%"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v3:L09",
+            "text": "합계: 612,000,000원 (부가가치세 별도)"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v3:L10",
+            "text": "견적 유효 기간: 발행일로부터 30일"
+          },
+          {
+            "span_id": "ART-E2E-QT-01:v3:L11",
+            "text": "계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함"
+          }
+        ]
+      }
+    ],
+    "quote_data": {
+      "v2": {
+        "quote_no": "Q-2026-0523",
+        "price_table": "PRICE-2026.2",
+        "lines": [
+          {
+            "code": "P-100",
+            "quantity": 800,
+            "months": 36
+          }
+        ],
+        "discount_components": [
+          {
+            "type": "다년",
+            "pct": 3
+          },
+          {
+            "type": "수량",
+            "pct": 2
+          },
+          {
+            "type": "고객 요청 추가",
+            "pct": 10
+          }
+        ],
+        "free_items": [
+          {
+            "code": "S-20",
+            "quantity": 1
+          }
+        ],
+        "exceptions": []
+      },
+      "v3": {
+        "quote_no": "Q-2026-0523",
+        "price_table": "PRICE-2026.2",
+        "lines": [
+          {
+            "code": "P-100",
+            "quantity": 800,
+            "months": 36
+          }
+        ],
+        "discount_components": [
+          {
+            "type": "다년",
+            "pct": 3
+          },
+          {
+            "type": "수량",
+            "pct": 2
+          },
+          {
+            "type": "고객 요청 추가",
+            "pct": 10
+          }
+        ],
+        "free_items": [
+          {
+            "code": "S-20",
+            "quantity": 1
+          }
+        ],
+        "exceptions": []
+      }
+    },
+    "approval_requests": [
+      {
+        "approval_id": "APR-QT-01-1",
+        "artifact_version": "v3",
+        "submitted_at": "2026-10-09T10:19:00+09:00",
+        "items": [
+          {
+            "type": "할인",
+            "value": "합산 15%",
+            "approver": "소속 팀장",
+            "reason": "고객 예산 6.2억 원 이내"
+          },
+          {
+            "type": "무상 제공",
+            "value": "온보딩 교육 1회",
+            "approver": "담당 임원",
+            "reason": "고객 요청"
+          }
+        ]
+      }
+    ],
+    "reference_access_log": [
+      {
+        "user_id": "E-1047",
+        "doc_id": "PRICE-2026.2",
+        "version": "2026.2",
+        "accessed_at": "2026-10-09T09:08:00+09:00"
+      }
+    ],
+    "evidence_links": [],
+    "events": [
+      {
+        "event_id": "EV-QT-01-1",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-QT-01",
+        "artifact_version": "v2",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-QT-01:v2:v2",
+        "occurred_at": "2026-10-09T09:17:00+09:00"
+      },
+      {
+        "event_id": "EV-QT-01-2",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-QT-01",
+        "artifact_version": "v3",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-QT-01:v3:v2",
+        "occurred_at": "2026-10-09T10:22:00+09:00",
+        "note": "산출물 수정 후 재완료"
+      },
+      {
+        "event_id": "EV-QT-01-3",
+        "event_type": "employee.confirmed",
+        "work_id": "W-E2E-QT-01",
+        "artifact_version": "v3",
+        "occurred_at": "2026-10-09T11:00:00+09:00"
+      }
+    ],
+    "human_actions": [
+      {
+        "action_id": "HA-QT-01-1",
+        "user_id": "E-1047",
+        "action": "confirm",
+        "artifact_version": "v3",
+        "at": "2026-10-09T11:00:00+09:00"
+      },
+      {
+        "action_id": "HA-QT-01-2",
+        "user_id": "L-3001",
+        "action": "approve_aggregation",
+        "artifact_version": "v3",
+        "at": "2026-10-09T11:30:00+09:00"
+      }
+    ],
+    "fault_injection": [],
+    "access_attempts": [
+      {
+        "attempt_id": "AC-QT-01-1",
+        "user_id": "L-3001",
+        "action": "팀 집계 조회",
+        "target": "T-SALES-01"
+      }
+    ]
+  }
+}

@@ -1,0 +1,241 @@
+{
+  "case_id": "E2E-QT-07",
+  "work_type": "quote",
+  "rfp_status": "없음",
+  "summary": "대성화학 Doc AI 120명 12개월 견적서 작성 (RFP 없음, 직원이 '신규 고객 프로모션' 할인 3% 적용 요청)",
+  "raw": {
+    "work_case": {
+      "work_id": "W-E2E-QT-07",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "employee_id": "E-1034",
+      "work_type": "quote",
+      "customer_id": "CUST-DS",
+      "status": "completed",
+      "created_at": "2026-10-15T10:00:00+09:00",
+      "completed_at": "2026-10-15T10:30:00+09:00",
+      "linked_work_ids": [
+        "W-E2E-PR-09"
+      ],
+      "rfp_status": "없음",
+      "registration": {
+        "product": "Doc AI",
+        "quantity": "사용자 120명",
+        "contract_months": 12,
+        "request_conditions": "신규 고객 프로모션 할인 3% 적용 요청",
+        "budget": ""
+      }
+    },
+    "source_documents": [],
+    "attached_references": [
+      {
+        "doc_id": "PRICE-2026.2",
+        "version": "2026.2"
+      },
+      {
+        "doc_id": "SALES-AI-GL-001",
+        "version": "v1.0"
+      }
+    ],
+    "messages": [
+      {
+        "message_id": "W-E2E-QT-07-M01",
+        "seq": 1,
+        "role": "user",
+        "content": "대성화학 견적서 작성해줘. PRICE-2026.2, Doc AI 120명 12개월. 신규 고객이라 프로모션 할인 3% 넣고 싶어. 비고에도 적어줘.",
+        "created_at": "2026-10-15T10:05:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-07-M02",
+        "seq": 2,
+        "role": "assistant",
+        "content": "견적서 초안입니다.\n\n[견적서] Q-2026-0484 / 고객사: 대성화학(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| 스마트 문서 AI (Doc AI) | 25,000원 | 120 | 12개월 | 36,000,000원 |\n소계: 36,000,000원\n할인율: 3%\n합계: 34,920,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함\n비고: 신규 고객 프로모션 할인 3%가 반영된 금액입니다.",
+        "created_at": "2026-10-15T10:08:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-07-M03",
+        "seq": 3,
+        "role": "user",
+        "content": "합계 맞네. 3%면 승인 필요 없는 거지? 저장할게.",
+        "created_at": "2026-10-15T10:20:00+09:00"
+      }
+    ],
+    "artifact_versions": [
+      {
+        "artifact_id": "ART-E2E-QT-07",
+        "version": "v1",
+        "author": "ai_draft",
+        "saved_at": "2026-10-15T10:08:00+09:00",
+        "content": "[견적서] Q-2026-0484 / 고객사: 대성화학(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| 스마트 문서 AI (Doc AI) | 25,000원 | 120 | 12개월 | 36,000,000원 |\n소계: 36,000,000원\n할인율: 3%\n합계: 34,920,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함\n비고: 신규 고객 프로모션 할인 3%가 반영된 금액입니다.",
+        "spans": [
+          {
+            "span_id": "ART-E2E-QT-07:v1:L01",
+            "text": "[견적서] Q-2026-0484 / 고객사: 대성화학(가상)"
+          },
+          {
+            "span_id": "ART-E2E-QT-07:v1:L02",
+            "text": "적용 가격표: PRICE-2026.2"
+          },
+          {
+            "span_id": "ART-E2E-QT-07:v1:L03",
+            "text": "| 상품 | 단가 | 수량 | 기간 | 금액 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-07:v1:L05",
+            "text": "| 스마트 문서 AI (Doc AI) | 25,000원 | 120 | 12개월 | 36,000,000원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-07:v1:L06",
+            "text": "소계: 36,000,000원"
+          },
+          {
+            "span_id": "ART-E2E-QT-07:v1:L07",
+            "text": "할인율: 3%"
+          },
+          {
+            "span_id": "ART-E2E-QT-07:v1:L08",
+            "text": "합계: 34,920,000원 (부가가치세 별도)"
+          },
+          {
+            "span_id": "ART-E2E-QT-07:v1:L09",
+            "text": "견적 유효 기간: 발행일로부터 30일"
+          },
+          {
+            "span_id": "ART-E2E-QT-07:v1:L10",
+            "text": "계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함"
+          },
+          {
+            "span_id": "ART-E2E-QT-07:v1:L11",
+            "text": "비고: 신규 고객 프로모션 할인 3%가 반영된 금액입니다."
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-QT-07",
+        "version": "v2",
+        "author": "employee",
+        "saved_at": "2026-10-15T10:25:00+09:00",
+        "content": "[견적서] Q-2026-0484 / 고객사: 대성화학(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| 스마트 문서 AI (Doc AI) | 25,000원 | 120 | 12개월 | 36,000,000원 |\n소계: 36,000,000원\n할인율: 3%\n합계: 34,920,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함\n비고: 신규 고객 프로모션 할인 3%가 반영된 금액입니다.",
+        "spans": [
+          {
+            "span_id": "ART-E2E-QT-07:v2:L01",
+            "text": "[견적서] Q-2026-0484 / 고객사: 대성화학(가상)"
+          },
+          {
+            "span_id": "ART-E2E-QT-07:v2:L02",
+            "text": "적용 가격표: PRICE-2026.2"
+          },
+          {
+            "span_id": "ART-E2E-QT-07:v2:L03",
+            "text": "| 상품 | 단가 | 수량 | 기간 | 금액 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-07:v2:L05",
+            "text": "| 스마트 문서 AI (Doc AI) | 25,000원 | 120 | 12개월 | 36,000,000원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-07:v2:L06",
+            "text": "소계: 36,000,000원"
+          },
+          {
+            "span_id": "ART-E2E-QT-07:v2:L07",
+            "text": "할인율: 3%"
+          },
+          {
+            "span_id": "ART-E2E-QT-07:v2:L08",
+            "text": "합계: 34,920,000원 (부가가치세 별도)"
+          },
+          {
+            "span_id": "ART-E2E-QT-07:v2:L09",
+            "text": "견적 유효 기간: 발행일로부터 30일"
+          },
+          {
+            "span_id": "ART-E2E-QT-07:v2:L10",
+            "text": "계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함"
+          },
+          {
+            "span_id": "ART-E2E-QT-07:v2:L11",
+            "text": "비고: 신규 고객 프로모션 할인 3%가 반영된 금액입니다."
+          }
+        ]
+      }
+    ],
+    "reference_access_log": [
+      {
+        "user_id": "E-1034",
+        "doc_id": "PRICE-2026.2",
+        "version": "2026.2",
+        "accessed_at": "2026-10-15T10:12:00+09:00"
+      }
+    ],
+    "evidence_links": [],
+    "events": [
+      {
+        "event_id": "EV-QT-07-1",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-QT-07",
+        "artifact_version": "v2",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-QT-07:v2:v2",
+        "occurred_at": "2026-10-15T10:30:00+09:00"
+      },
+      {
+        "event_id": "EV-QT-07-C",
+        "event_type": "employee.confirmed",
+        "work_id": "W-E2E-QT-07",
+        "occurred_at": "2026-10-15T11:40:00+09:00"
+      }
+    ],
+    "human_actions": [
+      {
+        "action_id": "HA-QT-07-1",
+        "user_id": "E-1034",
+        "action": "confirm",
+        "at": "2026-10-15T11:40:00+09:00"
+      }
+    ],
+    "fault_injection": [],
+    "access_attempts": [
+      {
+        "attempt_id": "AC-QT-07-1",
+        "user_id": "E-1034",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-QT-07"
+      },
+      {
+        "attempt_id": "AC-QT-07-2",
+        "user_id": "E-1021",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-QT-07"
+      },
+      {
+        "attempt_id": "AC-QT-07-3",
+        "user_id": "X-9001",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-QT-07"
+      }
+    ],
+    "quote_data": {
+      "v2": {
+        "quote_no": "Q-2026-0484",
+        "price_table": "PRICE-2026.2",
+        "lines": [
+          {
+            "code": "P-100",
+            "quantity": 120,
+            "months": 12
+          }
+        ],
+        "discount_components": [
+          {
+            "type": "신규 고객 프로모션",
+            "pct": 3
+          }
+        ],
+        "free_items": [],
+        "exceptions": []
+      }
+    },
+    "approval_requests": []
+  }
+}

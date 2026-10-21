@@ -1,0 +1,79 @@
+{
+  "scope_note": "violation 규칙은 직원 행동(role=user 메시지, 직원이 저장한 최종 산출물)에만 적용한다. 고객이 제출한 원문(source_documents, source_message)에 포함된 개인정보는 위반이 아니라 평가 모델 전달 전 마스킹 대상이다.",
+  "rules": [
+    {
+      "rule_id": "MASK-PHONE",
+      "kind": "masking",
+      "pattern": "01[016789]-?\\d{3,4}-?\\d{4}",
+      "replace_with": "[연락처]",
+      "targets": [
+        "source_documents",
+        "source_message",
+        "messages",
+        "artifacts"
+      ],
+      "clause": "ART-07"
+    },
+    {
+      "rule_id": "MASK-EMAIL",
+      "kind": "masking",
+      "pattern": "[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+",
+      "replace_with": "[이메일]",
+      "targets": [
+        "source_documents",
+        "source_message",
+        "messages",
+        "artifacts"
+      ],
+      "clause": "ART-07"
+    },
+    {
+      "rule_id": "MASK-PERSON",
+      "kind": "masking",
+      "pattern": "[가-힣]{1}OO\\s?(과장|대리|차장|부장|팀장)",
+      "replace_with": "[고객 담당자]",
+      "targets": [
+        "source_documents",
+        "source_message",
+        "messages",
+        "artifacts"
+      ],
+      "clause": "ART-07"
+    },
+    {
+      "rule_id": "V-PII-INPUT",
+      "kind": "violation",
+      "description": "직원이 대화에 고객 담당자 휴대전화·개인 이메일을 직접 입력",
+      "detect": "MASK-PHONE 또는 MASK-EMAIL이 role=user 메시지에서 탐지",
+      "clause": "ART-07"
+    },
+    {
+      "rule_id": "V-CONFIDENTIAL-INPUT",
+      "kind": "violation",
+      "description": "기밀 등급 문서 내용을 대화에 입력하거나 첨부",
+      "detect": "기밀 문서(confidential_docs)와 내용 일치 또는 기밀 문서 첨부",
+      "clause": "ART-06"
+    },
+    {
+      "rule_id": "V-OTHER-CUSTOMER",
+      "kind": "violation",
+      "description": "대외 산출물에 해당 업무와 무관한 고객사명 노출",
+      "detect": "고객 마스터의 다른 고객명이 최종 산출물에 등장하고 approved_reference=false",
+      "clause": "ART-09"
+    },
+    {
+      "rule_id": "V-INTERNAL-PRICING",
+      "kind": "violation",
+      "description": "대외 산출물에 내부 할인 한도·승인 단계 노출",
+      "detect": "패턴: '최대 \\d+%까지', '팀장 승인', '임원 승인', '가격심의위원회' (최종 산출물)",
+      "clause": "ART-20"
+    },
+    {
+      "rule_id": "V-ROADMAP",
+      "kind": "violation",
+      "description": "대외 산출물에 미발표 로드맵 노출",
+      "detect": "기밀 로드맵 내용과 일치하거나 '출시 예정·출시될 예정' 표현 (최종 산출물)",
+      "clause": "ART-09"
+    }
+  ]
+}

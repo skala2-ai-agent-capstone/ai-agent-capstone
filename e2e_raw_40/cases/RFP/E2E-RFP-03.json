@@ -1,0 +1,326 @@
+{
+  "case_id": "E2E-RFP-03",
+  "work_type": "rfp_analysis",
+  "rfp_status": "첨부 + 정정 공고",
+  "summary": "가온건설 통합 현황 분석 RFP 요구사항 대응표 작성 (RFP v1.0 첨부, 이후 정정 공고 v1.1 추가 수신)",
+  "raw": {
+    "work_case": {
+      "work_id": "W-E2E-RFP-03",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "employee_id": "E-1071",
+      "work_type": "rfp_analysis",
+      "customer_id": "CUST-GA",
+      "status": "completed",
+      "created_at": "2026-10-07T09:05:00+09:00",
+      "completed_at": "2026-10-07T10:25:00+09:00",
+      "linked_work_ids": [],
+      "rfp_status": "첨부 + 정정 공고",
+      "registration": {
+        "rfp_document": "RFP-GA-2026-02 v1.0 (정정 공고 v1.1 수신)",
+        "submission_deadline": "2026-11-06",
+        "evaluation_method": "기술 70 : 가격 30",
+        "customer_purpose": "20개 현장 실적 통합 모니터링",
+        "required_requirements": "대시보드, 보고서 자동화, ERP 연동, 현장별 테넌트, 모바일 앱"
+      }
+    },
+    "source_documents": [
+      {
+        "attachment_id": "ATT-RFP-03A",
+        "doc_id": "RFP-GA-2026-02",
+        "doc_type": "rfp",
+        "version": "v1.0",
+        "grade": "대외비",
+        "uploaded_by": "E-1071",
+        "uploaded_at": "2026-10-07T09:07:00+09:00",
+        "content": "[가온건설(가상) 통합 현황 분석 플랫폼 RFP v1.0 — 3장 요구사항]\n3.1 (p.3) REQ-01 [필수] 경영진이 현황을 한눈에 볼 수 있는 대시보드를 제공해야 한다.\n3.2 (p.3) REQ-02 [필수] 현장 월간 보고서를 자동으로 생성해야 한다.\n3.3 (p.4) REQ-03 [필수] 사내 ERP 데이터를 매일 연동해야 한다.\n3.4 (p.4) REQ-04 [필수] 20개 현장을 각각 분리된 테넌트로 운영할 수 있어야 한다.\n3.5 (p.5) REQ-05 [선택] 월 가용성 99.9% 이상의 SLA를 제공하면 가점을 부여한다.\n3.6 (p.5) REQ-06 [필수] 현장 관리자용 모바일 앱을 제공해야 한다.\n제출 기한: 2026-11-06 / 평가 방식: 기술 70 : 가격 30\n문의: 가온건설 경영혁신팀 정OO 대리 (010-0000-3310, jung.oo@gaon-const.example)"
+      },
+      {
+        "attachment_id": "ATT-RFP-03B",
+        "doc_id": "RFP-GA-2026-02",
+        "doc_type": "rfp_correction",
+        "version": "v1.1",
+        "grade": "대외비",
+        "uploaded_by": "E-1071",
+        "uploaded_at": "2026-10-07T09:49:00+09:00",
+        "content": "[가온건설(가상) RFP 정정 공고 v1.1]\n정정 1: 3.5 (p.5) REQ-05의 SLA 기준을 '월 가용성 99.9%'에서 '월 가용성 99.95%'로 상향하고 구분을 [필수]로 변경한다.\n정정 2: 3.7 (p.6) REQ-07 [필수] 정보보호 관리체계(ISMS-P) 인증 보유 증빙을 제출해야 한다. (신규)\n정정 사유는 별도 공지하지 않는다."
+      }
+    ],
+    "attached_references": [
+      {
+        "doc_id": "PROD-INSIGHT",
+        "version": "v1.8"
+      }
+    ],
+    "messages": [
+      {
+        "message_id": "W-E2E-RFP-03-M01",
+        "seq": 1,
+        "role": "user",
+        "content": "가온건설 RFP 요구사항을 모두 뽑아서 대응표로 만들어줘.\n- 제품 설명서는 Insight Hub v1.8 기준이고, 근거는 조항 번호까지 적어줘.\n- 구분은 원문 표기대로(필수/선택), 대응 수준은 충족·부분 충족·대안 제시·대응 불가 중 하나.\n- 설명서에 없는 내용은 충족이라고 하지 말고 사유에 '확인 필요'라고 적어줘.\n\n[가온건설(가상) 통합 현황 분석 플랫폼 RFP v1.0 — 3장 요구사항]\n3.1 (p.3) REQ-01 [필수] 경영진이 현황을 한눈에 볼 수 있는 대시보드를 제공해야 한다.\n3.2 (p.3) REQ-02 [필수] 현장 월간 보고서를 자동으로 생성해야 한다.\n3.3 (p.4) REQ-03 [필수] 사내 ERP 데이터를 매일 연동해야 한다.\n3.4 (p.4) REQ-04 [필수] 20개 현장을 각각 분리된 테넌트로 운영할 수 있어야 한다.\n3.5 (p.5) REQ-05 [선택] 월 가용성 99.9% 이상의 SLA를 제공하면 가점을 부여한다.\n3.6 (p.5) REQ-06 [필수] 현장 관리자용 모바일 앱을 제공해야 한다.\n제출 기한: 2026-11-06 / 평가 방식: 기술 70 : 가격 30",
+        "created_at": "2026-10-07T09:10:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-03-M02",
+        "seq": 2,
+        "role": "assistant",
+        "content": "RFP 요구사항을 정리했습니다.\n\n| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 3.1 (p.3) | 경영진용 대시보드 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |\n| REQ-02 | 3.2 (p.3) | 월간 보고서 자동 생성 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |\n| REQ-03 | 3.3 (p.4) | ERP 일 단위 연동 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 ERP 연동 방식 명시 없음, 담당 부서 확인 후 대안 제시 |\n| REQ-04 | 3.4 (p.4) | 20개 현장 테넌트 분리 운영 | 필수 | 충족 | PROD-INSIGHT v1.8 §1.1 | 테넌트 단위 운영·과금 |\n| REQ-05 | 3.5 (p.5) | 월 가용성 99.9% SLA | 선택 | 충족 | PROD-INSIGHT v1.8 §8.1 | - |\n| REQ-06 | 3.6 (p.5) | 모바일 앱 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 모바일 앱 제공 내용 없음, 확인 후 대안 제시 |\n",
+        "created_at": "2026-10-07T09:14:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-03-M03",
+        "seq": 3,
+        "role": "user",
+        "content": "방금 고객이 정정 공고(v1.1)를 보냈어. REQ-05 기준이 바뀌었다는데 반영해서 다시 정리해줘.\n\n[가온건설(가상) RFP 정정 공고 v1.1]\n정정 1: 3.5 (p.5) REQ-05의 SLA 기준을 '월 가용성 99.9%'에서 '월 가용성 99.95%'로 상향하고 구분을 [필수]로 변경한다.\n정정 2: 3.7 (p.6) REQ-07 [필수] 정보보호 관리체계(ISMS-P) 인증 보유 증빙을 제출해야 한다. (신규)\n정정 사유는 별도 공지하지 않는다.",
+        "created_at": "2026-10-07T09:50:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-03-M04",
+        "seq": 4,
+        "role": "assistant",
+        "content": "정정 공고의 REQ-05 변경을 반영했습니다.\n\n| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 3.1 (p.3) | 경영진용 대시보드 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |\n| REQ-02 | 3.2 (p.3) | 월간 보고서 자동 생성 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |\n| REQ-03 | 3.3 (p.4) | ERP 일 단위 연동 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 ERP 연동 방식 명시 없음, 담당 부서 확인 후 대안 제시 |\n| REQ-04 | 3.4 (p.4) | 20개 현장 테넌트 분리 운영 | 필수 | 충족 | PROD-INSIGHT v1.8 §1.1 | 테넌트 단위 운영·과금 |\n| REQ-05 | 3.5 (p.5) | 월 가용성 99.95% SLA | 필수 | 대응 불가 | PROD-INSIGHT v1.8 §8.1 | 표준 SLA는 월 가용성 99.9%로 정정 기준(99.95%) 미달 |\n| REQ-06 | 3.6 (p.5) | 모바일 앱 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 모바일 앱 제공 내용 없음, 확인 후 대안 제시 |\n",
+        "created_at": "2026-10-07T09:54:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-03-M05",
+        "seq": 5,
+        "role": "user",
+        "content": "정정 2번에 신규 요구사항 REQ-07도 있잖아. 그것도 넣어줘.",
+        "created_at": "2026-10-07T10:08:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-03-M06",
+        "seq": 6,
+        "role": "assistant",
+        "content": "REQ-07을 추가했습니다.\n\n| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 3.1 (p.3) | 경영진용 대시보드 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |\n| REQ-02 | 3.2 (p.3) | 월간 보고서 자동 생성 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |\n| REQ-03 | 3.3 (p.4) | ERP 일 단위 연동 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 ERP 연동 방식 명시 없음, 담당 부서 확인 후 대안 제시 |\n| REQ-04 | 3.4 (p.4) | 20개 현장 테넌트 분리 운영 | 필수 | 충족 | PROD-INSIGHT v1.8 §1.1 | 테넌트 단위 운영·과금 |\n| REQ-05 | 3.5 (p.5) | 월 가용성 99.95% SLA | 필수 | 대응 불가 | PROD-INSIGHT v1.8 §8.1 | 표준 SLA는 월 가용성 99.9%로 정정 기준(99.95%) 미달 |\n| REQ-06 | 3.6 (p.5) | 모바일 앱 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 모바일 앱 제공 내용 없음, 확인 후 대안 제시 |\n| REQ-07 | 3.7 (p.6) | ISMS-P 인증 보유 증빙 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 인증 현황 없음, 확인 후 대안 제시 |\n",
+        "created_at": "2026-10-07T10:11:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-03-M07",
+        "seq": 7,
+        "role": "user",
+        "content": "원문 정정 공고랑 대조해보니 맞네. 이걸로 저장할게.",
+        "created_at": "2026-10-07T10:20:00+09:00"
+      }
+    ],
+    "artifact_versions": [
+      {
+        "artifact_id": "ART-E2E-RFP-03",
+        "version": "v1",
+        "author": "ai_draft",
+        "saved_at": "2026-10-07T09:14:00+09:00",
+        "content": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 3.1 (p.3) | 경영진용 대시보드 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |\n| REQ-02 | 3.2 (p.3) | 월간 보고서 자동 생성 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |\n| REQ-03 | 3.3 (p.4) | ERP 일 단위 연동 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 ERP 연동 방식 명시 없음, 담당 부서 확인 후 대안 제시 |\n| REQ-04 | 3.4 (p.4) | 20개 현장 테넌트 분리 운영 | 필수 | 충족 | PROD-INSIGHT v1.8 §1.1 | 테넌트 단위 운영·과금 |\n| REQ-05 | 3.5 (p.5) | 월 가용성 99.9% SLA | 선택 | 충족 | PROD-INSIGHT v1.8 §8.1 | - |\n| REQ-06 | 3.6 (p.5) | 모바일 앱 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 모바일 앱 제공 내용 없음, 확인 후 대안 제시 |\n",
+        "spans": [
+          {
+            "span_id": "ART-E2E-RFP-03:v1:HEADER",
+            "text": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-03:v1:REQ-01",
+            "text": "| REQ-01 | 3.1 (p.3) | 경영진용 대시보드 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-03:v1:REQ-02",
+            "text": "| REQ-02 | 3.2 (p.3) | 월간 보고서 자동 생성 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-03:v1:REQ-03",
+            "text": "| REQ-03 | 3.3 (p.4) | ERP 일 단위 연동 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 ERP 연동 방식 명시 없음, 담당 부서 확인 후 대안 제시 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-03:v1:REQ-04",
+            "text": "| REQ-04 | 3.4 (p.4) | 20개 현장 테넌트 분리 운영 | 필수 | 충족 | PROD-INSIGHT v1.8 §1.1 | 테넌트 단위 운영·과금 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-03:v1:REQ-05",
+            "text": "| REQ-05 | 3.5 (p.5) | 월 가용성 99.9% SLA | 선택 | 충족 | PROD-INSIGHT v1.8 §8.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-03:v1:REQ-06",
+            "text": "| REQ-06 | 3.6 (p.5) | 모바일 앱 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 모바일 앱 제공 내용 없음, 확인 후 대안 제시 |"
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-RFP-03",
+        "version": "v2",
+        "author": "ai_draft",
+        "saved_at": "2026-10-07T09:54:00+09:00",
+        "content": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 3.1 (p.3) | 경영진용 대시보드 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |\n| REQ-02 | 3.2 (p.3) | 월간 보고서 자동 생성 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |\n| REQ-03 | 3.3 (p.4) | ERP 일 단위 연동 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 ERP 연동 방식 명시 없음, 담당 부서 확인 후 대안 제시 |\n| REQ-04 | 3.4 (p.4) | 20개 현장 테넌트 분리 운영 | 필수 | 충족 | PROD-INSIGHT v1.8 §1.1 | 테넌트 단위 운영·과금 |\n| REQ-05 | 3.5 (p.5) | 월 가용성 99.95% SLA | 필수 | 대응 불가 | PROD-INSIGHT v1.8 §8.1 | 표준 SLA는 월 가용성 99.9%로 정정 기준(99.95%) 미달 |\n| REQ-06 | 3.6 (p.5) | 모바일 앱 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 모바일 앱 제공 내용 없음, 확인 후 대안 제시 |\n",
+        "spans": [
+          {
+            "span_id": "ART-E2E-RFP-03:v2:HEADER",
+            "text": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-03:v2:REQ-01",
+            "text": "| REQ-01 | 3.1 (p.3) | 경영진용 대시보드 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-03:v2:REQ-02",
+            "text": "| REQ-02 | 3.2 (p.3) | 월간 보고서 자동 생성 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-03:v2:REQ-03",
+            "text": "| REQ-03 | 3.3 (p.4) | ERP 일 단위 연동 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 ERP 연동 방식 명시 없음, 담당 부서 확인 후 대안 제시 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-03:v2:REQ-04",
+            "text": "| REQ-04 | 3.4 (p.4) | 20개 현장 테넌트 분리 운영 | 필수 | 충족 | PROD-INSIGHT v1.8 §1.1 | 테넌트 단위 운영·과금 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-03:v2:REQ-05",
+            "text": "| REQ-05 | 3.5 (p.5) | 월 가용성 99.95% SLA | 필수 | 대응 불가 | PROD-INSIGHT v1.8 §8.1 | 표준 SLA는 월 가용성 99.9%로 정정 기준(99.95%) 미달 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-03:v2:REQ-06",
+            "text": "| REQ-06 | 3.6 (p.5) | 모바일 앱 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 모바일 앱 제공 내용 없음, 확인 후 대안 제시 |"
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-RFP-03",
+        "version": "v3",
+        "author": "employee",
+        "saved_at": "2026-10-07T10:22:00+09:00",
+        "content": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 3.1 (p.3) | 경영진용 대시보드 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |\n| REQ-02 | 3.2 (p.3) | 월간 보고서 자동 생성 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |\n| REQ-03 | 3.3 (p.4) | ERP 일 단위 연동 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 ERP 연동 방식 명시 없음, 담당 부서 확인 후 대안 제시 |\n| REQ-04 | 3.4 (p.4) | 20개 현장 테넌트 분리 운영 | 필수 | 충족 | PROD-INSIGHT v1.8 §1.1 | 테넌트 단위 운영·과금 |\n| REQ-05 | 3.5 (p.5) | 월 가용성 99.95% SLA | 필수 | 대응 불가 | PROD-INSIGHT v1.8 §8.1 | 표준 SLA는 월 가용성 99.9%로 정정 기준(99.95%) 미달 |\n| REQ-06 | 3.6 (p.5) | 모바일 앱 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 모바일 앱 제공 내용 없음, 확인 후 대안 제시 |\n| REQ-07 | 3.7 (p.6) | ISMS-P 인증 보유 증빙 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 인증 현황 없음, 확인 후 대안 제시 |\n",
+        "spans": [
+          {
+            "span_id": "ART-E2E-RFP-03:v3:HEADER",
+            "text": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-03:v3:REQ-01",
+            "text": "| REQ-01 | 3.1 (p.3) | 경영진용 대시보드 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-03:v3:REQ-02",
+            "text": "| REQ-02 | 3.2 (p.3) | 월간 보고서 자동 생성 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-03:v3:REQ-03",
+            "text": "| REQ-03 | 3.3 (p.4) | ERP 일 단위 연동 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 ERP 연동 방식 명시 없음, 담당 부서 확인 후 대안 제시 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-03:v3:REQ-04",
+            "text": "| REQ-04 | 3.4 (p.4) | 20개 현장 테넌트 분리 운영 | 필수 | 충족 | PROD-INSIGHT v1.8 §1.1 | 테넌트 단위 운영·과금 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-03:v3:REQ-05",
+            "text": "| REQ-05 | 3.5 (p.5) | 월 가용성 99.95% SLA | 필수 | 대응 불가 | PROD-INSIGHT v1.8 §8.1 | 표준 SLA는 월 가용성 99.9%로 정정 기준(99.95%) 미달 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-03:v3:REQ-06",
+            "text": "| REQ-06 | 3.6 (p.5) | 모바일 앱 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 모바일 앱 제공 내용 없음, 확인 후 대안 제시 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-03:v3:REQ-07",
+            "text": "| REQ-07 | 3.7 (p.6) | ISMS-P 인증 보유 증빙 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 인증 현황 없음, 확인 후 대안 제시 |"
+          }
+        ]
+      }
+    ],
+    "reference_access_log": [
+      {
+        "user_id": "E-1071",
+        "doc_id": "RFP-GA-2026-02",
+        "version": "v1.0",
+        "accessed_at": "2026-10-07T09:09:00+09:00"
+      },
+      {
+        "user_id": "E-1071",
+        "doc_id": "RFP-GA-2026-02",
+        "version": "v1.1",
+        "accessed_at": "2026-10-07T09:53:00+09:00"
+      },
+      {
+        "user_id": "E-1071",
+        "doc_id": "RFP-GA-2026-02",
+        "version": "v1.1",
+        "accessed_at": "2026-10-07T10:15:00+09:00"
+      },
+      {
+        "user_id": "E-1071",
+        "doc_id": "PROD-INSIGHT",
+        "version": "v1.8",
+        "accessed_at": "2026-10-07T10:16:00+09:00"
+      }
+    ],
+    "evidence_links": [
+      {
+        "link_id": "EL-RFP-03-1",
+        "span_id": "ART-E2E-RFP-03:v3:REQ-05",
+        "doc_id": "RFP-GA-2026-02",
+        "version": "v1.1",
+        "location": "정정 1",
+        "created_by": "E-1071",
+        "created_at": "2026-10-07T10:18:00+09:00"
+      },
+      {
+        "link_id": "EL-RFP-03-2",
+        "span_id": "ART-E2E-RFP-03:v3:REQ-07",
+        "doc_id": "RFP-GA-2026-02",
+        "version": "v1.1",
+        "location": "정정 2",
+        "created_by": "E-1071",
+        "created_at": "2026-10-07T10:19:00+09:00"
+      }
+    ],
+    "events": [
+      {
+        "event_id": "EV-RFP-03-1",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-RFP-03",
+        "artifact_version": "v2",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-RFP-03:v2:v2",
+        "occurred_at": "2026-10-07T09:58:00+09:00",
+        "note": "정정 반영 직후 한 번 완료 처리했다가 재오픈"
+      },
+      {
+        "event_id": "EV-RFP-03-2",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-RFP-03",
+        "artifact_version": "v3",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-RFP-03:v3:v2",
+        "occurred_at": "2026-10-07T10:25:00+09:00"
+      },
+      {
+        "event_id": "EV-RFP-03-C",
+        "event_type": "employee.confirmed",
+        "work_id": "W-E2E-RFP-03",
+        "occurred_at": "2026-10-07T11:35:00+09:00"
+      }
+    ],
+    "human_actions": [
+      {
+        "action_id": "HA-RFP-03-1",
+        "user_id": "E-1071",
+        "action": "confirm",
+        "at": "2026-10-07T11:35:00+09:00"
+      }
+    ],
+    "fault_injection": [],
+    "access_attempts": [
+      {
+        "attempt_id": "AC-RFP-03-1",
+        "user_id": "E-1071",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-03"
+      },
+      {
+        "attempt_id": "AC-RFP-03-2",
+        "user_id": "E-1034",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-03"
+      },
+      {
+        "attempt_id": "AC-RFP-03-3",
+        "user_id": "X-9001",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-03"
+      }
+    ]
+  }
+}

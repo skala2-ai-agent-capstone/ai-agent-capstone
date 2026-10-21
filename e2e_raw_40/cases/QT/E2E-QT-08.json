@@ -1,0 +1,301 @@
+{
+  "case_id": "E2E-QT-08",
+  "work_type": "quote",
+  "rfp_status": "없음",
+  "summary": "오름에너지 Contact AI 150석 36개월 견적서 작성 (RFP 없음, 기술지원 3개월 무상과 분기 선불 요청, AI 합계 오류 교정, 승인 요청 제출)",
+  "raw": {
+    "work_case": {
+      "work_id": "W-E2E-QT-08",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "employee_id": "E-1082",
+      "work_type": "quote",
+      "customer_id": "CUST-OR",
+      "status": "completed",
+      "created_at": "2026-10-16T09:00:00+09:00",
+      "completed_at": "2026-10-16T10:20:00+09:00",
+      "linked_work_ids": [
+        "W-E2E-PR-08"
+      ],
+      "rfp_status": "없음",
+      "registration": {
+        "product": "Contact AI",
+        "quantity": "상담석 150석",
+        "contract_months": 36,
+        "request_conditions": "전용 기술지원 3개월 무상, 결제 분기 선불",
+        "budget": ""
+      }
+    },
+    "source_documents": [],
+    "attached_references": [
+      {
+        "doc_id": "PRICE-2026.2",
+        "version": "2026.2"
+      },
+      {
+        "doc_id": "SALES-AI-GL-001",
+        "version": "v1.0"
+      }
+    ],
+    "messages": [
+      {
+        "message_id": "W-E2E-QT-08-M01",
+        "seq": 1,
+        "role": "user",
+        "content": "오름에너지 견적서 작성해줘.\n- 가격표 PRICE-2026.2, Contact AI 150석 36개월, 다년 3%p.\n- 고객 요청: 전용 기술지원 3개월 무상 제공, 결제는 분기 선불.\n- 기재: 가격표 버전, 단가·수량·기간·금액, 무상 항목, 소계, 할인율, 합계(부가세 별도), 유효 기간 30일, 계약 조건.",
+        "created_at": "2026-10-16T09:05:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-08-M02",
+        "seq": 2,
+        "role": "assistant",
+        "content": "견적서 초안입니다.\n\n[견적서] Q-2026-0491 / 고객사: 오름에너지(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| AI 컨택센터 (Contact AI) | 90,000원 | 150 | 36개월 | 486,000,000원 |\n| 전용 기술지원 3개월 | 무상 | 1 | 3개월 | 0원 |\n소계: 486,000,000원\n할인율: 3%\n합계: 417,420,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 분기 선불 청구(고객 요청), 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함",
+        "created_at": "2026-10-16T09:09:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-08-M03",
+        "seq": 3,
+        "role": "user",
+        "content": "합계 검산해봤는데 소계 486,000,000원에 3% 빼면 471,420,000원이어야 해. 417,420,000원은 숫자 순서가 바뀐 것 같은데 고쳐줘.",
+        "created_at": "2026-10-16T09:20:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-08-M04",
+        "seq": 4,
+        "role": "assistant",
+        "content": "맞습니다. 합계를 471,420,000원으로 정정했습니다.\n\n[견적서] Q-2026-0491 / 고객사: 오름에너지(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| AI 컨택센터 (Contact AI) | 90,000원 | 150 | 36개월 | 486,000,000원 |\n| 전용 기술지원 3개월 | 무상 | 1 | 3개월 | 0원 |\n소계: 486,000,000원\n할인율: 3%\n합계: 471,420,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 분기 선불 청구(고객 요청), 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함",
+        "created_at": "2026-10-16T09:23:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-08-M05",
+        "seq": 5,
+        "role": "user",
+        "content": "별표 2 확인해보니 무상 제공은 담당 임원 승인, 결제 조건 변경은 팀장 승인이야. 둘 다 승인 요청 올렸어. 견적서 저장할게.",
+        "created_at": "2026-10-16T09:40:00+09:00"
+      }
+    ],
+    "artifact_versions": [
+      {
+        "artifact_id": "ART-E2E-QT-08",
+        "version": "v1",
+        "author": "ai_draft",
+        "saved_at": "2026-10-16T09:09:00+09:00",
+        "content": "[견적서] Q-2026-0491 / 고객사: 오름에너지(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| AI 컨택센터 (Contact AI) | 90,000원 | 150 | 36개월 | 486,000,000원 |\n| 전용 기술지원 3개월 | 무상 | 1 | 3개월 | 0원 |\n소계: 486,000,000원\n할인율: 3%\n합계: 417,420,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 분기 선불 청구(고객 요청), 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함",
+        "spans": [
+          {
+            "span_id": "ART-E2E-QT-08:v1:L01",
+            "text": "[견적서] Q-2026-0491 / 고객사: 오름에너지(가상)"
+          },
+          {
+            "span_id": "ART-E2E-QT-08:v1:L02",
+            "text": "적용 가격표: PRICE-2026.2"
+          },
+          {
+            "span_id": "ART-E2E-QT-08:v1:L03",
+            "text": "| 상품 | 단가 | 수량 | 기간 | 금액 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-08:v1:L05",
+            "text": "| AI 컨택센터 (Contact AI) | 90,000원 | 150 | 36개월 | 486,000,000원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-08:v1:L06",
+            "text": "| 전용 기술지원 3개월 | 무상 | 1 | 3개월 | 0원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-08:v1:L07",
+            "text": "소계: 486,000,000원"
+          },
+          {
+            "span_id": "ART-E2E-QT-08:v1:L08",
+            "text": "할인율: 3%"
+          },
+          {
+            "span_id": "ART-E2E-QT-08:v1:L09",
+            "text": "합계: 417,420,000원 (부가가치세 별도)"
+          },
+          {
+            "span_id": "ART-E2E-QT-08:v1:L10",
+            "text": "견적 유효 기간: 발행일로부터 30일"
+          },
+          {
+            "span_id": "ART-E2E-QT-08:v1:L11",
+            "text": "계약 조건: 분기 선불 청구(고객 요청), 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함"
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-QT-08",
+        "version": "v2",
+        "author": "employee",
+        "saved_at": "2026-10-16T09:45:00+09:00",
+        "content": "[견적서] Q-2026-0491 / 고객사: 오름에너지(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| AI 컨택센터 (Contact AI) | 90,000원 | 150 | 36개월 | 486,000,000원 |\n| 전용 기술지원 3개월 | 무상 | 1 | 3개월 | 0원 |\n소계: 486,000,000원\n할인율: 3%\n합계: 471,420,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 분기 선불 청구(고객 요청), 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함",
+        "spans": [
+          {
+            "span_id": "ART-E2E-QT-08:v2:L01",
+            "text": "[견적서] Q-2026-0491 / 고객사: 오름에너지(가상)"
+          },
+          {
+            "span_id": "ART-E2E-QT-08:v2:L02",
+            "text": "적용 가격표: PRICE-2026.2"
+          },
+          {
+            "span_id": "ART-E2E-QT-08:v2:L03",
+            "text": "| 상품 | 단가 | 수량 | 기간 | 금액 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-08:v2:L05",
+            "text": "| AI 컨택센터 (Contact AI) | 90,000원 | 150 | 36개월 | 486,000,000원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-08:v2:L06",
+            "text": "| 전용 기술지원 3개월 | 무상 | 1 | 3개월 | 0원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-08:v2:L07",
+            "text": "소계: 486,000,000원"
+          },
+          {
+            "span_id": "ART-E2E-QT-08:v2:L08",
+            "text": "할인율: 3%"
+          },
+          {
+            "span_id": "ART-E2E-QT-08:v2:L09",
+            "text": "합계: 471,420,000원 (부가가치세 별도)"
+          },
+          {
+            "span_id": "ART-E2E-QT-08:v2:L10",
+            "text": "견적 유효 기간: 발행일로부터 30일"
+          },
+          {
+            "span_id": "ART-E2E-QT-08:v2:L11",
+            "text": "계약 조건: 분기 선불 청구(고객 요청), 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함"
+          }
+        ]
+      }
+    ],
+    "reference_access_log": [
+      {
+        "user_id": "E-1082",
+        "doc_id": "PRICE-2026.2",
+        "version": "2026.2",
+        "accessed_at": "2026-10-16T09:15:00+09:00"
+      },
+      {
+        "user_id": "E-1082",
+        "doc_id": "SALES-AI-GL-001",
+        "version": "v1.0",
+        "accessed_at": "2026-10-16T09:38:00+09:00"
+      }
+    ],
+    "evidence_links": [
+      {
+        "link_id": "EL-QT-08-1",
+        "span_id": "ART-E2E-QT-08:v2:L09",
+        "doc_id": "PRICE-2026.2",
+        "version": "2026.2",
+        "location": "P-200",
+        "created_by": "E-1082",
+        "created_at": "2026-10-16T09:30:00+09:00"
+      }
+    ],
+    "events": [
+      {
+        "event_id": "EV-QT-08-1",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-QT-08",
+        "artifact_version": "v2",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-QT-08:v2:v2",
+        "occurred_at": "2026-10-16T10:20:00+09:00"
+      },
+      {
+        "event_id": "EV-QT-08-C",
+        "event_type": "employee.confirmed",
+        "work_id": "W-E2E-QT-08",
+        "occurred_at": "2026-10-16T11:30:00+09:00"
+      }
+    ],
+    "human_actions": [
+      {
+        "action_id": "HA-QT-08-1",
+        "user_id": "E-1082",
+        "action": "confirm",
+        "at": "2026-10-16T11:30:00+09:00"
+      }
+    ],
+    "fault_injection": [],
+    "access_attempts": [
+      {
+        "attempt_id": "AC-QT-08-1",
+        "user_id": "E-1082",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-QT-08"
+      },
+      {
+        "attempt_id": "AC-QT-08-2",
+        "user_id": "E-1034",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-QT-08"
+      },
+      {
+        "attempt_id": "AC-QT-08-3",
+        "user_id": "X-9001",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-QT-08"
+      }
+    ],
+    "quote_data": {
+      "v2": {
+        "quote_no": "Q-2026-0491",
+        "price_table": "PRICE-2026.2",
+        "lines": [
+          {
+            "code": "P-200",
+            "quantity": 150,
+            "months": 36
+          }
+        ],
+        "discount_components": [
+          {
+            "type": "다년",
+            "pct": 3
+          }
+        ],
+        "free_items": [
+          {
+            "code": "S-10",
+            "quantity": 1
+          }
+        ],
+        "exceptions": [
+          {
+            "type": "결제 조건 변경",
+            "value": "분기 선불"
+          }
+        ]
+      }
+    },
+    "approval_requests": [
+      {
+        "approval_id": "APR-QT-08-1",
+        "artifact_version": "v2",
+        "submitted_at": "2026-10-16T09:42:00+09:00",
+        "items": [
+          {
+            "type": "무상 제공",
+            "value": "전용 기술지원 3개월",
+            "approver": "담당 임원",
+            "reason": "고객 요청"
+          },
+          {
+            "type": "결제 조건 변경",
+            "value": "분기 선불",
+            "approver": "소속 팀장",
+            "reason": "고객 요청"
+          }
+        ]
+      }
+    ]
+  }
+}
