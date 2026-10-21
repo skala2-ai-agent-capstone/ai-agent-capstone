@@ -1,8 +1,9 @@
 from typing import Self
 
-from pydantic import Field, model_validator
+from pydantic import ConfigDict, Field, JsonValue, model_validator
 
-from .workflow_models import EvaluationOutput, ItemEvaluation
+from .models import NonEmpty, StrictModel
+from .workflow_models import EvaluationOutput, ItemEvaluation, Reference
 
 
 class AgentItemEvaluation(ItemEvaluation):
@@ -35,3 +36,16 @@ class AgentEvaluationOutput(EvaluationOutput):
             raise ValueError("평가 항목 ID가 중복되었습니다.")
 
         return self
+
+
+class EvaluationReceipt(StrictModel):
+    """평가 코드가 검증 후 생성하는 결과·근거 묶음. LLM 출력 스키마와 분리한다."""
+
+    model_config = ConfigDict(str_strip_whitespace=False)
+
+    report: EvaluationOutput
+    approved_business_sha256: NonEmpty
+    snapshot: dict[str, JsonValue]
+    materials_sha256: NonEmpty
+    additional_sources: dict[str, str]
+    additional_references: list[Reference]

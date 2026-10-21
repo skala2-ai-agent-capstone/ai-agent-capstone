@@ -189,7 +189,7 @@ class EvaluationRun(StrictModel):
 
 
 class EvaluationEvidence(StrictModel):
-    """같은 실행에서 조회한 B 전용 추가 근거. A의 공통 입력과 별도로 전달한다."""
+    """같은 실행에서 조회한 평가용 추가 근거. 분류·승인 모듈의 공통 입력과 별도로 전달한다."""
 
     context: EvaluationRun
     work_case: WorkCaseEvidence
@@ -264,10 +264,10 @@ class EvaluationEvidence(StrictModel):
         registration = self.work_case.registration
         if registration is not None:
             content = registration.content
-            sources[registration.evidence_id] = (
-                content
-                if isinstance(content, str)
-                else json.dumps(content, ensure_ascii=False, sort_keys=True)
+            sources[registration.evidence_id] = json.dumps(
+                content,
+                ensure_ascii=False,
+                sort_keys=True,
             )
         message = self.work_case.source_message
         if message is not None:
@@ -276,5 +276,9 @@ class EvaluationEvidence(StrictModel):
         for artifact in self.artifacts:
             sources.update({span.span_id: span.text for span in artifact.spans})
         if self.policy_check is not None:
-            sources[self.policy_check.evidence_id] = self.policy_check.model_dump_json()
+            sources[self.policy_check.evidence_id] = json.dumps(
+                self.policy_check.model_dump(mode="json", exclude_none=True),
+                ensure_ascii=False,
+                sort_keys=True,
+            )
         return sources

@@ -346,7 +346,7 @@ async def test_streamable_http_lifecycle_auth_and_tool_result(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_injected_b_evaluator_only_runs_after_approval():
+async def test_injected_evaluator_only_runs_after_approval():
     class StubEvaluator:
         calls = 0
 
@@ -368,7 +368,7 @@ async def test_injected_b_evaluator_only_runs_after_approval():
 
     gateway, evaluator = ReplayGateway(), StubEvaluator()
     graph = build_agent_graph(gateway, StubClassifier(), StubBuilder(), evaluator=evaluator)
-    config = {"configurable": {"thread_id": "b-evaluation"}}
+    config = {"configurable": {"thread_id": "approved-evaluation"}}
     result = await graph.ainvoke({"work_id": gateway.wid}, config)
     assert evaluator.calls == 0
     result = await graph.ainvoke(Command(resume=approve(result)), config)

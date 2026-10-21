@@ -12,6 +12,8 @@ from .workflow_models import CriteriaDraft, Reference, content_hash
 
 
 class EvaluationMaterials(StrictModel):
+    model_config = ConfigDict(str_strip_whitespace=False)
+
     context: EvaluationRun
     evidence_sha256: NonEmpty
     work_sources: dict[str, str]
@@ -262,7 +264,7 @@ async def collect_evaluation_materials(
         if (data.get("doc_id"), data.get("version")) != (ref["doc_id"], ref["version"]):
             raise ValueError("허용 목록과 다른 참조 자료가 반환되었습니다.")
         reference_details.append({k: data.get(k) for k in ("doc_id", "version", "status", "grade")})
-        if data.get("status") != "현행":
+        if data.get("status") != "현행" or data.get("grade") in {"대외비", "기밀"}:
             missing.append(f"non_current_reference:{ref['doc_id']}@{ref['version']}")
             continue
         for raw in data["chunks"]:

@@ -1,4 +1,4 @@
-"""MCP 응답 검증과 B 입력 변환. 연결·인증은 호출자가 제공한다."""
+"""MCP 응답 검증과 평가 입력 변환. 연결·인증은 호출자가 제공한다."""
 
 import json
 from typing import Literal, Protocol
@@ -189,7 +189,7 @@ def parse_work_case_response(
             else None
         ),
     )
-    # work_type·정답·이벤트·회사 정보 등은 B의 근거 데이터로 복사하지 않는다.
+    # work_type·정답·이벤트·회사 정보 등은 평가 모듈의 근거 데이터로 복사하지 않는다.
     return result, success.meta
 
 
@@ -253,7 +253,7 @@ async def collect_evaluation_evidence(
     context: EvaluationRun,
     call_tool: BusinessToolCaller,
 ) -> EvaluationEvidence:
-    """A의 인증된 도구 호출 함수를 사용한다. 저장 도구와 LLM은 호출하지 않는다."""
+    """분류·승인 모듈의 인증된 도구 호출 함수를 사용한다. 저장 도구와 LLM은 호출하지 않는다."""
     context = EvaluationRun.model_validate(context.model_dump(mode="json"))
     work_response = decode_mcp_result(
         await call_tool(

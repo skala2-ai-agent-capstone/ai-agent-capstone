@@ -1,11 +1,21 @@
 """LLM 평가 결과를 승인된 기준과 실제 조회 원문에 대조한다."""
 
+import re
+
+from .evaluation_contract import (
+    ITEM_KEYS,
+    MISSING_WORK_MESSAGES,
+    eligible_work_sources,
+    score_issue,
+)
 from .evaluation_materials import EvaluationMaterials
 from .evaluation_models import AgentEvaluationOutput
 from .evidence_models import EvaluationEvidence
 from .workflow_models import EvaluationInput, content_hash
 
-ITEM_KEYS = ("problem_definition", "instruction_quality", "verification", "security", "quality")
+VISIBLE_SECRET = re.compile(
+    r"01[016789]-?\d{3,4}-?\d{4}|[\w.+-]+@[\w-]+(?:\.[\w-]+)+|\bsk-[A-Za-z0-9_-]{20,}\b"
+)
 
 
 class EvaluationError(ValueError):
@@ -88,6 +98,16 @@ def validate_materials(request, evidence, materials) -> None:
             raise EvaluationError("허용된 문서 버전 목록에 없는 참조 근거입니다.")
 
 
+def reference_catalog(request, materials):
+    references = {}
+    for ref in request.approved_criteria.references + materials.references:
+        key = (ref.document_id, ref.version, ref.section_id)
+        if key in references and references[key].content != ref.content:
+            raise EvaluationError("같은 문서 버전·구간의 기준 원문이 서로 다릅니다.")
+        references[key] = ref
+    return references
+
+
 def validate_evaluation_result(
     request: EvaluationInput,
     result: AgentEvaluationOutput,
@@ -110,55 +130,56 @@ def validate_evaluation_result(
     if {item.criterion_id for item in result.items} != criteria.keys():
         raise EvaluationError("평가 항목이 승인된 기준과 다릅니다.")
     sources, kinds = evidence_catalog(request, evidence, materials)
-    references = {}
-    for ref in request.approved_criteria.references + materials.references:
-        key = (ref.document_id, ref.version, ref.section_id)
-        if key in references and references[key] != ref.content:
-            raise EvaluationError("같은 문서 버전·구간의 기준 원문이 서로 다릅니다.")
-        references[key] = ref.content
+    references = {key: ref.content for key, ref in reference_catalog(request, materials).items()}
     for item in result.items:
         criterion = criteria[item.criterion_id]
         if item.score is not None and item.score not in {level.score for level in criterion.levels}:
             raise EvaluationError("승인된 기준에서 허용하지 않는 점수입니다.")
         work_ids = set()
         for proof in item.work_evidence:
-            if proof.source_id not in sources or proof.quote not in sources[proof.source_id]:
-                raise EvaluationError("업무 근거 ID 또는 인용문이 실제 원문과 다릅니다.")
+            if proof.source_id not in sources:
+                raise EvaluationError(
+                    f"{item.criterion_id}: 업무 근거 ID가 실제 조회 목록에 없습니다."
+                )
+            if proof.quote not in sources[proof.source_id]:
+                raise EvaluationError(
+                    f"{item.criterion_id}: 선택한 업무 근거의 인용문이 원문과 다릅니다."
+                )
             work_ids.add(proof.source_id)
         for proof in item.rule_evidence:
             if proof.key() not in references or proof.quote not in references[proof.key()]:
                 raise EvaluationError("기준 근거의 문서·버전·구간 또는 인용문이 다릅니다.")
-        approved_keys = {proof.key() for proof in criterion.rule_evidence}
-        if not any(proof.key() in approved_keys for proof in item.rule_evidence):
+        if not any(
+            proof.key() == approved.key() and proof.quote in approved.quote
+            for proof in item.rule_evidence for approved in criterion.rule_evidence
+        ):
             raise EvaluationError("해당 항목의 승인된 기준 근거가 없습니다.")
         if item.observation != "observed":
             continue
         key = item.criterion_id.rsplit(".", 1)[1]
-        proof_kinds = {kinds[source_id] for source_id in work_ids}
-        if key in {"problem_definition", "instruction_quality", "verification"}:
-            employee_kinds = {"message:user", "registration", "evidence_link", "approval_request"}
-            if key == "verification":
-                employee_kinds -= {"registration", "approval_request"}
-            if not proof_kinds & employee_kinds:
-                raise EvaluationError("직원 행동 평가에 직원의 실제 행동 근거가 없습니다.")
-        if key == "quality" and "target_artifact" not in proof_kinds:
-            raise EvaluationError("결과물 품질 평가에 평가 대상 산출물의 근거가 없습니다.")
-        if key == "security":
-            policy = evidence.policy_check
-            if policy is None or policy.evidence_id not in work_ids:
-                raise EvaluationError("보안 점수에는 서버 정책 검사 근거가 필요합니다.")
-            if policy.violations and item.score != 0:
-                raise EvaluationError("정책 위반이 탐지된 업무에 보안 준수 점수를 줄 수 없습니다.")
-        if (
-            request.classification.work_type == "quotation"
-            and key in {"quality", "verification"}
-            and item.score == 2
-            and f"{request.work_record.work_id}:reference_quote" not in sources
-        ):
-            raise EvaluationError("견적의 완전한 검증·품질 점수에는 기준 견적 조회가 필요합니다.")
+        eligible = eligible_work_sources(
+            key, kinds, request.work_record.work_id,
+            policy_available=evidence.policy_check is not None,
+        )
+        if not work_ids & eligible:
+            raise EvaluationError(MISSING_WORK_MESSAGES[key])
+        issue = score_issue(
+            key, item.score, request.classification.work_type,
+            policy_violations=bool(evidence.policy_check and evidence.policy_check.violations),
+            reference_quote_available=f"{request.work_record.work_id}:reference_quote" in sources,
+        )
+        if issue:
+            raise EvaluationError(issue)
     coaching_ids = [entry.criterion_id for entry in result.coaching]
     if len(coaching_ids) != 5 or set(coaching_ids) != criteria.keys():
         raise EvaluationError("코칭은 평가 항목별로 중복 없이 하나씩 필요합니다.")
+    if any(
+        VISIBLE_SECRET.search(text)
+        for text in (
+            [item.reason for item in result.items] + [entry.action for entry in result.coaching]
+        )
+    ):
+        raise EvaluationError("판단 이유·코칭에 마스킹되지 않은 연락처 또는 인증정보가 있습니다.")
     # 개선율·ROI 등 입력에 없는 성과 수치를 요약에서 만들어내지 않는다.
     scored = [item for item in result.items if item.score is not None]
     total = sum(item.score for item in scored)

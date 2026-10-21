@@ -6,12 +6,22 @@ import json
 from openai import APIConnectionError, APIStatusError, APITimeoutError, AsyncOpenAI
 from pydantic import ValidationError
 
+from .evaluation_contract import MISSING_WORK_MESSAGES
 from .evaluation_materials import EvaluationMaterials, collect_evaluation_materials
 from .evaluation_models import AgentEvaluationOutput
 from .evaluation_prompts import SYSTEM_PROMPT
+from .evaluation_selection import (
+    SELECTION_VERSION,
+    build_choices,
+    choice_requirements,
+    resolve_selection,
+    security_choice_ids,
+    selection_model,
+)
 from .evaluation_validation import (
     EvaluationError,
     evidence_catalog,
+    reference_catalog,
     validate_criteria,
     validate_evaluation_result,
     validate_materials,
@@ -28,6 +38,63 @@ from .mcp_adapter import (
 from .workflow_models import EvaluationInput
 
 MAX_INPUT_CHARS = 180_000
+
+
+def validation_feedback(error: ValidationError) -> str:
+    """검증 이유만 전달한다. 모델 응답·인용·민감한 입력 값은 포함하지 않는다."""
+    known_messages = {
+        "관측된 항목에는 점수와 업무 근거가 필요합니다.",
+        "미관측·자료 부족 항목에는 점수를 부여할 수 없습니다.",
+        "검토 필요 항목은 review_required가 true여야 합니다.",
+        "보안 준수 항목에는 1점을 줄 수 없습니다.",
+        "평가 항목 ID가 중복되었습니다.",
+        "점수는 정수 0·1·2 또는 null이어야 합니다.",
+        "평가 항목은 객체여야 합니다.",
+        "제공된 항목·근거 선택 ID 중에서 선택해야 합니다.",
+        "허용된 관측 상태를 선택해야 합니다.",
+        "승인된 기준에서 허용하지 않는 점수입니다.",
+        "선택 ID·필수 필드·자료형이 평가 응답 형식과 맞지 않습니다.",
+        "서버 정책 검사 근거가 없어 보안 항목을 채점할 수 없습니다.",
+        "보안 채점의 업무 근거는 서버 정책 검사 구간에서 선택해야 합니다.",
+        "해당 항목의 승인된 기준 근거를 선택해야 합니다.",
+        "정책 위반이 탐지된 업무에 보안 준수 점수를 줄 수 없습니다.",
+        "견적의 완전한 검증·품질 점수에는 기준 견적 조회가 필요합니다.",
+    } | set(MISSING_WORK_MESSAGES.values())
+    reasons = {
+        "enum": "제공된 항목·근거 선택 ID 중에서 선택해야 합니다.",
+        "literal_error": "허용된 관측 상태를 선택해야 합니다.",
+        "int_type": "점수는 정수 0·1·2 또는 null이어야 합니다.",
+        "greater_than_equal": "점수는 0 이상이어야 합니다.",
+        "less_than_equal": "점수는 2 이하여야 합니다.",
+        "missing": "필수 필드가 누락됐습니다.",
+        "extra_forbidden": "정의되지 않은 필드가 포함됐습니다.",
+        "too_short": "필수 항목·근거의 개수가 부족합니다.",
+        "too_long": "항목·근거의 개수가 허용 한도를 초과했습니다.",
+        "string_too_short": "빈 문자열을 사용할 수 없습니다.",
+        "bool_type": "검토 여부는 true 또는 false여야 합니다.",
+    }
+    details = []
+    for entry in error.errors(include_input=False, include_url=False)[:3]:
+        # 예상 밖 필드 이름에도 사용자 입력이 들어갈 수 있어 알려진 경로만 표시한다.
+        fields = {
+            "items", "coaching", "criterion_id", "observation", "score", "reason",
+            "work_evidence_ids", "rule_evidence_ids", "review_required", "action",
+            "required_work_evidence_id", "required_rule_evidence_id",
+        }
+        path = ".".join(
+            str(part) if isinstance(part, int) or part in fields else "unknown_field"
+            for part in entry["loc"]
+        ) or "결과 전체"
+        message = entry["msg"].removeprefix("Value error, ")
+        reason = message if message in known_messages else reasons.get(
+            entry["type"], "평가 결과의 값이 스키마 규칙과 맞지 않습니다."
+        )
+        details.append(f"{path}: {reason}")
+        if entry["type"] == "evaluation_selection":
+            diagnostic = entry.get("ctx", {}).get("diagnostic")
+            if diagnostic:
+                details.append("항목 진단=" + json.dumps(diagnostic, ensure_ascii=False))
+    return "평가 결과의 형식·점수·선택 ID가 잘못되었습니다: " + "; ".join(details)
 
 
 class OpenAIEvaluator:
@@ -90,7 +157,7 @@ class OpenAIEvaluator:
         evidence: EvaluationEvidence,
         materials: EvaluationMaterials,
     ) -> AgentEvaluationOutput:
-        """이미 수집한 자료를 사용하는 경계. 테스트·A의 수집 노드 재사용용."""
+        """이미 수집한 자료를 사용하는 경계. 테스트·분류·승인 모듈의 수집 노드 재사용용."""
         request = EvaluationInput.model_validate(request.model_dump(mode="json"))
         evidence = EvaluationEvidence.model_validate(evidence.model_dump(mode="json"))
         materials = EvaluationMaterials.model_validate(materials.model_dump(mode="json"))
@@ -100,15 +167,20 @@ class OpenAIEvaluator:
             raise EvaluationError("평가기와 조회 자료의 실행 범위가 다릅니다.")
         payload = build_evaluation_payload(request, evidence=evidence)
         sources, kinds = evidence_catalog(request, evidence, materials)
-        payload["work_evidence_catalog"] = [
-            {"source_id": source_id, "kind": kinds[source_id], "text": text}
-            for source_id, text in sources.items()
-        ]
-        refs = {
-            (r.document_id, r.version, r.section_id): r
-            for r in request.approved_criteria.references + materials.references
+        refs = reference_catalog(request, materials)
+        choices = build_choices(request, sources, kinds, refs, evidence=evidence)
+        payload["work_evidence_catalog"] = choices.work
+        payload["reference_catalog"] = choices.rules
+        payload["approved_rule_choices"] = choices.approved_rule_ids
+        payload["criterion_requirements"] = choice_requirements(choices, request)
+        payload["security_evidence"] = {
+            "available": evidence.policy_check is not None,
+            "policy_check_choice_ids": security_choice_ids(choices, request.work_record.work_id),
+            "violations_detected": bool(evidence.policy_check.violations)
+            if evidence.policy_check is not None else None,
         }
-        payload["reference_catalog"] = [ref.model_dump(mode="json") for ref in refs.values()]
+        payload["evidence_selection_version"] = SELECTION_VERSION
+        response_format = selection_model(choices, request)
         payload["additional_details"] = materials.details
         payload["missing_sources"] = sorted(
             set(payload["missing_sources"] + materials.missing_sources)
@@ -125,7 +197,7 @@ class OpenAIEvaluator:
                 response = await self.client.responses.parse(
                     model=self.model,
                     input=messages,
-                    text_format=AgentEvaluationOutput,
+                    text_format=response_format,
                     max_output_tokens=6000,
                     temperature=0,
                     store=False,
@@ -134,8 +206,8 @@ class OpenAIEvaluator:
                 raise EvaluationError("평가 API 연결 또는 시간 초과 오류입니다.") from exc
             except APIStatusError as exc:
                 raise EvaluationError(f"평가 API 오류(HTTP {exc.status_code}).") from exc
-            except ValidationError:
-                issue = "평가 결과의 JSON 형식·점수·상태가 잘못되었습니다."
+            except ValidationError as exc:
+                issue = validation_feedback(exc)
             else:
                 if response.status != "completed":
                     raise EvaluationError(
@@ -150,8 +222,8 @@ class OpenAIEvaluator:
                 if response.output_parsed is None:
                     raise EvaluationError("구조화된 평가 결과가 없습니다.")
                 try:
-                    result = AgentEvaluationOutput.model_validate(
-                        response.output_parsed.model_dump(mode="json")
+                    result = resolve_selection(
+                        response.output_parsed.model_dump(mode="json"), choices, request
                     )
                     return validate_evaluation_result(
                         request,
@@ -159,10 +231,14 @@ class OpenAIEvaluator:
                         evidence=evidence,
                         materials=materials,
                     )
-                except ValidationError:
-                    issue = "평가 결과의 JSON 형식·점수·상태가 잘못되었습니다."
+                except ValidationError as exc:
+                    issue = validation_feedback(exc)
                 except EvaluationError as exc:
                     issue = str(exc)
+                if attempt < self.max_validation_retries:
+                    messages.append({
+                        "role": "assistant", "content": response.output_parsed.model_dump_json(),
+                    })
             if attempt == self.max_validation_retries:
                 raise EvaluationError("평가 결과 검증 실패: " + issue)
             messages.append(

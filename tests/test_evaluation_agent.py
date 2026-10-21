@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 import httpx
 import pytest
+from jsonschema import Draft202012Validator
 from openai import AsyncOpenAI
 from test_mcp_adapter import CASES, approved_request, inputs, policy_response, response
 
@@ -210,6 +211,37 @@ def valid_result(fixture, evidence, materials):
     )
 
 
+def selected_result(result, payload):
+    """고정 공개 결과를 모델 전용 필수/추가 근거 선택 응답으로 바꾼다."""
+    checked = result.model_dump(mode="json")
+    items = []
+    for item in checked["items"]:
+        requirements = payload["criterion_requirements"][item["criterion_id"]]
+        work_ids = [
+            next(row["id"] for row in payload["work_evidence_catalog"]
+                 if row["source_id"] == proof["source_id"] and row["text"] in proof["quote"])
+            for proof in item.pop("work_evidence")
+        ]
+        rule_ids = [
+            next(row["id"] for row in payload["reference_catalog"]
+                 if all(row[key] == proof[key] for key in ("document_id", "version", "section_id"))
+                 and row["content"] in proof["quote"])
+            for proof in item.pop("rule_evidence")
+        ]
+        primary_work = next(
+            (key for key in work_ids if key in requirements["required_work_choice_ids"]), None,
+        ) if item["observation"] == "observed" else next(iter(work_ids), None)
+        primary_rule = next(
+            key for key in rule_ids if key in requirements["required_rule_choice_ids"]
+        )
+        item["required_work_evidence_id"] = primary_work
+        item["work_evidence_ids"] = [key for key in work_ids if key != primary_work]
+        item["required_rule_evidence_id"] = primary_rule
+        item["rule_evidence_ids"] = [key for key in rule_ids if key != primary_rule]
+        items.append(item)
+    return {"items": items, "coaching": checked["coaching"]}
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("work_type", ["rfp_analysis", "proposal", "quote", "inquiry_reply"])
 async def test_four_sales_types_collect_validate_and_render(work_type):
@@ -288,8 +320,9 @@ async def test_invalid_or_unsupported_model_results_are_rejected(change):
 
 
 @pytest.mark.asyncio
-async def test_sdk_serialization_parsing_and_validation_offline():
-    fixture = ToolFixture()
+@pytest.mark.parametrize("work_type", ["rfp_analysis", "proposal", "quote", "inquiry_reply"])
+async def test_sdk_serialization_parsing_and_validation_offline(work_type):
+    fixture = ToolFixture(work_type)
     evidence, materials = await collect(fixture)
     result = valid_result(fixture, evidence, materials)
     requests = []
@@ -304,6 +337,24 @@ async def test_sdk_serialization_parsing_and_validation_offline():
         payload = json.loads(body["input"][1]["content"])
         assert payload["work_evidence_catalog"]
         assert payload["reference_catalog"]
+        assert payload["security_evidence"]["available"] is True
+        assert payload["security_evidence"]["policy_check_choice_ids"]
+        # SDK가 실제 전송하는 형식에서도 채점 상태와 점수·근거의 모순을 막는다.
+        schema = body["text"]["format"]["schema"]
+        assert schema["type"] == "object" and "anyOf" not in schema
+        validator = Draft202012Validator(schema)
+        wire = selected_result(result, payload)
+        assert validator.is_valid(wire)
+        general_work = next(
+            row["id"] for row in payload["work_evidence_catalog"] if row["kind"] == "message:user"
+        )
+        for change in (
+            {"score": None}, {"required_work_evidence_id": None}, {"score": 1},
+            {"required_work_evidence_id": general_work},
+        ):
+            broken = deepcopy(wire)
+            broken["items"][3].update(change)
+            assert not validator.is_valid(broken)
         return httpx.Response(
             200,
             json={
@@ -321,7 +372,9 @@ async def test_sdk_serialization_parsing_and_validation_offline():
                         "content": [
                             {
                                 "type": "output_text",
-                                "text": result.model_dump_json(),
+                                "text": json.dumps(
+                                    selected_result(result, payload), ensure_ascii=False
+                                ),
                                 "annotations": [],
                             }
                         ],
@@ -346,18 +399,77 @@ async def test_sdk_serialization_parsing_and_validation_offline():
 
 
 @pytest.mark.asyncio
-async def test_invalid_citation_gets_one_bounded_retry():
+@pytest.mark.parametrize("index", range(5))
+async def test_actual_sdk_reports_failed_values_and_parses_corrected_result_offline(index):
     fixture = ToolFixture()
     evidence, materials = await collect(fixture)
     good = valid_result(fixture, evidence, materials)
-    bad = good.model_copy(deep=True)
-    bad.items[0].work_evidence[0].quote = "없는 문장"
-    parse = AsyncMock(
-        side_effect=[
-            SimpleNamespace(status="completed", output=[], output_parsed=bad),
-            SimpleNamespace(status="completed", output=[], output_parsed=good),
-        ]
-    )
+    requests = []
+
+    def handler(request):
+        body = json.loads(request.content)
+        requests.append(body)
+        payload = json.loads(body["input"][1]["content"])
+        wire = selected_result(good, payload)
+        if len(requests) == 1:
+            wire["items"][index].update(
+                score=None, required_work_evidence_id=None, work_evidence_ids=[],
+            )
+        else:
+            feedback = body["input"][-1]["content"]
+            assert good.items[index].criterion_id in feedback
+            assert '"score": null' in feedback
+            assert '"work_evidence_ids": []' in feedback
+        return httpx.Response(200, json={
+            "id": "resp_offline", "object": "response", "created_at": 1,
+            "status": "completed", "model": "gpt-4o-mini",
+            "output": [{
+                "id": "msg_offline", "type": "message", "role": "assistant",
+                "status": "completed", "content": [{
+                    "type": "output_text", "text": json.dumps(wire, ensure_ascii=False),
+                    "annotations": [],
+                }],
+            }],
+        })
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http_client:
+        async with AsyncOpenAI(
+            api_key="fake-test-key", http_client=http_client, max_retries=0,
+        ) as client:
+            agent = OpenAIEvaluator(
+                client, context=fixture.context, business_call=fixture.business,
+                rag_call=fixture.rag,
+            )
+            checked = await agent.evaluate_collected(
+                fixture.request, evidence=evidence, materials=materials,
+            )
+    assert len(requests) == 2
+    assert checked.items[index].score == 0
+    assert checked.items[index].work_evidence
+
+
+@pytest.mark.asyncio
+async def test_invalid_evidence_selection_gets_one_bounded_retry():
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    good = valid_result(fixture, evidence, materials)
+    replies = 0
+
+    async def reply(**arguments):
+        nonlocal replies
+        replies += 1
+        payload = json.loads(arguments["input"][1]["content"])
+        raw = selected_result(good, payload)
+        if replies == 1:
+            raw["items"][0]["required_work_evidence_id"] = "w-nonexistent"
+            parsed = SimpleNamespace(
+                model_dump=lambda **_: raw, model_dump_json=lambda: json.dumps(raw)
+            )
+        else:
+            parsed = arguments["text_format"].model_validate(raw)
+        return SimpleNamespace(status="completed", output=[], output_parsed=parsed)
+
+    parse = AsyncMock(side_effect=reply)
     agent = OpenAIEvaluator(
         SimpleNamespace(responses=SimpleNamespace(parse=parse)),
         context=fixture.context,
@@ -367,6 +479,95 @@ async def test_invalid_citation_gets_one_bounded_retry():
     result = await agent.evaluate_collected(fixture.request, evidence=evidence, materials=materials)
     assert parse.await_count == 2
     assert result.run_id == fixture.context.run_id
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(("change", "reason"), [
+    ({"score": 1}, "보안 준수 항목에는 1점을 줄 수 없습니다"),
+    ({"observation": "unobserved"}, "미관측·자료 부족 항목에는 점수를 부여할 수 없습니다"),
+    ({"score": None}, "관측된 항목에는 점수와 업무 근거가 필요합니다"),
+    ({"required_work_evidence_id": None}, "관측된 항목에는 점수와 업무 근거가 필요합니다"),
+    ({"observation": "needs_review", "score": None, "review_required": False},
+     "검토 필요 항목은 review_required가 true여야 합니다"),
+])
+async def test_item_3_failure_keeps_actual_reason_in_output_and_retry(change, reason):
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    good = valid_result(fixture, evidence, materials)
+
+    async def reply(**arguments):
+        payload = json.loads(arguments["input"][1]["content"])
+        raw = selected_result(good, payload)
+        raw["items"][3].update(change)
+        parsed = arguments["text_format"].model_validate(raw)
+        return SimpleNamespace(status="completed", output=[], output_parsed=parsed)
+
+    parse = AsyncMock(side_effect=reply)
+    agent = OpenAIEvaluator(
+        SimpleNamespace(responses=SimpleNamespace(parse=parse)),
+        context=fixture.context, business_call=fixture.business, rag_call=fixture.rag,
+    )
+    with pytest.raises(EvaluationError) as caught:
+        await agent.evaluate_collected(fixture.request, evidence=evidence, materials=materials)
+    assert f"items.3: {reason}" in str(caught.value)
+    assert parse.await_count == 2  # 기존 최대 1회 수정 요청은 그대로 유지한다.
+    feedback = parse.await_args_list[1].kwargs["input"][-1]["content"]
+    assert reason in feedback
+
+
+@pytest.mark.asyncio
+async def test_item_semantics_can_be_corrected_using_specific_retry_feedback():
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    good = valid_result(fixture, evidence, materials)
+    calls = 0
+
+    async def reply(**arguments):
+        nonlocal calls
+        calls += 1
+        payload = json.loads(arguments["input"][1]["content"])
+        raw = selected_result(good, payload)
+        if calls == 1:
+            raw["items"][3]["score"] = 1
+        else:
+            assert "보안 준수 항목에는 1점을 줄 수 없습니다" in arguments["input"][-1]["content"]
+        parsed = arguments["text_format"].model_validate(raw)
+        return SimpleNamespace(status="completed", output=[], output_parsed=parsed)
+
+    parse = AsyncMock(side_effect=reply)
+    agent = OpenAIEvaluator(
+        SimpleNamespace(responses=SimpleNamespace(parse=parse)),
+        context=fixture.context, business_call=fixture.business, rag_call=fixture.rag,
+    )
+    result = await agent.evaluate_collected(fixture.request, evidence=evidence, materials=materials)
+    assert result.items[3].score == 0
+    assert parse.await_count == 2
+
+
+@pytest.mark.asyncio
+async def test_sdk_parse_validation_feedback_does_not_expose_input():
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    good = valid_result(fixture, evidence, materials)
+
+    async def reply(**arguments):
+        payload = json.loads(arguments["input"][1]["content"])
+        raw = selected_result(good, payload)
+        raw["items"][3]["score"] = "private-input-do-not-display"
+        # 실제 SDK가 내부 Pydantic 파싱 단계에서 거절하는 경로를 재현한다.
+        return arguments["text_format"].model_validate(raw)
+
+    parse = AsyncMock(side_effect=reply)
+    agent = OpenAIEvaluator(
+        SimpleNamespace(responses=SimpleNamespace(parse=parse)),
+        context=fixture.context, business_call=fixture.business, rag_call=fixture.rag,
+        max_validation_retries=0,
+    )
+    with pytest.raises(EvaluationError) as caught:
+        await agent.evaluate_collected(fixture.request, evidence=evidence, materials=materials)
+    assert "items.3: 점수는 정수" in str(caught.value)
+    assert "private-input" not in str(caught.value)
+    assert parse.await_count == 1
 
 
 @pytest.mark.asyncio
@@ -435,6 +636,23 @@ async def test_changed_approved_policy_fails_before_llm():
     )
     with pytest.raises(ValueError, match="승인된 평가기준"):
         await agent.evaluate(fixture.request)
+    parse.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_conflicting_retrieved_reference_versions_fail_before_llm():
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    approved_ids = {ref.document_id for ref in fixture.request.approved_criteria.references}
+    ref = next(ref for ref in materials.references if ref.document_id not in approved_ids)
+    materials.references.append(ref.model_copy(update={"content": "같은 버전의 다른 본문"}))
+    parse = AsyncMock()
+    agent = OpenAIEvaluator(
+        SimpleNamespace(responses=SimpleNamespace(parse=parse)), context=fixture.context,
+        business_call=fixture.business, rag_call=fixture.rag,
+    )
+    with pytest.raises(EvaluationError, match="같은 문서 버전·구간"):
+        await agent.evaluate_collected(fixture.request, evidence=evidence, materials=materials)
     parse.assert_not_awaited()
 
 
@@ -525,13 +743,12 @@ async def test_only_retryable_temporary_mcp_failure_is_retried_once():
                 }
         return await fixture.business(name, arguments)
 
-    parse = AsyncMock(
-        return_value=SimpleNamespace(
-            status="completed",
-            output=[],
-            output_parsed=good,
-        )
-    )
+    async def reply(**arguments):
+        payload = json.loads(arguments["input"][1]["content"])
+        parsed = arguments["text_format"].model_validate(selected_result(good, payload))
+        return SimpleNamespace(status="completed", output=[], output_parsed=parsed)
+
+    parse = AsyncMock(side_effect=reply)
     agent = OpenAIEvaluator(
         SimpleNamespace(responses=SimpleNamespace(parse=parse)),
         context=fixture.context,
@@ -563,11 +780,88 @@ async def test_security_violation_cannot_receive_two_points():
         validate_evaluation_result(fixture.request, result, evidence=evidence, materials=materials)
 
 
-def test_cli_missing_configuration_has_actionable_error(monkeypatch, capsys):
+@pytest.mark.asyncio
+async def test_security_wrong_source_gets_policy_choices_in_bounded_retry():
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    good = valid_result(fixture, evidence, materials)
+    calls = 0
+
+    async def reply(**arguments):
+        nonlocal calls
+        calls += 1
+        payload = json.loads(arguments["input"][1]["content"])
+        assert payload["security_evidence"]["available"] is True
+        ids = payload["security_evidence"]["policy_check_choice_ids"]
+        assert ids
+        raw = selected_result(good, payload)
+        if calls == 1:
+            wrong = next(
+                row["id"] for row in payload["work_evidence_catalog"]
+                if row["kind"] == "message:user"
+            )
+            raw["items"][3]["required_work_evidence_id"] = wrong
+        else:
+            feedback = arguments["input"][-1]["content"]
+            assert "보안 점수에는 서버 정책 검사 근거가 필요합니다" in feedback
+            assert '"eligible_required_work_ids"' in feedback
+            assert ids[0] in feedback
+        parsed = arguments["text_format"].model_validate(raw)
+        return SimpleNamespace(status="completed", output=[], output_parsed=parsed)
+
+    parse = AsyncMock(side_effect=reply)
+    agent = OpenAIEvaluator(
+        SimpleNamespace(responses=SimpleNamespace(parse=parse)), context=fixture.context,
+        business_call=fixture.business, rag_call=fixture.rag,
+    )
+    result = await agent.evaluate_collected(fixture.request, evidence=evidence, materials=materials)
+    assert parse.await_count == 2
+    security = result.items[3]
+    assert {proof.source_id for proof in security.work_evidence} == {
+        evidence.policy_check.evidence_id,
+    }
+
+
+@pytest.mark.asyncio
+async def test_missing_policy_is_explicit_in_model_input_and_returns_no_security_score():
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    public = valid_result(fixture, evidence, materials)
+    public.items[3].observation = "insufficient_data"
+    public.items[3].score = None
+    public.items[3].work_evidence = []
+    evidence.policy_check = None
+    materials.evidence_sha256 = content_hash(evidence)
+
+    async def reply(**arguments):
+        payload = json.loads(arguments["input"][1]["content"])
+        assert payload["security_evidence"] == {
+            "available": False, "policy_check_choice_ids": [], "violations_detected": None,
+        }
+        assert "policy_check" in payload["missing_sources"]
+        parsed = arguments["text_format"].model_validate(selected_result(public, payload))
+        return SimpleNamespace(status="completed", output=[], output_parsed=parsed)
+
+    parse = AsyncMock(side_effect=reply)
+    agent = OpenAIEvaluator(
+        SimpleNamespace(responses=SimpleNamespace(parse=parse)), context=fixture.context,
+        business_call=fixture.business, rag_call=fixture.rag,
+    )
+    checked = await agent.evaluate_collected(
+        fixture.request, evidence=evidence, materials=materials,
+    )
+    assert checked.items[3].score is None
+    assert checked.items[3].observation == "insufficient_data"
+    assert parse.await_count == 1
+
+
+def test_cli_missing_configuration_has_actionable_error(monkeypatch, capsys, tmp_path):
     from work_classifier import evaluate_cli
 
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.delenv("RUN_TOKEN", raising=False)
+    monkeypatch.delenv("MCP_RUN_TOKEN", raising=False)
+    monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(evaluate_cli, "load_dotenv", lambda: None)
     monkeypatch.setattr(
         "sys.argv", ["evaluate_cli", "--input", "unused.json", "--run-context", "unused.json"]

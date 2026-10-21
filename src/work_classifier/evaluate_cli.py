@@ -3,7 +3,6 @@
 import argparse
 import asyncio
 import json
-import os
 import sys
 from contextlib import AsyncExitStack
 from pathlib import Path
@@ -19,13 +18,14 @@ from .evaluation_agent import OpenAIEvaluator, render_evaluation_report
 from .evaluation_validation import EvaluationError
 from .evidence_models import EvaluationRun
 from .mcp_adapter import MCPToolError
+from .runtime_settings import setting
 from .workflow_models import EvaluationInput
 
 
 async def run(args) -> None:
     load_dotenv()
-    api_key = os.environ.get("OPENAI_API_KEY")
-    token = os.environ.get("RUN_TOKEN")
+    api_key = setting("OPENAI_API_KEY")
+    token = setting("MCP_RUN_TOKEN") or setting("RUN_TOKEN")
     if not api_key or not token:
         raise EvaluationError("OPENAI_API_KEY와 RUN_TOKEN 환경 변수가 필요합니다.")
     request = EvaluationInput.model_validate_json(args.input.read_text(encoding="utf-8"))

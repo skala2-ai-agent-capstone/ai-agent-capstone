@@ -305,7 +305,7 @@ def test_malformed_responses_are_rejected(result):
 
 
 def approved_request(context):
-    # A의 확정 분류와 사람의 승인을 테스트에서만 대체한다.
+    # 분류·승인 모듈의 확정 분류와 사람의 승인을 테스트에서만 대체한다.
     work = WorkContext(
         work_id=context.work_id,
         messages=[
