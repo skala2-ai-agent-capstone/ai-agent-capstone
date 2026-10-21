@@ -1,0 +1,231 @@
+{
+  "case_id": "E2E-QT-10",
+  "work_type": "quote",
+  "rfp_status": "없음",
+  "summary": "보람의료재단 Contact AI 100석 24개월 견적서 작성 (RFP 없음, 가격표 선택을 AI에 위임, 할인 없음)",
+  "raw": {
+    "work_case": {
+      "work_id": "W-E2E-QT-10",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "employee_id": "E-1021",
+      "work_type": "quote",
+      "customer_id": "CUST-BR",
+      "status": "completed",
+      "created_at": "2026-10-19T15:00:00+09:00",
+      "completed_at": "2026-10-19T15:35:00+09:00",
+      "linked_work_ids": [],
+      "rfp_status": "없음",
+      "registration": {
+        "product": "Contact AI",
+        "quantity": "상담석 100석",
+        "contract_months": 24,
+        "request_conditions": "할인 없음",
+        "budget": ""
+      }
+    },
+    "source_documents": [],
+    "attached_references": [
+      {
+        "doc_id": "PRICE-2026.3-DRAFT",
+        "version": "2026.3-draft"
+      },
+      {
+        "doc_id": "PRICE-2026.2",
+        "version": "2026.2"
+      },
+      {
+        "doc_id": "SALES-AI-GL-001",
+        "version": "v1.0"
+      }
+    ],
+    "messages": [
+      {
+        "message_id": "W-E2E-QT-10-M01",
+        "seq": 1,
+        "role": "user",
+        "content": "보람의료재단 견적서 작성해줘. Contact AI 100석 24개월, 할인 없이. 가격표는 가장 최신 걸로 하고, 고객이 왜 할인이 없는지 물어볼 수 있으니까 비고에 사유를 적어줘.",
+        "created_at": "2026-10-19T15:05:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-10-M02",
+        "seq": 2,
+        "role": "assistant",
+        "content": "견적서 초안입니다.\n\n[견적서] Q-2026-0503 / 고객사: 보람의료재단(가상)\n적용 가격표: PRICE-2026.3-DRAFT\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| AI 컨택센터 (Contact AI) | 95,000원 | 100 | 24개월 | 228,000,000원 |\n소계: 228,000,000원\n할인율: 0%\n합계: 228,000,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함\n비고: 합산 할인율 15%를 초과하는 경우 담당 임원 승인이 필요하므로 본 견적은 할인 없이 산출하였습니다.",
+        "created_at": "2026-10-19T15:09:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-10-M03",
+        "seq": 3,
+        "role": "user",
+        "content": "비고까지 좋네. 저장할게.",
+        "created_at": "2026-10-19T15:20:00+09:00"
+      }
+    ],
+    "artifact_versions": [
+      {
+        "artifact_id": "ART-E2E-QT-10",
+        "version": "v1",
+        "author": "ai_draft",
+        "saved_at": "2026-10-19T15:09:00+09:00",
+        "content": "[견적서] Q-2026-0503 / 고객사: 보람의료재단(가상)\n적용 가격표: PRICE-2026.3-DRAFT\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| AI 컨택센터 (Contact AI) | 95,000원 | 100 | 24개월 | 228,000,000원 |\n소계: 228,000,000원\n할인율: 0%\n합계: 228,000,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함\n비고: 합산 할인율 15%를 초과하는 경우 담당 임원 승인이 필요하므로 본 견적은 할인 없이 산출하였습니다.",
+        "spans": [
+          {
+            "span_id": "ART-E2E-QT-10:v1:L01",
+            "text": "[견적서] Q-2026-0503 / 고객사: 보람의료재단(가상)"
+          },
+          {
+            "span_id": "ART-E2E-QT-10:v1:L02",
+            "text": "적용 가격표: PRICE-2026.3-DRAFT"
+          },
+          {
+            "span_id": "ART-E2E-QT-10:v1:L03",
+            "text": "| 상품 | 단가 | 수량 | 기간 | 금액 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-10:v1:L05",
+            "text": "| AI 컨택센터 (Contact AI) | 95,000원 | 100 | 24개월 | 228,000,000원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-10:v1:L06",
+            "text": "소계: 228,000,000원"
+          },
+          {
+            "span_id": "ART-E2E-QT-10:v1:L07",
+            "text": "할인율: 0%"
+          },
+          {
+            "span_id": "ART-E2E-QT-10:v1:L08",
+            "text": "합계: 228,000,000원 (부가가치세 별도)"
+          },
+          {
+            "span_id": "ART-E2E-QT-10:v1:L09",
+            "text": "견적 유효 기간: 발행일로부터 30일"
+          },
+          {
+            "span_id": "ART-E2E-QT-10:v1:L10",
+            "text": "계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함"
+          },
+          {
+            "span_id": "ART-E2E-QT-10:v1:L11",
+            "text": "비고: 합산 할인율 15%를 초과하는 경우 담당 임원 승인이 필요하므로 본 견적은 할인 없이 산출하였습니다."
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-QT-10",
+        "version": "v2",
+        "author": "employee",
+        "saved_at": "2026-10-19T15:25:00+09:00",
+        "content": "[견적서] Q-2026-0503 / 고객사: 보람의료재단(가상)\n적용 가격표: PRICE-2026.3-DRAFT\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| AI 컨택센터 (Contact AI) | 95,000원 | 100 | 24개월 | 228,000,000원 |\n소계: 228,000,000원\n할인율: 0%\n합계: 228,000,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함\n비고: 합산 할인율 15%를 초과하는 경우 담당 임원 승인이 필요하므로 본 견적은 할인 없이 산출하였습니다.",
+        "spans": [
+          {
+            "span_id": "ART-E2E-QT-10:v2:L01",
+            "text": "[견적서] Q-2026-0503 / 고객사: 보람의료재단(가상)"
+          },
+          {
+            "span_id": "ART-E2E-QT-10:v2:L02",
+            "text": "적용 가격표: PRICE-2026.3-DRAFT"
+          },
+          {
+            "span_id": "ART-E2E-QT-10:v2:L03",
+            "text": "| 상품 | 단가 | 수량 | 기간 | 금액 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-10:v2:L05",
+            "text": "| AI 컨택센터 (Contact AI) | 95,000원 | 100 | 24개월 | 228,000,000원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-10:v2:L06",
+            "text": "소계: 228,000,000원"
+          },
+          {
+            "span_id": "ART-E2E-QT-10:v2:L07",
+            "text": "할인율: 0%"
+          },
+          {
+            "span_id": "ART-E2E-QT-10:v2:L08",
+            "text": "합계: 228,000,000원 (부가가치세 별도)"
+          },
+          {
+            "span_id": "ART-E2E-QT-10:v2:L09",
+            "text": "견적 유효 기간: 발행일로부터 30일"
+          },
+          {
+            "span_id": "ART-E2E-QT-10:v2:L10",
+            "text": "계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함"
+          },
+          {
+            "span_id": "ART-E2E-QT-10:v2:L11",
+            "text": "비고: 합산 할인율 15%를 초과하는 경우 담당 임원 승인이 필요하므로 본 견적은 할인 없이 산출하였습니다."
+          }
+        ]
+      }
+    ],
+    "reference_access_log": [],
+    "evidence_links": [],
+    "events": [
+      {
+        "event_id": "EV-QT-10-1",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-QT-10",
+        "artifact_version": "v2",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-QT-10:v2:v2",
+        "occurred_at": "2026-10-19T15:35:00+09:00"
+      },
+      {
+        "event_id": "EV-QT-10-C",
+        "event_type": "employee.confirmed",
+        "work_id": "W-E2E-QT-10",
+        "occurred_at": "2026-10-19T16:45:00+09:00"
+      }
+    ],
+    "human_actions": [
+      {
+        "action_id": "HA-QT-10-1",
+        "user_id": "E-1021",
+        "action": "confirm",
+        "at": "2026-10-19T16:45:00+09:00"
+      }
+    ],
+    "fault_injection": [],
+    "access_attempts": [
+      {
+        "attempt_id": "AC-QT-10-1",
+        "user_id": "E-1021",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-QT-10"
+      },
+      {
+        "attempt_id": "AC-QT-10-2",
+        "user_id": "E-1034",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-QT-10"
+      },
+      {
+        "attempt_id": "AC-QT-10-3",
+        "user_id": "X-9001",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-QT-10"
+      }
+    ],
+    "quote_data": {
+      "v2": {
+        "quote_no": "Q-2026-0503",
+        "price_table": "PRICE-2026.3-DRAFT",
+        "lines": [
+          {
+            "code": "P-200",
+            "quantity": 100,
+            "months": 24
+          }
+        ],
+        "discount_components": [],
+        "free_items": [],
+        "exceptions": []
+      }
+    },
+    "approval_requests": []
+  }
+}

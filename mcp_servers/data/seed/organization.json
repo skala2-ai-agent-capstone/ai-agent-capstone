@@ -1,0 +1,152 @@
+{
+  "companies": [
+    {
+      "company_id": "C-LGCNS-SALES",
+      "name": "LG CNS 영업담당 (가상 테넌트)",
+      "min_aggregation_size": 5
+    },
+    {
+      "company_id": "C-OTHER-01",
+      "name": "타 고객사 (가상, 테넌트 격리 테스트용)",
+      "min_aggregation_size": 5
+    }
+  ],
+  "teams": [
+    {
+      "team_id": "T-SALES-01",
+      "company_id": "C-LGCNS-SALES",
+      "name": "영업1팀"
+    },
+    {
+      "team_id": "T-SALES-02",
+      "company_id": "C-LGCNS-SALES",
+      "name": "영업2팀"
+    },
+    {
+      "team_id": "T-OTHER-01",
+      "company_id": "C-OTHER-01",
+      "name": "타사 영업팀"
+    }
+  ],
+  "users": [
+    {
+      "user_id": "E-1021",
+      "name": "가상 직원 A",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "role": "employee",
+      "test_token": "test-token-E-1021"
+    },
+    {
+      "user_id": "E-1034",
+      "name": "가상 직원 B",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "role": "employee",
+      "test_token": "test-token-E-1034"
+    },
+    {
+      "user_id": "E-1047",
+      "name": "가상 직원 C",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "role": "employee",
+      "test_token": "test-token-E-1047"
+    },
+    {
+      "user_id": "E-1052",
+      "name": "가상 직원 D",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "role": "employee",
+      "test_token": "test-token-E-1052"
+    },
+    {
+      "user_id": "E-1060",
+      "name": "가상 직원 E",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "role": "employee",
+      "test_token": "test-token-E-1060"
+    },
+    {
+      "user_id": "E-1071",
+      "name": "가상 직원 F",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "role": "employee",
+      "test_token": "test-token-E-1071"
+    },
+    {
+      "user_id": "E-1101",
+      "name": "가상 직원 G",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-02",
+      "role": "employee",
+      "test_token": "test-token-E-1101"
+    },
+    {
+      "user_id": "E-1082",
+      "name": "가상 직원 H",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "role": "employee",
+      "test_token": "test-token-E-1082"
+    },
+    {
+      "user_id": "E-1102",
+      "name": "가상 직원 I",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-02",
+      "role": "employee",
+      "test_token": "test-token-E-1102"
+    },
+    {
+      "user_id": "R-2001",
+      "name": "가상 검토자",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": null,
+      "role": "reviewer",
+      "test_token": "test-token-R-2001"
+    },
+    {
+      "user_id": "L-3001",
+      "name": "가상 팀장",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "role": "team_lead",
+      "test_token": "test-token-L-3001"
+    },
+    {
+      "user_id": "A-3101",
+      "name": "가상 AX 담당자",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": null,
+      "role": "ax_manager",
+      "test_token": "test-token-A-3101"
+    },
+    {
+      "user_id": "AD-4001",
+      "name": "가상 관리자",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": null,
+      "role": "admin",
+      "test_token": "test-token-AD-4001"
+    },
+    {
+      "user_id": "X-9001",
+      "name": "타사 직원",
+      "company_id": "C-OTHER-01",
+      "team_id": "T-OTHER-01",
+      "role": "employee",
+      "test_token": "test-token-X-9001"
+    }
+  ],
+  "role_permissions": {
+    "employee": "본인 평가·코칭 조회, 본인 이의 제기",
+    "reviewer": "배정된 검토 건의 상세 자료·결과 처리",
+    "team_lead": "담당 팀 집계 조회·집계 승인 (개인 상세는 별도 권한 필요)",
+    "ax_manager": "담당 팀 집계 조회",
+    "admin": "사용자·연동·자료 설정 관리 (개인 평가 원문 자동 열람 불가)"
+  }
+}

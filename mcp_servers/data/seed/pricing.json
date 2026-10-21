@@ -1,0 +1,133 @@
+{
+  "products": [
+    {
+      "code": "P-100",
+      "name": "스마트 문서 AI (Doc AI)",
+      "unit": "사용자·월"
+    },
+    {
+      "code": "P-200",
+      "name": "AI 컨택센터 (Contact AI)",
+      "unit": "상담석·월"
+    },
+    {
+      "code": "P-300",
+      "name": "데이터 분석 플랫폼 (Insight Hub)",
+      "unit": "테넌트·월"
+    },
+    {
+      "code": "S-10",
+      "name": "전용 기술지원",
+      "unit": "월"
+    },
+    {
+      "code": "S-20",
+      "name": "온보딩 교육",
+      "unit": "회"
+    }
+  ],
+  "price_tables": [
+    {
+      "version": "PRICE-2026.2",
+      "status": "현행",
+      "effective_from": "2026-07-01",
+      "prices": {
+        "P-100": 25000,
+        "P-200": 90000,
+        "P-300": 3000000,
+        "S-10": 500000,
+        "S-20": 2000000
+      }
+    },
+    {
+      "version": "PRICE-2025.4",
+      "status": "폐기",
+      "effective_from": "2025-10-01",
+      "effective_to": "2026-06-30",
+      "prices": {
+        "P-100": 23000,
+        "P-200": 85000,
+        "P-300": 2800000,
+        "S-10": 450000,
+        "S-20": 1800000
+      }
+    },
+    {
+      "version": "PRICE-2026.3-DRAFT",
+      "status": "초안",
+      "effective_from": null,
+      "prices": {
+        "P-100": 25000,
+        "P-200": 95000,
+        "P-300": 3000000,
+        "S-10": 500000,
+        "S-20": 2000000
+      }
+    }
+  ],
+  "discount_rules": {
+    "components": [
+      {
+        "type": "다년",
+        "condition": "계약 기간 36개월 이상",
+        "pct": 3
+      },
+      {
+        "type": "다년",
+        "condition": "계약 기간 60개월 이상",
+        "pct": 5
+      },
+      {
+        "type": "수량",
+        "condition": "사용자 500명 이상 (P-100)",
+        "pct": 2
+      }
+    ],
+    "approval_tiers": [
+      {
+        "max_pct": 5,
+        "approver": "담당자",
+        "approval_required": false
+      },
+      {
+        "max_pct": 15,
+        "approver": "소속 팀장",
+        "approval_required": true
+      },
+      {
+        "max_pct": 25,
+        "approver": "담당 임원",
+        "approval_required": true
+      },
+      {
+        "max_pct": 100,
+        "approver": "가격심의위원회",
+        "approval_required": true
+      }
+    ],
+    "exceptions": [
+      {
+        "type": "무상 제공",
+        "approver": "담당 임원"
+      },
+      {
+        "type": "SLA 상향",
+        "approver": "담당 임원"
+      },
+      {
+        "type": "결제 조건 변경",
+        "approver": "소속 팀장"
+      },
+      {
+        "type": "표준 계약서 외 조항·위약금 감면",
+        "approver": "가격심의위원회"
+      },
+      {
+        "type": "견적 유효 기간 연장",
+        "approver": "소속 팀장"
+      }
+    ],
+    "rounding": "천 원 미만 절사, 부가가치세 별도",
+    "source": "SALES-AI-GL-001 v1.0 별표 2"
+  }
+}

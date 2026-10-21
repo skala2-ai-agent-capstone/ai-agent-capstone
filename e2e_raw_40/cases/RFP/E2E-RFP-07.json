@@ -1,0 +1,247 @@
+{
+  "case_id": "E2E-RFP-07",
+  "work_type": "rfp_analysis",
+  "rfp_status": "첨부",
+  "summary": "푸른시청 행정 데이터 분석 플랫폼 RFP 요구사항 대응표 작성 (공공 RFP, 상세 지시, 평가 중 LLM 일시 장애 주입)",
+  "raw": {
+    "work_case": {
+      "work_id": "W-E2E-RFP-07",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "employee_id": "E-1047",
+      "work_type": "rfp_analysis",
+      "customer_id": "CUST-PN",
+      "status": "completed",
+      "created_at": "2026-10-13T09:00:00+09:00",
+      "completed_at": "2026-10-13T09:50:00+09:00",
+      "linked_work_ids": [],
+      "rfp_status": "첨부",
+      "registration": {
+        "rfp_document": "RFP-PN-2026-04 v1.0",
+        "submission_deadline": "2026-11-25",
+        "evaluation_method": "기술 80 : 가격 20",
+        "customer_purpose": "행정 데이터 기반 의사결정 지원",
+        "required_requirements": "통합 대시보드, 보고서 자동화, 부서별 테넌트, SLA 99.9%, GS 인증"
+      }
+    },
+    "source_documents": [
+      {
+        "attachment_id": "ATT-RFP-07",
+        "doc_id": "RFP-PN-2026-04",
+        "doc_type": "rfp",
+        "version": "v1.0",
+        "grade": "대외비",
+        "uploaded_by": "E-1047",
+        "uploaded_at": "2026-10-13T09:02:00+09:00",
+        "content": "[푸른시청(가상) 행정 데이터 분석 플랫폼 구축 RFP v1.0 — 3장 요구사항]\n3.1 (p.8) REQ-01 [필수] 시 행정 현황을 보여주는 통합 대시보드를 제공해야 한다.\n3.2 (p.8) REQ-02 [필수] 부서별 정기 보고서를 자동으로 생성해야 한다.\n3.3 (p.9) REQ-03 [필수] 부서별로 분리된 환경(테넌트)에서 운영할 수 있어야 한다.\n3.4 (p.9) REQ-04 [필수] 월 가용성 99.9% 이상을 보장해야 한다.\n3.5 (p.10) REQ-05 [선택] 시민 포털과 연계할 수 있는 API를 제공하면 가점을 부여한다.\n3.6 (p.10) REQ-06 [필수] GS 인증 1등급을 보유해야 한다.\n제출 기한: 2026-11-25 / 평가 방식: 기술 80 : 가격 20\n문의: 푸른시청 정보화담당관 이OO 팀장 (010-0000-7710, lee.oo@purun-city.example)"
+      }
+    ],
+    "attached_references": [
+      {
+        "doc_id": "PROD-INSIGHT",
+        "version": "v1.8"
+      }
+    ],
+    "messages": [
+      {
+        "message_id": "W-E2E-RFP-07-M01",
+        "seq": 1,
+        "role": "user",
+        "content": "푸른시청 RFP 요구사항을 하나도 빠짐없이 추출해서 대응표로 만들어줘.\n- 근거는 Insight Hub 제품 설명서 v1.8, 조항 번호까지.\n- 구분은 원문 표기 그대로(필수/선택), 대응 수준은 충족·부분 충족·대안 제시·대응 불가 중 하나.\n- 열 순서: 번호, 원문 위치, 요구사항, 구분, 대응 수준, 대응 근거, 사유.\n- 설명서에서 확인되지 않는 항목은 충족으로 쓰지 말고 사유에 '확인 필요'로 적어줘.\n\n[푸른시청(가상) 행정 데이터 분석 플랫폼 구축 RFP v1.0 — 3장 요구사항]\n3.1 (p.8) REQ-01 [필수] 시 행정 현황을 보여주는 통합 대시보드를 제공해야 한다.\n3.2 (p.8) REQ-02 [필수] 부서별 정기 보고서를 자동으로 생성해야 한다.\n3.3 (p.9) REQ-03 [필수] 부서별로 분리된 환경(테넌트)에서 운영할 수 있어야 한다.\n3.4 (p.9) REQ-04 [필수] 월 가용성 99.9% 이상을 보장해야 한다.\n3.5 (p.10) REQ-05 [선택] 시민 포털과 연계할 수 있는 API를 제공하면 가점을 부여한다.\n3.6 (p.10) REQ-06 [필수] GS 인증 1등급을 보유해야 한다.\n제출 기한: 2026-11-25 / 평가 방식: 기술 80 : 가격 20",
+        "created_at": "2026-10-13T09:10:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-07-M02",
+        "seq": 2,
+        "role": "assistant",
+        "content": "RFP 요구사항을 정리했습니다.\n\n| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 3.1 (p.8) | 통합 대시보드 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |\n| REQ-02 | 3.2 (p.8) | 부서별 보고서 자동 생성 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |\n| REQ-03 | 3.3 (p.9) | 부서별 테넌트 분리 운영 | 선택 | 충족 | PROD-INSIGHT v1.8 §1.1 | - |\n| REQ-04 | 3.4 (p.9) | 월 가용성 99.9% | 필수 | 충족 | PROD-INSIGHT v1.8 §8.1 | - |\n| REQ-05 | 3.5 (p.10) | 시민 포털 연계 API | 선택 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 포털 연계 API 내용 없음, 확인 필요 |\n| REQ-06 | 3.6 (p.10) | GS 인증 1등급 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 인증 현황 없음, 확인 필요 |\n",
+        "created_at": "2026-10-13T09:14:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-07-M03",
+        "seq": 3,
+        "role": "user",
+        "content": "원문 3.3(p.9)을 다시 봤는데 REQ-03은 [필수]야. 구분이 틀렸어. 그리고 각 행의 근거 조항이 설명서에 실제로 있는지 하나씩 확인해서 알려줘.",
+        "created_at": "2026-10-13T09:25:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-07-M04",
+        "seq": 4,
+        "role": "assistant",
+        "content": "REQ-03의 구분을 필수로 수정했습니다. 근거 조항을 점검한 결과 §2.1, §1.1, §8.1은 설명서에 있고, REQ-05·REQ-06은 설명서에 해당 내용이 없어 '확인 필요'로 표시했습니다.\n\n| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 3.1 (p.8) | 통합 대시보드 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |\n| REQ-02 | 3.2 (p.8) | 부서별 보고서 자동 생성 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |\n| REQ-03 | 3.3 (p.9) | 부서별 테넌트 분리 운영 | 필수 | 충족 | PROD-INSIGHT v1.8 §1.1 | - |\n| REQ-04 | 3.4 (p.9) | 월 가용성 99.9% | 필수 | 충족 | PROD-INSIGHT v1.8 §8.1 | - |\n| REQ-05 | 3.5 (p.10) | 시민 포털 연계 API | 선택 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 포털 연계 API 내용 없음, 확인 필요 |\n| REQ-06 | 3.6 (p.10) | GS 인증 1등급 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 인증 현황 없음, 확인 필요 |\n",
+        "created_at": "2026-10-13T09:30:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-07-M05",
+        "seq": 5,
+        "role": "user",
+        "content": "확인했어. 저장한다.",
+        "created_at": "2026-10-13T09:42:00+09:00"
+      }
+    ],
+    "artifact_versions": [
+      {
+        "artifact_id": "ART-E2E-RFP-07",
+        "version": "v1",
+        "author": "ai_draft",
+        "saved_at": "2026-10-13T09:14:00+09:00",
+        "content": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 3.1 (p.8) | 통합 대시보드 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |\n| REQ-02 | 3.2 (p.8) | 부서별 보고서 자동 생성 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |\n| REQ-03 | 3.3 (p.9) | 부서별 테넌트 분리 운영 | 선택 | 충족 | PROD-INSIGHT v1.8 §1.1 | - |\n| REQ-04 | 3.4 (p.9) | 월 가용성 99.9% | 필수 | 충족 | PROD-INSIGHT v1.8 §8.1 | - |\n| REQ-05 | 3.5 (p.10) | 시민 포털 연계 API | 선택 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 포털 연계 API 내용 없음, 확인 필요 |\n| REQ-06 | 3.6 (p.10) | GS 인증 1등급 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 인증 현황 없음, 확인 필요 |\n",
+        "spans": [
+          {
+            "span_id": "ART-E2E-RFP-07:v1:HEADER",
+            "text": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-07:v1:REQ-01",
+            "text": "| REQ-01 | 3.1 (p.8) | 통합 대시보드 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-07:v1:REQ-02",
+            "text": "| REQ-02 | 3.2 (p.8) | 부서별 보고서 자동 생성 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-07:v1:REQ-03",
+            "text": "| REQ-03 | 3.3 (p.9) | 부서별 테넌트 분리 운영 | 선택 | 충족 | PROD-INSIGHT v1.8 §1.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-07:v1:REQ-04",
+            "text": "| REQ-04 | 3.4 (p.9) | 월 가용성 99.9% | 필수 | 충족 | PROD-INSIGHT v1.8 §8.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-07:v1:REQ-05",
+            "text": "| REQ-05 | 3.5 (p.10) | 시민 포털 연계 API | 선택 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 포털 연계 API 내용 없음, 확인 필요 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-07:v1:REQ-06",
+            "text": "| REQ-06 | 3.6 (p.10) | GS 인증 1등급 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 인증 현황 없음, 확인 필요 |"
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-RFP-07",
+        "version": "v2",
+        "author": "employee",
+        "saved_at": "2026-10-13T09:45:00+09:00",
+        "content": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 3.1 (p.8) | 통합 대시보드 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |\n| REQ-02 | 3.2 (p.8) | 부서별 보고서 자동 생성 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |\n| REQ-03 | 3.3 (p.9) | 부서별 테넌트 분리 운영 | 필수 | 충족 | PROD-INSIGHT v1.8 §1.1 | - |\n| REQ-04 | 3.4 (p.9) | 월 가용성 99.9% | 필수 | 충족 | PROD-INSIGHT v1.8 §8.1 | - |\n| REQ-05 | 3.5 (p.10) | 시민 포털 연계 API | 선택 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 포털 연계 API 내용 없음, 확인 필요 |\n| REQ-06 | 3.6 (p.10) | GS 인증 1등급 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 인증 현황 없음, 확인 필요 |\n",
+        "spans": [
+          {
+            "span_id": "ART-E2E-RFP-07:v2:HEADER",
+            "text": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-07:v2:REQ-01",
+            "text": "| REQ-01 | 3.1 (p.8) | 통합 대시보드 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-07:v2:REQ-02",
+            "text": "| REQ-02 | 3.2 (p.8) | 부서별 보고서 자동 생성 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-07:v2:REQ-03",
+            "text": "| REQ-03 | 3.3 (p.9) | 부서별 테넌트 분리 운영 | 필수 | 충족 | PROD-INSIGHT v1.8 §1.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-07:v2:REQ-04",
+            "text": "| REQ-04 | 3.4 (p.9) | 월 가용성 99.9% | 필수 | 충족 | PROD-INSIGHT v1.8 §8.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-07:v2:REQ-05",
+            "text": "| REQ-05 | 3.5 (p.10) | 시민 포털 연계 API | 선택 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 포털 연계 API 내용 없음, 확인 필요 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-07:v2:REQ-06",
+            "text": "| REQ-06 | 3.6 (p.10) | GS 인증 1등급 | 필수 | 대안 제시 | PROD-INSIGHT v1.8 | 설명서에 인증 현황 없음, 확인 필요 |"
+          }
+        ]
+      }
+    ],
+    "reference_access_log": [
+      {
+        "user_id": "E-1047",
+        "doc_id": "RFP-PN-2026-04",
+        "version": "v1.0",
+        "accessed_at": "2026-10-13T09:20:00+09:00"
+      },
+      {
+        "user_id": "E-1047",
+        "doc_id": "PROD-INSIGHT",
+        "version": "v1.8",
+        "accessed_at": "2026-10-13T09:33:00+09:00"
+      }
+    ],
+    "evidence_links": [
+      {
+        "link_id": "EL-RFP-07-1",
+        "span_id": "ART-E2E-RFP-07:v2:REQ-03",
+        "doc_id": "RFP-PN-2026-04",
+        "version": "v1.0",
+        "location": "3.3 (p.9)",
+        "created_by": "E-1047",
+        "created_at": "2026-10-13T09:36:00+09:00"
+      },
+      {
+        "link_id": "EL-RFP-07-2",
+        "span_id": "ART-E2E-RFP-07:v2:REQ-04",
+        "doc_id": "PROD-INSIGHT",
+        "version": "v1.8",
+        "location": "§8.1",
+        "created_by": "E-1047",
+        "created_at": "2026-10-13T09:38:00+09:00"
+      }
+    ],
+    "events": [
+      {
+        "event_id": "EV-RFP-07-1",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-RFP-07",
+        "artifact_version": "v2",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-RFP-07:v2:v2",
+        "occurred_at": "2026-10-13T09:50:00+09:00"
+      },
+      {
+        "event_id": "EV-RFP-07-C",
+        "event_type": "employee.confirmed",
+        "work_id": "W-E2E-RFP-07",
+        "occurred_at": "2026-10-13T11:00:00+09:00"
+      }
+    ],
+    "human_actions": [
+      {
+        "action_id": "HA-RFP-07-1",
+        "user_id": "E-1047",
+        "action": "confirm",
+        "at": "2026-10-13T11:00:00+09:00"
+      }
+    ],
+    "fault_injection": [
+      {
+        "target": "llm_api",
+        "node": "evaluate_items",
+        "error": "TEMPORARY_FAILURE",
+        "times": 2,
+        "note": "재시도 한도 이내 복구"
+      }
+    ],
+    "access_attempts": [
+      {
+        "attempt_id": "AC-RFP-07-1",
+        "user_id": "E-1047",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-07"
+      },
+      {
+        "attempt_id": "AC-RFP-07-2",
+        "user_id": "E-1034",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-07"
+      },
+      {
+        "attempt_id": "AC-RFP-07-3",
+        "user_id": "X-9001",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-07"
+      }
+    ]
+  }
+}

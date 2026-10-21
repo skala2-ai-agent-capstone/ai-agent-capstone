@@ -1,0 +1,72 @@
+[
+  {
+    "customer_id": "CUST-HB",
+    "name": "한빛제약(가상)",
+    "approved_reference": false
+  },
+  {
+    "customer_id": "CUST-DH",
+    "name": "동해물류(가상)",
+    "approved_reference": false
+  },
+  {
+    "customer_id": "CUST-SJ",
+    "name": "서진금융(가상)",
+    "approved_reference": false
+  },
+  {
+    "customer_id": "CUST-NR",
+    "name": "누리유통(가상)",
+    "approved_reference": false
+  },
+  {
+    "customer_id": "CUST-MR",
+    "name": "미래교육재단(가상)",
+    "approved_reference": true
+  },
+  {
+    "customer_id": "CUST-JW",
+    "name": "정원보험(가상)",
+    "approved_reference": false
+  },
+  {
+    "customer_id": "CUST-GA",
+    "name": "가온건설(가상)",
+    "approved_reference": false
+  },
+  {
+    "customer_id": "CUST-BR",
+    "name": "보람의료재단(가상)",
+    "approved_reference": false
+  },
+  {
+    "customer_id": "CUST-DS",
+    "name": "대성화학(가상)",
+    "approved_reference": false
+  },
+  {
+    "customer_id": "CUST-SH",
+    "name": "새한식품(가상)",
+    "approved_reference": true
+  },
+  {
+    "customer_id": "CUST-OR",
+    "name": "오름에너지(가상)",
+    "approved_reference": false
+  },
+  {
+    "customer_id": "CUST-PN",
+    "name": "푸른시청(가상)",
+    "approved_reference": false
+  },
+  {
+    "customer_id": "CUST-CS",
+    "name": "청솔대학교(가상)",
+    "approved_reference": false
+  },
+  {
+    "customer_id": "CUST-TK",
+    "name": "태광모터스(가상)",
+    "approved_reference": false
+  }
+]

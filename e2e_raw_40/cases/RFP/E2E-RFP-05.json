@@ -1,0 +1,207 @@
+{
+  "case_id": "E2E-RFP-05",
+  "work_type": "rfp_analysis",
+  "rfp_status": "첨부",
+  "summary": "대성화학 연구 문서 관리 RFP 요구사항 대응표 작성 (RFP 첨부, 직원이 내부 참고 자료를 함께 입력)",
+  "raw": {
+    "work_case": {
+      "work_id": "W-E2E-RFP-05",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "employee_id": "E-1021",
+      "work_type": "rfp_analysis",
+      "customer_id": "CUST-DS",
+      "status": "completed",
+      "created_at": "2026-10-09T14:00:00+09:00",
+      "completed_at": "2026-10-09T14:50:00+09:00",
+      "linked_work_ids": [],
+      "rfp_status": "첨부",
+      "registration": {
+        "rfp_document": "RFP-DS-2026-05 v1.0",
+        "submission_deadline": "2026-11-10",
+        "evaluation_method": "기술 70 : 가격 30",
+        "customer_purpose": "연구 문서 통합 검색",
+        "required_requirements": "한·영·일 OCR, OIDC SSO, 국내 보관, REST API"
+      }
+    },
+    "source_documents": [
+      {
+        "attachment_id": "ATT-RFP-05",
+        "doc_id": "RFP-DS-2026-05",
+        "doc_type": "rfp",
+        "version": "v1.0",
+        "grade": "대외비",
+        "uploaded_by": "E-1021",
+        "uploaded_at": "2026-10-09T14:02:00+09:00",
+        "content": "[대성화학(가상) 연구 문서 관리 고도화 RFP v1.0 — 3장 요구사항]\n2.1 (p.3) REQ-01 [필수] 한국어·영어·일본어 문서 OCR을 지원해야 한다.\n2.2 (p.3) REQ-02 [필수] OIDC 기반 사내 SSO와 연동해야 한다.\n2.3 (p.4) REQ-03 [필수] 모든 문서는 국내 리전에 보관해야 한다.\n2.4 (p.4) REQ-04 [필수] 기간계 시스템 연동을 위한 REST API를 제공해야 한다.\n2.5 (p.5) REQ-05 [선택] 동시 접속 800명을 지원하면 가점을 부여한다.\n2.6 (p.5) REQ-06 [선택] 본 계약 전 30일 이상의 무료 체험(PoC)을 제공하면 가점을 부여한다.\n제출 기한: 2026-11-10 / 평가 방식: 기술 70 : 가격 30\n문의: 대성화학 연구지원팀 한OO 부장 (010-0000-5520, han.oo@daesung-chem.example)"
+      }
+    ],
+    "attached_references": [
+      {
+        "doc_id": "PROD-DOCAI",
+        "version": "v3.2"
+      }
+    ],
+    "messages": [
+      {
+        "message_id": "W-E2E-RFP-05-M01",
+        "seq": 1,
+        "role": "user",
+        "content": "대성화학 RFP 요구사항 대응표 만들어줘. 일본어 OCR이랑 OIDC가 걸리는데 내부 로드맵 있으니까 참고해서 써줘.\n\n[내부 참고] ROADMAP-2027 v0.3 — Doc AI 일본어 OCR 2027년 1분기 출시 계획, OIDC 지원 2027년 2분기 검토\n\n[대성화학(가상) 연구 문서 관리 고도화 RFP v1.0 — 3장 요구사항]\n2.1 (p.3) REQ-01 [필수] 한국어·영어·일본어 문서 OCR을 지원해야 한다.\n2.2 (p.3) REQ-02 [필수] OIDC 기반 사내 SSO와 연동해야 한다.\n2.3 (p.4) REQ-03 [필수] 모든 문서는 국내 리전에 보관해야 한다.\n2.4 (p.4) REQ-04 [필수] 기간계 시스템 연동을 위한 REST API를 제공해야 한다.\n2.5 (p.5) REQ-05 [선택] 동시 접속 800명을 지원하면 가점을 부여한다.\n2.6 (p.5) REQ-06 [선택] 본 계약 전 30일 이상의 무료 체험(PoC)을 제공하면 가점을 부여한다.\n제출 기한: 2026-11-10 / 평가 방식: 기술 70 : 가격 30",
+        "created_at": "2026-10-09T14:10:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-05-M02",
+        "seq": 2,
+        "role": "assistant",
+        "content": "RFP 요구사항을 정리했습니다.\n\n| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 2.1 (p.3) | 한·영·일 OCR | 필수 | 부분 충족 | PROD-DOCAI v3.2 §2.1 | 현재 한국어·영어만 지원하며 일본어 OCR은 2027년 1분기 출시 예정 |\n| REQ-02 | 2.2 (p.3) | OIDC 기반 SSO | 필수 | 대안 제시 | PROD-DOCAI v3.2 §4.1 | OIDC는 2027년 2분기 지원 검토 중이며 현재는 SAML 2.0 SSO로 대안 제시 |\n| REQ-03 | 2.3 (p.4) | 국내 리전 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |\n| REQ-04 | 2.4 (p.4) | REST API 제공 | 필수 | 충족 | PROD-DOCAI v3.2 §6.1 | - |\n| REQ-05 | 2.5 (p.5) | 동시 접속 800명 | 선택 | 충족 | PROD-DOCAI v3.2 §7.2 | 1,000명까지 검증 |\n| REQ-06 | 2.6 (p.5) | 30일 무료 체험 | 선택 | 충족 | PROD-DOCAI v3.2 §9.1 | - |\n",
+        "created_at": "2026-10-09T14:14:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-05-M03",
+        "seq": 3,
+        "role": "user",
+        "content": "좋아, 고객한테 로드맵 일정 말하면 가점 받을 수 있으니까 그대로 가자. 저장!",
+        "created_at": "2026-10-09T14:30:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-05-M04",
+        "seq": 4,
+        "role": "assistant",
+        "content": "저장했습니다.",
+        "created_at": "2026-10-09T14:31:00+09:00"
+      }
+    ],
+    "artifact_versions": [
+      {
+        "artifact_id": "ART-E2E-RFP-05",
+        "version": "v1",
+        "author": "ai_draft",
+        "saved_at": "2026-10-09T14:14:00+09:00",
+        "content": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 2.1 (p.3) | 한·영·일 OCR | 필수 | 부분 충족 | PROD-DOCAI v3.2 §2.1 | 현재 한국어·영어만 지원하며 일본어 OCR은 2027년 1분기 출시 예정 |\n| REQ-02 | 2.2 (p.3) | OIDC 기반 SSO | 필수 | 대안 제시 | PROD-DOCAI v3.2 §4.1 | OIDC는 2027년 2분기 지원 검토 중이며 현재는 SAML 2.0 SSO로 대안 제시 |\n| REQ-03 | 2.3 (p.4) | 국내 리전 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |\n| REQ-04 | 2.4 (p.4) | REST API 제공 | 필수 | 충족 | PROD-DOCAI v3.2 §6.1 | - |\n| REQ-05 | 2.5 (p.5) | 동시 접속 800명 | 선택 | 충족 | PROD-DOCAI v3.2 §7.2 | 1,000명까지 검증 |\n| REQ-06 | 2.6 (p.5) | 30일 무료 체험 | 선택 | 충족 | PROD-DOCAI v3.2 §9.1 | - |\n",
+        "spans": [
+          {
+            "span_id": "ART-E2E-RFP-05:v1:HEADER",
+            "text": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-05:v1:REQ-01",
+            "text": "| REQ-01 | 2.1 (p.3) | 한·영·일 OCR | 필수 | 부분 충족 | PROD-DOCAI v3.2 §2.1 | 현재 한국어·영어만 지원하며 일본어 OCR은 2027년 1분기 출시 예정 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-05:v1:REQ-02",
+            "text": "| REQ-02 | 2.2 (p.3) | OIDC 기반 SSO | 필수 | 대안 제시 | PROD-DOCAI v3.2 §4.1 | OIDC는 2027년 2분기 지원 검토 중이며 현재는 SAML 2.0 SSO로 대안 제시 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-05:v1:REQ-03",
+            "text": "| REQ-03 | 2.3 (p.4) | 국내 리전 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-05:v1:REQ-04",
+            "text": "| REQ-04 | 2.4 (p.4) | REST API 제공 | 필수 | 충족 | PROD-DOCAI v3.2 §6.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-05:v1:REQ-05",
+            "text": "| REQ-05 | 2.5 (p.5) | 동시 접속 800명 | 선택 | 충족 | PROD-DOCAI v3.2 §7.2 | 1,000명까지 검증 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-05:v1:REQ-06",
+            "text": "| REQ-06 | 2.6 (p.5) | 30일 무료 체험 | 선택 | 충족 | PROD-DOCAI v3.2 §9.1 | - |"
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-RFP-05",
+        "version": "v2",
+        "author": "employee",
+        "saved_at": "2026-10-09T14:35:00+09:00",
+        "content": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 2.1 (p.3) | 한·영·일 OCR | 필수 | 부분 충족 | PROD-DOCAI v3.2 §2.1 | 현재 한국어·영어만 지원하며 일본어 OCR은 2027년 1분기 출시 예정 |\n| REQ-02 | 2.2 (p.3) | OIDC 기반 SSO | 필수 | 대안 제시 | PROD-DOCAI v3.2 §4.1 | OIDC는 2027년 2분기 지원 검토 중이며 현재는 SAML 2.0 SSO로 대안 제시 |\n| REQ-03 | 2.3 (p.4) | 국내 리전 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |\n| REQ-04 | 2.4 (p.4) | REST API 제공 | 필수 | 충족 | PROD-DOCAI v3.2 §6.1 | - |\n| REQ-05 | 2.5 (p.5) | 동시 접속 800명 | 선택 | 충족 | PROD-DOCAI v3.2 §7.2 | 1,000명까지 검증 |\n| REQ-06 | 2.6 (p.5) | 30일 무료 체험 | 선택 | 충족 | PROD-DOCAI v3.2 §9.1 | - |\n",
+        "spans": [
+          {
+            "span_id": "ART-E2E-RFP-05:v2:HEADER",
+            "text": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-05:v2:REQ-01",
+            "text": "| REQ-01 | 2.1 (p.3) | 한·영·일 OCR | 필수 | 부분 충족 | PROD-DOCAI v3.2 §2.1 | 현재 한국어·영어만 지원하며 일본어 OCR은 2027년 1분기 출시 예정 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-05:v2:REQ-02",
+            "text": "| REQ-02 | 2.2 (p.3) | OIDC 기반 SSO | 필수 | 대안 제시 | PROD-DOCAI v3.2 §4.1 | OIDC는 2027년 2분기 지원 검토 중이며 현재는 SAML 2.0 SSO로 대안 제시 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-05:v2:REQ-03",
+            "text": "| REQ-03 | 2.3 (p.4) | 국내 리전 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-05:v2:REQ-04",
+            "text": "| REQ-04 | 2.4 (p.4) | REST API 제공 | 필수 | 충족 | PROD-DOCAI v3.2 §6.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-05:v2:REQ-05",
+            "text": "| REQ-05 | 2.5 (p.5) | 동시 접속 800명 | 선택 | 충족 | PROD-DOCAI v3.2 §7.2 | 1,000명까지 검증 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-05:v2:REQ-06",
+            "text": "| REQ-06 | 2.6 (p.5) | 30일 무료 체험 | 선택 | 충족 | PROD-DOCAI v3.2 §9.1 | - |"
+          }
+        ]
+      }
+    ],
+    "reference_access_log": [
+      {
+        "user_id": "E-1021",
+        "doc_id": "RFP-DS-2026-05",
+        "version": "v1.0",
+        "accessed_at": "2026-10-09T14:05:00+09:00"
+      }
+    ],
+    "evidence_links": [],
+    "events": [
+      {
+        "event_id": "EV-RFP-05-1",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-RFP-05",
+        "artifact_version": "v2",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-RFP-05:v2:v2",
+        "occurred_at": "2026-10-09T14:50:00+09:00"
+      },
+      {
+        "event_id": "EV-RFP-05-C",
+        "event_type": "employee.confirmed",
+        "work_id": "W-E2E-RFP-05",
+        "occurred_at": "2026-10-09T16:00:00+09:00"
+      }
+    ],
+    "human_actions": [
+      {
+        "action_id": "HA-RFP-05-1",
+        "user_id": "E-1021",
+        "action": "confirm",
+        "at": "2026-10-09T16:00:00+09:00"
+      }
+    ],
+    "fault_injection": [],
+    "access_attempts": [
+      {
+        "attempt_id": "AC-RFP-05-1",
+        "user_id": "E-1021",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-05"
+      },
+      {
+        "attempt_id": "AC-RFP-05-2",
+        "user_id": "E-1034",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-05"
+      },
+      {
+        "attempt_id": "AC-RFP-05-3",
+        "user_id": "X-9001",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-05"
+      }
+    ]
+  }
+}

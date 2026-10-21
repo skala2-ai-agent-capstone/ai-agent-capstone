@@ -1,0 +1,223 @@
+{
+  "case_id": "E2E-RFP-02",
+  "work_type": "rfp_analysis",
+  "rfp_status": "첨부",
+  "summary": "정원보험 Contact AI 도입 RFP 요구사항 대응표 작성 (RFP 첨부, 요구사항 8건)",
+  "raw": {
+    "work_case": {
+      "work_id": "W-E2E-RFP-02",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "employee_id": "E-1060",
+      "work_type": "rfp_analysis",
+      "customer_id": "CUST-JW",
+      "status": "completed",
+      "created_at": "2026-10-06T13:20:00+09:00",
+      "completed_at": "2026-10-06T14:05:00+09:00",
+      "linked_work_ids": [],
+      "rfp_status": "첨부",
+      "registration": {
+        "rfp_document": "RFP-JW-2026-03 v1.0",
+        "submission_deadline": "2026-11-13",
+        "evaluation_method": "기술 60 : 가격 40",
+        "customer_purpose": "상담 품질 평준화와 후처리 시간 단축",
+        "required_requirements": "한국어 STT, 300석, IVR 유지, 녹취 3년, 자동 요약"
+      }
+    },
+    "source_documents": [
+      {
+        "attachment_id": "ATT-RFP-02",
+        "doc_id": "RFP-JW-2026-03",
+        "doc_type": "rfp",
+        "version": "v1.0",
+        "grade": "대외비",
+        "uploaded_by": "E-1060",
+        "uploaded_at": "2026-10-06T13:22:00+09:00",
+        "content": "[정원보험(가상) Contact AI 도입 RFP v1.0 — 3장 요구사항]\n3.1 (p.4) REQ-01 [필수] 상담 음성을 한국어로 실시간 텍스트 변환(STT)해야 한다.\n3.2 (p.4) REQ-02 [필수] 동시 상담 300석 이상을 지원해야 한다.\n3.3 (p.5) REQ-03 [필수] 기존 IVR 시스템을 교체하지 않고 연동·유지할 수 있어야 한다.\n3.4 (p.5) REQ-04 [필수] 상담 녹취는 3년간 보관해야 한다.\n3.5 (p.6) REQ-05 [필수] 상담 내용을 자동으로 요약해 CRM에 저장해야 한다.\n3.6 (p.6) REQ-06 [선택] 영어 상담 STT를 지원하면 가점을 부여한다.\n3.7 (p.7) REQ-07 [필수] 월 가용성 99.95% 이상의 SLA를 보장해야 한다.\n3.8 (p.7) REQ-08 [필수] 서울 외 지역에 이중화 리전을 운영해야 한다.\n제출 기한: 2026-11-13 / 평가 방식: 기술 60 : 가격 40\n문의: 정원보험 상품전략팀 최OO 과장 (010-0000-2201, choi.oo@jungwon-ins.example)"
+      }
+    ],
+    "attached_references": [
+      {
+        "doc_id": "PROD-CONTACT",
+        "version": "v2.4"
+      }
+    ],
+    "messages": [
+      {
+        "message_id": "W-E2E-RFP-02-M01",
+        "seq": 1,
+        "role": "user",
+        "content": "정원보험 RFP 요구사항 분석해서 대응표 만들어줘. 제품은 Contact AI 제품 설명서 기준으로.\n\n[정원보험(가상) Contact AI 도입 RFP v1.0 — 3장 요구사항]\n3.1 (p.4) REQ-01 [필수] 상담 음성을 한국어로 실시간 텍스트 변환(STT)해야 한다.\n3.2 (p.4) REQ-02 [필수] 동시 상담 300석 이상을 지원해야 한다.\n3.3 (p.5) REQ-03 [필수] 기존 IVR 시스템을 교체하지 않고 연동·유지할 수 있어야 한다.\n3.4 (p.5) REQ-04 [필수] 상담 녹취는 3년간 보관해야 한다.\n3.5 (p.6) REQ-05 [필수] 상담 내용을 자동으로 요약해 CRM에 저장해야 한다.\n3.6 (p.6) REQ-06 [선택] 영어 상담 STT를 지원하면 가점을 부여한다.\n3.7 (p.7) REQ-07 [필수] 월 가용성 99.95% 이상의 SLA를 보장해야 한다.\n3.8 (p.7) REQ-08 [필수] 서울 외 지역에 이중화 리전을 운영해야 한다.\n제출 기한: 2026-11-13 / 평가 방식: 기술 60 : 가격 40\n문의: [고객 담당자] (연락처 삭제)",
+        "created_at": "2026-10-06T13:30:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-02-M02",
+        "seq": 2,
+        "role": "assistant",
+        "content": "RFP 요구사항을 정리했습니다.\n\n| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 3.1 (p.4) | 한국어 실시간 STT | 필수 | 충족 | PROD-CONTACT v2.4 §1.1 | - |\n| REQ-02 | 3.2 (p.4) | 동시 상담 300석 이상 | 필수 | 충족 | PROD-CONTACT v2.4 §2.2 | 최대 500석 지원 |\n| REQ-03 | 3.3 (p.5) | 기존 IVR 연동·유지 | 필수 | 충족 | PROD-CONTACT v2.4 §3.1 | - |\n| REQ-04 | 3.4 (p.5) | 녹취 3년 보관 | 필수 | 충족 | PROD-CONTACT v2.4 §4.1 | - |\n| REQ-05 | 3.5 (p.6) | 상담 자동 요약 및 CRM 저장 | 필수 | 충족 | PROD-CONTACT v2.4 §1.1, §3.1 | - |\n| REQ-06 | 3.6 (p.6) | 영어 상담 STT | 필수 | 충족 | PROD-CONTACT v2.4 §1.1 | - |\n| REQ-07 | 3.7 (p.7) | 월 가용성 99.95% SLA | 필수 | 충족 | PROD-CONTACT v2.4 §8.1 | - |\n| REQ-08 | 3.8 (p.7) | 서울 외 이중화 리전 | 필수 | 대안 제시 | PROD-CONTACT v2.4 §4.1 | 서울 리전 보관만 명시, 이중화 가능 여부는 담당 부서 확인 후 대안 제시 |\n",
+        "created_at": "2026-10-06T13:34:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-02-M03",
+        "seq": 3,
+        "role": "user",
+        "content": "고마워. 이대로 저장할게.",
+        "created_at": "2026-10-06T13:52:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-02-M04",
+        "seq": 4,
+        "role": "assistant",
+        "content": "네, 대응표를 저장했습니다. 제출 전 원문과 한 번 더 대조해 보시길 권합니다.",
+        "created_at": "2026-10-06T13:53:00+09:00"
+      }
+    ],
+    "artifact_versions": [
+      {
+        "artifact_id": "ART-E2E-RFP-02",
+        "version": "v1",
+        "author": "ai_draft",
+        "saved_at": "2026-10-06T13:34:00+09:00",
+        "content": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 3.1 (p.4) | 한국어 실시간 STT | 필수 | 충족 | PROD-CONTACT v2.4 §1.1 | - |\n| REQ-02 | 3.2 (p.4) | 동시 상담 300석 이상 | 필수 | 충족 | PROD-CONTACT v2.4 §2.2 | 최대 500석 지원 |\n| REQ-03 | 3.3 (p.5) | 기존 IVR 연동·유지 | 필수 | 충족 | PROD-CONTACT v2.4 §3.1 | - |\n| REQ-04 | 3.4 (p.5) | 녹취 3년 보관 | 필수 | 충족 | PROD-CONTACT v2.4 §4.1 | - |\n| REQ-05 | 3.5 (p.6) | 상담 자동 요약 및 CRM 저장 | 필수 | 충족 | PROD-CONTACT v2.4 §1.1, §3.1 | - |\n| REQ-06 | 3.6 (p.6) | 영어 상담 STT | 필수 | 충족 | PROD-CONTACT v2.4 §1.1 | - |\n| REQ-07 | 3.7 (p.7) | 월 가용성 99.95% SLA | 필수 | 충족 | PROD-CONTACT v2.4 §8.1 | - |\n| REQ-08 | 3.8 (p.7) | 서울 외 이중화 리전 | 필수 | 대안 제시 | PROD-CONTACT v2.4 §4.1 | 서울 리전 보관만 명시, 이중화 가능 여부는 담당 부서 확인 후 대안 제시 |\n",
+        "spans": [
+          {
+            "span_id": "ART-E2E-RFP-02:v1:HEADER",
+            "text": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-02:v1:REQ-01",
+            "text": "| REQ-01 | 3.1 (p.4) | 한국어 실시간 STT | 필수 | 충족 | PROD-CONTACT v2.4 §1.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-02:v1:REQ-02",
+            "text": "| REQ-02 | 3.2 (p.4) | 동시 상담 300석 이상 | 필수 | 충족 | PROD-CONTACT v2.4 §2.2 | 최대 500석 지원 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-02:v1:REQ-03",
+            "text": "| REQ-03 | 3.3 (p.5) | 기존 IVR 연동·유지 | 필수 | 충족 | PROD-CONTACT v2.4 §3.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-02:v1:REQ-04",
+            "text": "| REQ-04 | 3.4 (p.5) | 녹취 3년 보관 | 필수 | 충족 | PROD-CONTACT v2.4 §4.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-02:v1:REQ-05",
+            "text": "| REQ-05 | 3.5 (p.6) | 상담 자동 요약 및 CRM 저장 | 필수 | 충족 | PROD-CONTACT v2.4 §1.1, §3.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-02:v1:REQ-06",
+            "text": "| REQ-06 | 3.6 (p.6) | 영어 상담 STT | 필수 | 충족 | PROD-CONTACT v2.4 §1.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-02:v1:REQ-07",
+            "text": "| REQ-07 | 3.7 (p.7) | 월 가용성 99.95% SLA | 필수 | 충족 | PROD-CONTACT v2.4 §8.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-02:v1:REQ-08",
+            "text": "| REQ-08 | 3.8 (p.7) | 서울 외 이중화 리전 | 필수 | 대안 제시 | PROD-CONTACT v2.4 §4.1 | 서울 리전 보관만 명시, 이중화 가능 여부는 담당 부서 확인 후 대안 제시 |"
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-RFP-02",
+        "version": "v2",
+        "author": "employee",
+        "saved_at": "2026-10-06T13:55:00+09:00",
+        "content": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 3.1 (p.4) | 한국어 실시간 STT | 필수 | 충족 | PROD-CONTACT v2.4 §1.1 | - |\n| REQ-02 | 3.2 (p.4) | 동시 상담 300석 이상 | 필수 | 충족 | PROD-CONTACT v2.4 §2.2 | 최대 500석 지원 |\n| REQ-03 | 3.3 (p.5) | 기존 IVR 연동·유지 | 필수 | 충족 | PROD-CONTACT v2.4 §3.1 | - |\n| REQ-04 | 3.4 (p.5) | 녹취 3년 보관 | 필수 | 충족 | PROD-CONTACT v2.4 §4.1 | - |\n| REQ-05 | 3.5 (p.6) | 상담 자동 요약 및 CRM 저장 | 필수 | 충족 | PROD-CONTACT v2.4 §1.1, §3.1 | - |\n| REQ-06 | 3.6 (p.6) | 영어 상담 STT | 필수 | 충족 | PROD-CONTACT v2.4 §1.1 | - |\n| REQ-07 | 3.7 (p.7) | 월 가용성 99.95% SLA | 필수 | 충족 | PROD-CONTACT v2.4 §8.1 | - |\n| REQ-08 | 3.8 (p.7) | 서울 외 이중화 리전 | 필수 | 대안 제시 | PROD-CONTACT v2.4 §4.1 | 서울 리전 보관만 명시, 이중화 가능 여부는 담당 부서 확인 후 대안 제시 |\n",
+        "spans": [
+          {
+            "span_id": "ART-E2E-RFP-02:v2:HEADER",
+            "text": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-02:v2:REQ-01",
+            "text": "| REQ-01 | 3.1 (p.4) | 한국어 실시간 STT | 필수 | 충족 | PROD-CONTACT v2.4 §1.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-02:v2:REQ-02",
+            "text": "| REQ-02 | 3.2 (p.4) | 동시 상담 300석 이상 | 필수 | 충족 | PROD-CONTACT v2.4 §2.2 | 최대 500석 지원 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-02:v2:REQ-03",
+            "text": "| REQ-03 | 3.3 (p.5) | 기존 IVR 연동·유지 | 필수 | 충족 | PROD-CONTACT v2.4 §3.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-02:v2:REQ-04",
+            "text": "| REQ-04 | 3.4 (p.5) | 녹취 3년 보관 | 필수 | 충족 | PROD-CONTACT v2.4 §4.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-02:v2:REQ-05",
+            "text": "| REQ-05 | 3.5 (p.6) | 상담 자동 요약 및 CRM 저장 | 필수 | 충족 | PROD-CONTACT v2.4 §1.1, §3.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-02:v2:REQ-06",
+            "text": "| REQ-06 | 3.6 (p.6) | 영어 상담 STT | 필수 | 충족 | PROD-CONTACT v2.4 §1.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-02:v2:REQ-07",
+            "text": "| REQ-07 | 3.7 (p.7) | 월 가용성 99.95% SLA | 필수 | 충족 | PROD-CONTACT v2.4 §8.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-02:v2:REQ-08",
+            "text": "| REQ-08 | 3.8 (p.7) | 서울 외 이중화 리전 | 필수 | 대안 제시 | PROD-CONTACT v2.4 §4.1 | 서울 리전 보관만 명시, 이중화 가능 여부는 담당 부서 확인 후 대안 제시 |"
+          }
+        ]
+      }
+    ],
+    "reference_access_log": [
+      {
+        "user_id": "E-1060",
+        "doc_id": "RFP-JW-2026-03",
+        "version": "v1.0",
+        "accessed_at": "2026-10-06T13:25:00+09:00"
+      }
+    ],
+    "evidence_links": [],
+    "events": [
+      {
+        "event_id": "EV-RFP-02-1",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-RFP-02",
+        "artifact_version": "v2",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-RFP-02:v2:v2",
+        "occurred_at": "2026-10-06T14:05:00+09:00"
+      },
+      {
+        "event_id": "EV-RFP-02-C",
+        "event_type": "employee.confirmed",
+        "work_id": "W-E2E-RFP-02",
+        "occurred_at": "2026-10-06T15:15:00+09:00"
+      }
+    ],
+    "human_actions": [
+      {
+        "action_id": "HA-RFP-02-1",
+        "user_id": "E-1060",
+        "action": "confirm",
+        "at": "2026-10-06T15:15:00+09:00"
+      }
+    ],
+    "fault_injection": [],
+    "access_attempts": [
+      {
+        "attempt_id": "AC-RFP-02-1",
+        "user_id": "E-1060",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-02"
+      },
+      {
+        "attempt_id": "AC-RFP-02-2",
+        "user_id": "E-1034",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-02"
+      },
+      {
+        "attempt_id": "AC-RFP-02-3",
+        "user_id": "X-9001",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-02"
+      }
+    ]
+  }
+}

@@ -1,0 +1,177 @@
+{
+  "case_id": "E2E-RFP-10",
+  "work_type": "rfp_analysis",
+  "rfp_status": "없음",
+  "summary": "태광모터스 전화 통화 메모 기반 요구사항 정리 (RFP 없음, 등록 정보 일부 비어 있음, 직원이 고객 휴대전화 번호를 대화에 입력)",
+  "raw": {
+    "work_case": {
+      "work_id": "W-E2E-RFP-10",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-02",
+      "employee_id": "E-1102",
+      "work_type": "rfp_analysis",
+      "customer_id": "CUST-TK",
+      "status": "completed",
+      "created_at": "2026-10-16T09:20:00+09:00",
+      "completed_at": "2026-10-16T09:55:00+09:00",
+      "linked_work_ids": [],
+      "rfp_status": "없음",
+      "registration": {
+        "rfp_document": "없음 (전화 통화 메모)",
+        "submission_deadline": "",
+        "evaluation_method": "",
+        "customer_purpose": "",
+        "required_requirements": "라인별 불량률 대시보드, 주간 리포트, 협력사별 분리"
+      }
+    },
+    "source_documents": [
+      {
+        "attachment_id": "ATT-RFP-10",
+        "doc_id": "MEMO-TK-1015",
+        "doc_type": "call_note",
+        "version": "v1",
+        "grade": "사내",
+        "uploaded_by": "E-1102",
+        "uploaded_at": "2026-10-16T09:22:00+09:00",
+        "content": "[통화 메모] 2026-10-15 17:10 태광모터스(가상) 생산관리팀 박OO 부장과 통화 (고객 휴대전화 010-0000-7788)\n1. 생산 라인별 불량률을 보여주는 대시보드가 필요함\n2. 주간 리포트를 자동으로 만들어 담당자에게 메일로 보내주길 원함\n3. 협력사 3곳이 각자 자기 데이터만 보도록 분리 운영하길 원함\n4. 월 가용성 99.99%면 좋겠다고 언급"
+      }
+    ],
+    "attached_references": [
+      {
+        "doc_id": "PROD-INSIGHT",
+        "version": "v1.8"
+      }
+    ],
+    "messages": [
+      {
+        "message_id": "W-E2E-RFP-10-M01",
+        "seq": 1,
+        "role": "user",
+        "content": "통화 메모 보고 요구사항 대응표 만들어줘. 고객이 박OO 부장이고 번호는 010-0000-7788이야. Insight Hub 설명서 기준으로.\n\n[통화 메모] 2026-10-15 17:10 태광모터스(가상) 생산관리팀 박OO 부장과 통화 (고객 휴대전화 010-0000-7788)\n1. 생산 라인별 불량률을 보여주는 대시보드가 필요함\n2. 주간 리포트를 자동으로 만들어 담당자에게 메일로 보내주길 원함\n3. 협력사 3곳이 각자 자기 데이터만 보도록 분리 운영하길 원함\n4. 월 가용성 99.99%면 좋겠다고 언급",
+        "created_at": "2026-10-16T09:25:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-10-M02",
+        "seq": 2,
+        "role": "assistant",
+        "content": "RFP 요구사항을 정리했습니다.\n\n| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| ASK-01 | 통화 메모 1 | 라인별 불량률 대시보드 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |\n| ASK-02 | 통화 메모 2 | 주간 리포트 자동 생성·메일 발송 | 필수 | 부분 충족 | PROD-INSIGHT v1.8 §2.1 | 리포트 자동화는 제공, 메일 발송 지원 여부는 설명서에 없음 |\n| ASK-03 | 통화 메모 3 | 협력사별 데이터 분리 운영 | 필수 | 충족 | PROD-INSIGHT v1.8 §1.1 | 테넌트 단위 운영 |\n| ASK-04 | 통화 메모 4 | 월 가용성 99.99% | 선택 | 대응 불가 | PROD-INSIGHT v1.8 §8.1 | 표준 SLA는 월 가용성 99.9% |\n",
+        "created_at": "2026-10-16T09:29:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-10-M03",
+        "seq": 3,
+        "role": "user",
+        "content": "굿. 바로 저장.",
+        "created_at": "2026-10-16T09:45:00+09:00"
+      }
+    ],
+    "artifact_versions": [
+      {
+        "artifact_id": "ART-E2E-RFP-10",
+        "version": "v1",
+        "author": "ai_draft",
+        "saved_at": "2026-10-16T09:29:00+09:00",
+        "content": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| ASK-01 | 통화 메모 1 | 라인별 불량률 대시보드 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |\n| ASK-02 | 통화 메모 2 | 주간 리포트 자동 생성·메일 발송 | 필수 | 부분 충족 | PROD-INSIGHT v1.8 §2.1 | 리포트 자동화는 제공, 메일 발송 지원 여부는 설명서에 없음 |\n| ASK-03 | 통화 메모 3 | 협력사별 데이터 분리 운영 | 필수 | 충족 | PROD-INSIGHT v1.8 §1.1 | 테넌트 단위 운영 |\n| ASK-04 | 통화 메모 4 | 월 가용성 99.99% | 선택 | 대응 불가 | PROD-INSIGHT v1.8 §8.1 | 표준 SLA는 월 가용성 99.9% |\n",
+        "spans": [
+          {
+            "span_id": "ART-E2E-RFP-10:v1:HEADER",
+            "text": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-10:v1:ASK-01",
+            "text": "| ASK-01 | 통화 메모 1 | 라인별 불량률 대시보드 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-10:v1:ASK-02",
+            "text": "| ASK-02 | 통화 메모 2 | 주간 리포트 자동 생성·메일 발송 | 필수 | 부분 충족 | PROD-INSIGHT v1.8 §2.1 | 리포트 자동화는 제공, 메일 발송 지원 여부는 설명서에 없음 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-10:v1:ASK-03",
+            "text": "| ASK-03 | 통화 메모 3 | 협력사별 데이터 분리 운영 | 필수 | 충족 | PROD-INSIGHT v1.8 §1.1 | 테넌트 단위 운영 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-10:v1:ASK-04",
+            "text": "| ASK-04 | 통화 메모 4 | 월 가용성 99.99% | 선택 | 대응 불가 | PROD-INSIGHT v1.8 §8.1 | 표준 SLA는 월 가용성 99.9% |"
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-RFP-10",
+        "version": "v2",
+        "author": "employee",
+        "saved_at": "2026-10-16T09:47:00+09:00",
+        "content": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| ASK-01 | 통화 메모 1 | 라인별 불량률 대시보드 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |\n| ASK-02 | 통화 메모 2 | 주간 리포트 자동 생성·메일 발송 | 필수 | 부분 충족 | PROD-INSIGHT v1.8 §2.1 | 리포트 자동화는 제공, 메일 발송 지원 여부는 설명서에 없음 |\n| ASK-03 | 통화 메모 3 | 협력사별 데이터 분리 운영 | 필수 | 충족 | PROD-INSIGHT v1.8 §1.1 | 테넌트 단위 운영 |\n| ASK-04 | 통화 메모 4 | 월 가용성 99.99% | 선택 | 대응 불가 | PROD-INSIGHT v1.8 §8.1 | 표준 SLA는 월 가용성 99.9% |\n",
+        "spans": [
+          {
+            "span_id": "ART-E2E-RFP-10:v2:HEADER",
+            "text": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-10:v2:ASK-01",
+            "text": "| ASK-01 | 통화 메모 1 | 라인별 불량률 대시보드 | 필수 | 충족 | PROD-INSIGHT v1.8 §2.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-10:v2:ASK-02",
+            "text": "| ASK-02 | 통화 메모 2 | 주간 리포트 자동 생성·메일 발송 | 필수 | 부분 충족 | PROD-INSIGHT v1.8 §2.1 | 리포트 자동화는 제공, 메일 발송 지원 여부는 설명서에 없음 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-10:v2:ASK-03",
+            "text": "| ASK-03 | 통화 메모 3 | 협력사별 데이터 분리 운영 | 필수 | 충족 | PROD-INSIGHT v1.8 §1.1 | 테넌트 단위 운영 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-10:v2:ASK-04",
+            "text": "| ASK-04 | 통화 메모 4 | 월 가용성 99.99% | 선택 | 대응 불가 | PROD-INSIGHT v1.8 §8.1 | 표준 SLA는 월 가용성 99.9% |"
+          }
+        ]
+      }
+    ],
+    "reference_access_log": [],
+    "evidence_links": [],
+    "events": [
+      {
+        "event_id": "EV-RFP-10-1",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-RFP-10",
+        "artifact_version": "v2",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-RFP-10:v2:v2",
+        "occurred_at": "2026-10-16T09:55:00+09:00"
+      },
+      {
+        "event_id": "EV-RFP-10-C",
+        "event_type": "employee.confirmed",
+        "work_id": "W-E2E-RFP-10",
+        "occurred_at": "2026-10-16T11:05:00+09:00"
+      }
+    ],
+    "human_actions": [
+      {
+        "action_id": "HA-RFP-10-1",
+        "user_id": "E-1102",
+        "action": "confirm",
+        "at": "2026-10-16T11:05:00+09:00"
+      }
+    ],
+    "fault_injection": [],
+    "access_attempts": [
+      {
+        "attempt_id": "AC-RFP-10-1",
+        "user_id": "E-1102",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-10"
+      },
+      {
+        "attempt_id": "AC-RFP-10-2",
+        "user_id": "E-1034",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-10"
+      },
+      {
+        "attempt_id": "AC-RFP-10-3",
+        "user_id": "X-9001",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-10"
+      }
+    ]
+  }
+}

@@ -1,0 +1,323 @@
+{
+  "case_id": "E2E-PR-10",
+  "work_type": "proposal",
+  "rfp_status": "없음",
+  "summary": "태광모터스 품질 문서·분석 제안서 작성 (RFP 없음, 두 제품 결합, 완료 후 팀장 피드백으로 일정 보완해 재완료, 이의 제기와 검토 요청 포함)",
+  "raw": {
+    "work_case": {
+      "work_id": "W-E2E-PR-10",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-02",
+      "employee_id": "E-1102",
+      "work_type": "proposal",
+      "customer_id": "CUST-TK",
+      "status": "completed",
+      "created_at": "2026-10-16T13:00:00+09:00",
+      "completed_at": "2026-10-16T13:50:00+09:00",
+      "linked_work_ids": [
+        "W-E2E-RFP-10"
+      ],
+      "rfp_status": "없음",
+      "registration": {
+        "customer_purpose": "품질 문서 통합과 라인별 불량 현황 자동화",
+        "scale": "Doc AI 300명, Insight Hub 1테넌트",
+        "required_requirements": "문서 OCR 검색, 대시보드, 주간 리포트",
+        "schedule": "2027년 3월 운영 전환, 제안서 제출 기한 2026-10-30",
+        "constraints": "생산 라인 가동 중단 없이 구축",
+        "rfp": "없음"
+      }
+    },
+    "source_documents": [],
+    "attached_references": [
+      {
+        "doc_id": "PROD-DOCAI",
+        "version": "v3.2"
+      },
+      {
+        "doc_id": "PROD-INSIGHT",
+        "version": "v1.8"
+      },
+      {
+        "doc_id": "PRICE-2026.2",
+        "version": "2026.2"
+      }
+    ],
+    "messages": [
+      {
+        "message_id": "W-E2E-PR-10-M01",
+        "seq": 1,
+        "role": "user",
+        "content": "태광모터스 제안서 써줘.\n- 제품은 Doc AI(300명)와 Insight Hub(1테넌트), 둘 다 24개월.\n- 가격은 현행 가격표(PRICE-2026.2)로 각각 계산해서 합계까지, 할인은 넣지 말고 참고가로.\n- 근거는 각 제품 설명서 조항 번호까지, 효과 수치는 설명서에 없으면 쓰지 마.\n- 구성: 1. 고객 과제 2. 제안 솔루션 3. 기대 효과 4. 도입 일정 5. 가격",
+        "created_at": "2026-10-16T13:05:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-PR-10-M02",
+        "seq": 2,
+        "role": "assistant",
+        "content": "제안서 초안입니다.\n\n[제안서] 태광모터스(가상) 생산·품질 문서 통합 및 분석 제안\n1. 고객 과제: 생산 현장의 품질 문서가 분산되어 있고 라인별 불량 현황을 주 단위로 수작업 집계함\n2. 제안 솔루션: Doc AI(한국어·영어 OCR, SAML 2.0 SSO, 서울 리전 보관)로 품질 문서를 통합 검색하고, Insight Hub(대시보드, 보고서 자동화)로 라인별 현황을 시각화 [근거: PROD-DOCAI v3.2 §2.1, §4.1, §5.1 / PROD-INSIGHT v1.8 §2.1]\n3. 기대 효과: 품질 문서 검색과 주간 집계에 쓰는 시간 감소 (수치는 파일럿에서 측정)\n4. 도입 일정: 2027년 1월 구축, 2027년 2월 운영 전환\n5. 가격: Doc AI 25,000원 × 300명 × 24개월 = 180,000,000원, Insight Hub 3,000,000원 × 1테넌트 × 24개월 = 72,000,000원, 합계 252,000,000원 (PRICE-2026.2 기준 참고가, 할인 미적용, 부가가치세 별도)",
+        "created_at": "2026-10-16T13:10:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-PR-10-M03",
+        "seq": 3,
+        "role": "user",
+        "content": "단가×수량×기간 직접 계산해봤는데 180,000,000이랑 72,000,000 맞네. 합계도 252,000,000 맞고. 일정만 좀 더 구체적으로 써야 할 것 같지만 일단 저장할게.",
+        "created_at": "2026-10-16T13:25:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-PR-10-M04",
+        "seq": 4,
+        "role": "user",
+        "content": "팀장님이 도입 일정을 단계별로 쓰라고 하셔서 4번 항목 고쳐줘. Doc AI 먼저 구축하고 Insight Hub 대시보드는 그다음 달, 운영 전환은 2027년 3월.",
+        "created_at": "2026-10-16T14:40:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-PR-10-M05",
+        "seq": 5,
+        "role": "assistant",
+        "content": "도입 일정을 단계별로 수정했습니다.\n\n[제안서] 태광모터스(가상) 생산·품질 문서 통합 및 분석 제안\n1. 고객 과제: 생산 현장의 품질 문서가 분산되어 있고 라인별 불량 현황을 주 단위로 수작업 집계함\n2. 제안 솔루션: Doc AI(한국어·영어 OCR, SAML 2.0 SSO, 서울 리전 보관)로 품질 문서를 통합 검색하고, Insight Hub(대시보드, 보고서 자동화)로 라인별 현황을 시각화 [근거: PROD-DOCAI v3.2 §2.1, §4.1, §5.1 / PROD-INSIGHT v1.8 §2.1]\n3. 기대 효과: 품질 문서 검색과 주간 집계에 쓰는 시간 감소 (수치는 파일럿에서 측정)\n4. 도입 일정: 2026년 12월 계약, 2027년 1월 Doc AI 구축·SSO 연동, 2027년 2월 Insight Hub 대시보드 구축, 2027년 3월 운영 전환 (단계별 일정)\n5. 가격: Doc AI 25,000원 × 300명 × 24개월 = 180,000,000원, Insight Hub 3,000,000원 × 1테넌트 × 24개월 = 72,000,000원, 합계 252,000,000원 (PRICE-2026.2 기준 참고가, 할인 미적용, 부가가치세 별도)",
+        "created_at": "2026-10-16T14:44:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-PR-10-M06",
+        "seq": 6,
+        "role": "user",
+        "content": "OK 저장할게.",
+        "created_at": "2026-10-16T14:52:00+09:00"
+      }
+    ],
+    "artifact_versions": [
+      {
+        "artifact_id": "ART-E2E-PR-10",
+        "version": "v1",
+        "author": "ai_draft",
+        "saved_at": "2026-10-16T13:10:00+09:00",
+        "content": "[제안서] 태광모터스(가상) 생산·품질 문서 통합 및 분석 제안\n1. 고객 과제: 생산 현장의 품질 문서가 분산되어 있고 라인별 불량 현황을 주 단위로 수작업 집계함\n2. 제안 솔루션: Doc AI(한국어·영어 OCR, SAML 2.0 SSO, 서울 리전 보관)로 품질 문서를 통합 검색하고, Insight Hub(대시보드, 보고서 자동화)로 라인별 현황을 시각화 [근거: PROD-DOCAI v3.2 §2.1, §4.1, §5.1 / PROD-INSIGHT v1.8 §2.1]\n3. 기대 효과: 품질 문서 검색과 주간 집계에 쓰는 시간 감소 (수치는 파일럿에서 측정)\n4. 도입 일정: 2027년 1월 구축, 2027년 2월 운영 전환\n5. 가격: Doc AI 25,000원 × 300명 × 24개월 = 180,000,000원, Insight Hub 3,000,000원 × 1테넌트 × 24개월 = 72,000,000원, 합계 252,000,000원 (PRICE-2026.2 기준 참고가, 할인 미적용, 부가가치세 별도)",
+        "spans": [
+          {
+            "span_id": "ART-E2E-PR-10:v1:L01",
+            "text": "[제안서] 태광모터스(가상) 생산·품질 문서 통합 및 분석 제안"
+          },
+          {
+            "span_id": "ART-E2E-PR-10:v1:L02",
+            "text": "1. 고객 과제: 생산 현장의 품질 문서가 분산되어 있고 라인별 불량 현황을 주 단위로 수작업 집계함"
+          },
+          {
+            "span_id": "ART-E2E-PR-10:v1:L03",
+            "text": "2. 제안 솔루션: Doc AI(한국어·영어 OCR, SAML 2.0 SSO, 서울 리전 보관)로 품질 문서를 통합 검색하고, Insight Hub(대시보드, 보고서 자동화)로 라인별 현황을 시각화 [근거: PROD-DOCAI v3.2 §2.1, §4.1, §5.1 / PROD-INSIGHT v1.8 §2.1]"
+          },
+          {
+            "span_id": "ART-E2E-PR-10:v1:L04",
+            "text": "3. 기대 효과: 품질 문서 검색과 주간 집계에 쓰는 시간 감소 (수치는 파일럿에서 측정)"
+          },
+          {
+            "span_id": "ART-E2E-PR-10:v1:L05",
+            "text": "4. 도입 일정: 2027년 1월 구축, 2027년 2월 운영 전환"
+          },
+          {
+            "span_id": "ART-E2E-PR-10:v1:L06",
+            "text": "5. 가격: Doc AI 25,000원 × 300명 × 24개월 = 180,000,000원, Insight Hub 3,000,000원 × 1테넌트 × 24개월 = 72,000,000원, 합계 252,000,000원 (PRICE-2026.2 기준 참고가, 할인 미적용, 부가가치세 별도)"
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-PR-10",
+        "version": "v2",
+        "author": "employee",
+        "saved_at": "2026-10-16T13:30:00+09:00",
+        "content": "[제안서] 태광모터스(가상) 생산·품질 문서 통합 및 분석 제안\n1. 고객 과제: 생산 현장의 품질 문서가 분산되어 있고 라인별 불량 현황을 주 단위로 수작업 집계함\n2. 제안 솔루션: Doc AI(한국어·영어 OCR, SAML 2.0 SSO, 서울 리전 보관)로 품질 문서를 통합 검색하고, Insight Hub(대시보드, 보고서 자동화)로 라인별 현황을 시각화 [근거: PROD-DOCAI v3.2 §2.1, §4.1, §5.1 / PROD-INSIGHT v1.8 §2.1]\n3. 기대 효과: 품질 문서 검색과 주간 집계에 쓰는 시간 감소 (수치는 파일럿에서 측정)\n4. 도입 일정: 2027년 1월 구축, 2027년 2월 운영 전환\n5. 가격: Doc AI 25,000원 × 300명 × 24개월 = 180,000,000원, Insight Hub 3,000,000원 × 1테넌트 × 24개월 = 72,000,000원, 합계 252,000,000원 (PRICE-2026.2 기준 참고가, 할인 미적용, 부가가치세 별도)",
+        "spans": [
+          {
+            "span_id": "ART-E2E-PR-10:v2:L01",
+            "text": "[제안서] 태광모터스(가상) 생산·품질 문서 통합 및 분석 제안"
+          },
+          {
+            "span_id": "ART-E2E-PR-10:v2:L02",
+            "text": "1. 고객 과제: 생산 현장의 품질 문서가 분산되어 있고 라인별 불량 현황을 주 단위로 수작업 집계함"
+          },
+          {
+            "span_id": "ART-E2E-PR-10:v2:L03",
+            "text": "2. 제안 솔루션: Doc AI(한국어·영어 OCR, SAML 2.0 SSO, 서울 리전 보관)로 품질 문서를 통합 검색하고, Insight Hub(대시보드, 보고서 자동화)로 라인별 현황을 시각화 [근거: PROD-DOCAI v3.2 §2.1, §4.1, §5.1 / PROD-INSIGHT v1.8 §2.1]"
+          },
+          {
+            "span_id": "ART-E2E-PR-10:v2:L04",
+            "text": "3. 기대 효과: 품질 문서 검색과 주간 집계에 쓰는 시간 감소 (수치는 파일럿에서 측정)"
+          },
+          {
+            "span_id": "ART-E2E-PR-10:v2:L05",
+            "text": "4. 도입 일정: 2027년 1월 구축, 2027년 2월 운영 전환"
+          },
+          {
+            "span_id": "ART-E2E-PR-10:v2:L06",
+            "text": "5. 가격: Doc AI 25,000원 × 300명 × 24개월 = 180,000,000원, Insight Hub 3,000,000원 × 1테넌트 × 24개월 = 72,000,000원, 합계 252,000,000원 (PRICE-2026.2 기준 참고가, 할인 미적용, 부가가치세 별도)"
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-PR-10",
+        "version": "v3",
+        "author": "employee",
+        "saved_at": "2026-10-16T14:55:00+09:00",
+        "content": "[제안서] 태광모터스(가상) 생산·품질 문서 통합 및 분석 제안\n1. 고객 과제: 생산 현장의 품질 문서가 분산되어 있고 라인별 불량 현황을 주 단위로 수작업 집계함\n2. 제안 솔루션: Doc AI(한국어·영어 OCR, SAML 2.0 SSO, 서울 리전 보관)로 품질 문서를 통합 검색하고, Insight Hub(대시보드, 보고서 자동화)로 라인별 현황을 시각화 [근거: PROD-DOCAI v3.2 §2.1, §4.1, §5.1 / PROD-INSIGHT v1.8 §2.1]\n3. 기대 효과: 품질 문서 검색과 주간 집계에 쓰는 시간 감소 (수치는 파일럿에서 측정)\n4. 도입 일정: 2026년 12월 계약, 2027년 1월 Doc AI 구축·SSO 연동, 2027년 2월 Insight Hub 대시보드 구축, 2027년 3월 운영 전환 (단계별 일정)\n5. 가격: Doc AI 25,000원 × 300명 × 24개월 = 180,000,000원, Insight Hub 3,000,000원 × 1테넌트 × 24개월 = 72,000,000원, 합계 252,000,000원 (PRICE-2026.2 기준 참고가, 할인 미적용, 부가가치세 별도)",
+        "spans": [
+          {
+            "span_id": "ART-E2E-PR-10:v3:L01",
+            "text": "[제안서] 태광모터스(가상) 생산·품질 문서 통합 및 분석 제안"
+          },
+          {
+            "span_id": "ART-E2E-PR-10:v3:L02",
+            "text": "1. 고객 과제: 생산 현장의 품질 문서가 분산되어 있고 라인별 불량 현황을 주 단위로 수작업 집계함"
+          },
+          {
+            "span_id": "ART-E2E-PR-10:v3:L03",
+            "text": "2. 제안 솔루션: Doc AI(한국어·영어 OCR, SAML 2.0 SSO, 서울 리전 보관)로 품질 문서를 통합 검색하고, Insight Hub(대시보드, 보고서 자동화)로 라인별 현황을 시각화 [근거: PROD-DOCAI v3.2 §2.1, §4.1, §5.1 / PROD-INSIGHT v1.8 §2.1]"
+          },
+          {
+            "span_id": "ART-E2E-PR-10:v3:L04",
+            "text": "3. 기대 효과: 품질 문서 검색과 주간 집계에 쓰는 시간 감소 (수치는 파일럿에서 측정)"
+          },
+          {
+            "span_id": "ART-E2E-PR-10:v3:L05",
+            "text": "4. 도입 일정: 2026년 12월 계약, 2027년 1월 Doc AI 구축·SSO 연동, 2027년 2월 Insight Hub 대시보드 구축, 2027년 3월 운영 전환 (단계별 일정)"
+          },
+          {
+            "span_id": "ART-E2E-PR-10:v3:L06",
+            "text": "5. 가격: Doc AI 25,000원 × 300명 × 24개월 = 180,000,000원, Insight Hub 3,000,000원 × 1테넌트 × 24개월 = 72,000,000원, 합계 252,000,000원 (PRICE-2026.2 기준 참고가, 할인 미적용, 부가가치세 별도)"
+          }
+        ]
+      }
+    ],
+    "reference_access_log": [
+      {
+        "user_id": "E-1102",
+        "doc_id": "PRICE-2026.2",
+        "version": "2026.2",
+        "accessed_at": "2026-10-16T13:18:00+09:00"
+      },
+      {
+        "user_id": "E-1102",
+        "doc_id": "PROD-DOCAI",
+        "version": "v3.2",
+        "accessed_at": "2026-10-16T13:20:00+09:00"
+      },
+      {
+        "user_id": "E-1102",
+        "doc_id": "PROD-INSIGHT",
+        "version": "v1.8",
+        "accessed_at": "2026-10-16T13:21:00+09:00"
+      }
+    ],
+    "evidence_links": [
+      {
+        "link_id": "EL-PR-10-1",
+        "span_id": "ART-E2E-PR-10:v2:L06",
+        "doc_id": "PRICE-2026.2",
+        "version": "2026.2",
+        "location": "P-100, P-300",
+        "created_by": "E-1102",
+        "created_at": "2026-10-16T13:28:00+09:00"
+      },
+      {
+        "link_id": "EL-PR-10-2",
+        "span_id": "ART-E2E-PR-10:v3:L06",
+        "doc_id": "PRICE-2026.2",
+        "version": "2026.2",
+        "location": "P-100, P-300",
+        "created_by": "E-1102",
+        "created_at": "2026-10-16T14:53:00+09:00"
+      }
+    ],
+    "events": [
+      {
+        "event_id": "EV-PR-10-1",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-PR-10",
+        "artifact_version": "v2",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-PR-10:v2:v2",
+        "occurred_at": "2026-10-16T13:50:00+09:00"
+      },
+      {
+        "event_id": "EV-PR-10-2",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-PR-10",
+        "artifact_version": "v3",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-PR-10:v3:v2",
+        "occurred_at": "2026-10-16T14:58:00+09:00"
+      },
+      {
+        "event_id": "EV-PR-10-3",
+        "event_type": "appeal.submitted",
+        "work_id": "W-E2E-PR-10",
+        "occurred_at": "2026-10-16T16:10:00+09:00"
+      },
+      {
+        "event_id": "EV-PR-10-4",
+        "event_type": "review.decided",
+        "work_id": "W-E2E-PR-10",
+        "occurred_at": "2026-10-16T17:20:00+09:00"
+      },
+      {
+        "event_id": "EV-PR-10-C",
+        "event_type": "employee.confirmed",
+        "work_id": "W-E2E-PR-10",
+        "occurred_at": "2026-10-16T17:40:00+09:00",
+        "artifact_version": "v3"
+      }
+    ],
+    "human_actions": [
+      {
+        "action_id": "HA-PR-10-1",
+        "user_id": "E-1102",
+        "action": "appeal",
+        "at": "2026-10-16T16:10:00+09:00",
+        "target_items": [
+          "결과 검증"
+        ],
+        "artifact_version": "v2",
+        "cited_evidence": [
+          "ART-E2E-PR-10:v2:L06"
+        ],
+        "comment": "가격 계산을 직접 검산하고 가격표 조항에 연결했습니다."
+      },
+      {
+        "action_id": "HA-PR-10-2",
+        "user_id": "R-2001",
+        "action": "review_decision",
+        "at": "2026-10-16T17:20:00+09:00",
+        "artifact_version": "v2",
+        "decision": "수정",
+        "reason": "검산 사실은 대화(M03)에 기록되어 있어 추가 근거로 인정"
+      },
+      {
+        "action_id": "HA-PR-10-3",
+        "user_id": "E-1102",
+        "action": "confirm",
+        "artifact_version": "v3",
+        "at": "2026-10-16T17:40:00+09:00"
+      }
+    ],
+    "fault_injection": [],
+    "access_attempts": [
+      {
+        "attempt_id": "AC-PR-10-1",
+        "user_id": "E-1102",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-PR-10"
+      },
+      {
+        "attempt_id": "AC-PR-10-2",
+        "user_id": "E-1034",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-PR-10"
+      },
+      {
+        "attempt_id": "AC-PR-10-3",
+        "user_id": "X-9001",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-PR-10"
+      }
+    ]
+  }
+}

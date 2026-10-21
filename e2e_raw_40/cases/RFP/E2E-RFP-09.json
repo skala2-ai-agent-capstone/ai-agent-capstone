@@ -1,0 +1,213 @@
+{
+  "case_id": "E2E-RFP-09",
+  "work_type": "rfp_analysis",
+  "rfp_status": "없음",
+  "summary": "오름에너지 현장 미팅 메모 기반 요구사항 정리 (RFP 없음, 직원이 작성한 구두 요구사항 메모)",
+  "raw": {
+    "work_case": {
+      "work_id": "W-E2E-RFP-09",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-02",
+      "employee_id": "E-1101",
+      "work_type": "rfp_analysis",
+      "customer_id": "CUST-OR",
+      "status": "completed",
+      "created_at": "2026-10-15T10:00:00+09:00",
+      "completed_at": "2026-10-15T10:50:00+09:00",
+      "linked_work_ids": [],
+      "rfp_status": "없음",
+      "registration": {
+        "rfp_document": "없음 (현장 미팅 메모)",
+        "submission_deadline": "미정",
+        "evaluation_method": "미정",
+        "customer_purpose": "설비 문서 검색 효율화",
+        "required_requirements": "SAML SSO, 국내 보관, 동시 300명"
+      }
+    },
+    "source_documents": [
+      {
+        "attachment_id": "ATT-RFP-09",
+        "doc_id": "MEMO-OR-1014",
+        "doc_type": "meeting_note",
+        "version": "v1",
+        "grade": "사내",
+        "uploaded_by": "E-1101",
+        "uploaded_at": "2026-10-15T10:02:00+09:00",
+        "content": "[미팅 메모] 2026-10-14 오름에너지(가상) 현장 미팅 / 참석: 고객 설비관리팀 장OO 부장 (010-0000-9930, jang.oo@oreum-energy.example) 외 2명, 당사 E-1101\n1. 설계 도면 PDF도 검색되면 좋겠다고 함 (희망사항)\n2. 사내 SSO는 SAML 방식이며 반드시 연동되어야 함\n3. 동시 접속 300명 규모로 사용 예정\n4. 보안 감사 대비 국내 데이터 보관이 필수\n5. 일본 지사 직원도 쓸 수 있으면 좋겠다고 언급 (일본어 문서 OCR)\n※ 고객이 구두로 말한 내용이며 문서로 확인된 것은 아님"
+      }
+    ],
+    "attached_references": [
+      {
+        "doc_id": "PROD-DOCAI",
+        "version": "v3.2"
+      }
+    ],
+    "messages": [
+      {
+        "message_id": "W-E2E-RFP-09-M01",
+        "seq": 1,
+        "role": "user",
+        "content": "어제 미팅 메모로 고객 요구사항 정리해줘. RFP는 없고 메모뿐이야. 번호는 MTG-01부터, 근거는 Doc AI 설명서 v3.2 조항까지.\n구분은 메모에 '희망사항'이라고 적힌 건 선택, 반드시/필수라고 한 건 필수로 해줘.\n\n[미팅 메모] 2026-10-14 오름에너지(가상) 현장 미팅 / 참석: 고객 설비관리팀 [고객 담당자] 외 2명, 당사 E-1101\n1. 설계 도면 PDF도 검색되면 좋겠다고 함 (희망사항)\n2. 사내 SSO는 SAML 방식이며 반드시 연동되어야 함\n3. 동시 접속 300명 규모로 사용 예정\n4. 보안 감사 대비 국내 데이터 보관이 필수\n5. 일본 지사 직원도 쓸 수 있으면 좋겠다고 언급 (일본어 문서 OCR)\n※ 고객이 구두로 말한 내용이며 문서로 확인된 것은 아님",
+        "created_at": "2026-10-15T10:10:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-09-M02",
+        "seq": 2,
+        "role": "assistant",
+        "content": "RFP 요구사항을 정리했습니다.\n\n| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| MTG-01 | 메모 1항 | 설계 도면 PDF 검색 | 필수 | 대안 제시 | PROD-DOCAI v3.2 §2.1 | OCR 지원 언어는 한국어·영어이며 도면 형식 지원 여부는 설명서에 없음, 확인 필요 |\n| MTG-02 | 메모 2항 | SAML SSO 연동 | 필수 | 충족 | PROD-DOCAI v3.2 §4.1 | - |\n| MTG-03 | 메모 3항 | 동시 접속 300명 | 필수 | 충족 | PROD-DOCAI v3.2 §7.2 | - |\n| MTG-04 | 메모 4항 | 국내 데이터 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |\n| MTG-05 | 메모 5항 | 일본어 문서 OCR | 필수 | 대응 불가 | PROD-DOCAI v3.2 §2.1 | 한국어·영어만 지원 |\n",
+        "created_at": "2026-10-15T10:14:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-09-M03",
+        "seq": 3,
+        "role": "user",
+        "content": "MTG-01이랑 MTG-05는 메모에 희망사항이라고 되어 있는데 필수로 적었네. 선택으로 고쳐줘.",
+        "created_at": "2026-10-15T10:26:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-09-M04",
+        "seq": 4,
+        "role": "assistant",
+        "content": "MTG-01과 MTG-05의 구분을 선택으로 수정했습니다.\n\n| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| MTG-01 | 메모 1항 | 설계 도면 PDF 검색 | 선택 | 대안 제시 | PROD-DOCAI v3.2 §2.1 | OCR 지원 언어는 한국어·영어이며 도면 형식 지원 여부는 설명서에 없음, 확인 필요 |\n| MTG-02 | 메모 2항 | SAML SSO 연동 | 필수 | 충족 | PROD-DOCAI v3.2 §4.1 | - |\n| MTG-03 | 메모 3항 | 동시 접속 300명 | 필수 | 충족 | PROD-DOCAI v3.2 §7.2 | - |\n| MTG-04 | 메모 4항 | 국내 데이터 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |\n| MTG-05 | 메모 5항 | 일본어 문서 OCR | 선택 | 대응 불가 | PROD-DOCAI v3.2 §2.1 | 한국어·영어만 지원 |\n",
+        "created_at": "2026-10-15T10:29:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-09-M05",
+        "seq": 5,
+        "role": "user",
+        "content": "OK 저장할게.",
+        "created_at": "2026-10-15T10:44:00+09:00"
+      }
+    ],
+    "artifact_versions": [
+      {
+        "artifact_id": "ART-E2E-RFP-09",
+        "version": "v1",
+        "author": "ai_draft",
+        "saved_at": "2026-10-15T10:14:00+09:00",
+        "content": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| MTG-01 | 메모 1항 | 설계 도면 PDF 검색 | 필수 | 대안 제시 | PROD-DOCAI v3.2 §2.1 | OCR 지원 언어는 한국어·영어이며 도면 형식 지원 여부는 설명서에 없음, 확인 필요 |\n| MTG-02 | 메모 2항 | SAML SSO 연동 | 필수 | 충족 | PROD-DOCAI v3.2 §4.1 | - |\n| MTG-03 | 메모 3항 | 동시 접속 300명 | 필수 | 충족 | PROD-DOCAI v3.2 §7.2 | - |\n| MTG-04 | 메모 4항 | 국내 데이터 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |\n| MTG-05 | 메모 5항 | 일본어 문서 OCR | 필수 | 대응 불가 | PROD-DOCAI v3.2 §2.1 | 한국어·영어만 지원 |\n",
+        "spans": [
+          {
+            "span_id": "ART-E2E-RFP-09:v1:HEADER",
+            "text": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-09:v1:MTG-01",
+            "text": "| MTG-01 | 메모 1항 | 설계 도면 PDF 검색 | 필수 | 대안 제시 | PROD-DOCAI v3.2 §2.1 | OCR 지원 언어는 한국어·영어이며 도면 형식 지원 여부는 설명서에 없음, 확인 필요 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-09:v1:MTG-02",
+            "text": "| MTG-02 | 메모 2항 | SAML SSO 연동 | 필수 | 충족 | PROD-DOCAI v3.2 §4.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-09:v1:MTG-03",
+            "text": "| MTG-03 | 메모 3항 | 동시 접속 300명 | 필수 | 충족 | PROD-DOCAI v3.2 §7.2 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-09:v1:MTG-04",
+            "text": "| MTG-04 | 메모 4항 | 국내 데이터 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-09:v1:MTG-05",
+            "text": "| MTG-05 | 메모 5항 | 일본어 문서 OCR | 필수 | 대응 불가 | PROD-DOCAI v3.2 §2.1 | 한국어·영어만 지원 |"
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-RFP-09",
+        "version": "v2",
+        "author": "employee",
+        "saved_at": "2026-10-15T10:46:00+09:00",
+        "content": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| MTG-01 | 메모 1항 | 설계 도면 PDF 검색 | 선택 | 대안 제시 | PROD-DOCAI v3.2 §2.1 | OCR 지원 언어는 한국어·영어이며 도면 형식 지원 여부는 설명서에 없음, 확인 필요 |\n| MTG-02 | 메모 2항 | SAML SSO 연동 | 필수 | 충족 | PROD-DOCAI v3.2 §4.1 | - |\n| MTG-03 | 메모 3항 | 동시 접속 300명 | 필수 | 충족 | PROD-DOCAI v3.2 §7.2 | - |\n| MTG-04 | 메모 4항 | 국내 데이터 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |\n| MTG-05 | 메모 5항 | 일본어 문서 OCR | 선택 | 대응 불가 | PROD-DOCAI v3.2 §2.1 | 한국어·영어만 지원 |\n",
+        "spans": [
+          {
+            "span_id": "ART-E2E-RFP-09:v2:HEADER",
+            "text": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-09:v2:MTG-01",
+            "text": "| MTG-01 | 메모 1항 | 설계 도면 PDF 검색 | 선택 | 대안 제시 | PROD-DOCAI v3.2 §2.1 | OCR 지원 언어는 한국어·영어이며 도면 형식 지원 여부는 설명서에 없음, 확인 필요 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-09:v2:MTG-02",
+            "text": "| MTG-02 | 메모 2항 | SAML SSO 연동 | 필수 | 충족 | PROD-DOCAI v3.2 §4.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-09:v2:MTG-03",
+            "text": "| MTG-03 | 메모 3항 | 동시 접속 300명 | 필수 | 충족 | PROD-DOCAI v3.2 §7.2 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-09:v2:MTG-04",
+            "text": "| MTG-04 | 메모 4항 | 국내 데이터 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-09:v2:MTG-05",
+            "text": "| MTG-05 | 메모 5항 | 일본어 문서 OCR | 선택 | 대응 불가 | PROD-DOCAI v3.2 §2.1 | 한국어·영어만 지원 |"
+          }
+        ]
+      }
+    ],
+    "reference_access_log": [
+      {
+        "user_id": "E-1101",
+        "doc_id": "PROD-DOCAI",
+        "version": "v3.2",
+        "accessed_at": "2026-10-15T10:40:00+09:00"
+      }
+    ],
+    "evidence_links": [],
+    "events": [
+      {
+        "event_id": "EV-RFP-09-1",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-RFP-09",
+        "artifact_version": "v2",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-RFP-09:v2:v2",
+        "occurred_at": "2026-10-15T10:50:00+09:00"
+      },
+      {
+        "event_id": "EV-RFP-09-C",
+        "event_type": "employee.confirmed",
+        "work_id": "W-E2E-RFP-09",
+        "occurred_at": "2026-10-15T12:00:00+09:00"
+      }
+    ],
+    "human_actions": [
+      {
+        "action_id": "HA-RFP-09-1",
+        "user_id": "E-1101",
+        "action": "confirm",
+        "at": "2026-10-15T12:00:00+09:00"
+      }
+    ],
+    "fault_injection": [
+      {
+        "target": "rag-mcp.search_policy",
+        "error": "TEMPORARY_FAILURE",
+        "times": 1,
+        "on_call": 1
+      }
+    ],
+    "access_attempts": [
+      {
+        "attempt_id": "AC-RFP-09-1",
+        "user_id": "E-1101",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-09"
+      },
+      {
+        "attempt_id": "AC-RFP-09-2",
+        "user_id": "E-1034",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-09"
+      },
+      {
+        "attempt_id": "AC-RFP-09-3",
+        "user_id": "X-9001",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-09"
+      }
+    ]
+  }
+}
