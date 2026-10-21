@@ -1,0 +1,112 @@
+name: ax-eval-mcp
+
+# 기동 순서: postgres(스키마 자동 적용)·chroma → db-init(데이터 적재, 1회 실행) → business-mcp·rag-mcp
+x-app: &app
+  build: .
+  image: ax-eval/mcp-servers:1.1.0
+  env_file: .env
+  environment: &app-env
+    DATABASE_URL: postgresql://axeval:${POSTGRES_PASSWORD:?.env에 POSTGRES_PASSWORD 필요}@postgres:5432/axeval
+    CHROMA_HOST: chroma
+    CHROMA_PORT: "8000"
+  volumes:
+    - ./data:/app/data:ro   # 시드·케이스 교체 시 이미지 재빌드 없이 db-init만 다시 실행
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: axeval
+      POSTGRES_USER: axeval
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?.env에 POSTGRES_PASSWORD 필요}
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ./db/postgres:/docker-entrypoint-initdb.d:ro   # 첫 기동 때 001_schema.sql 실행
+    ports:
+      - "5433:5432"   # 호스트 5432는 로컬 Postgres(Homebrew 등)와 겹치기 쉬워 5433으로 연다. 내부망은 그대로 postgres:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U axeval -d axeval"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  chroma:
+    image: chromadb/chroma:0.6.3   # requirements.txt의 chromadb-client와 같은 버전
+    environment:
+      IS_PERSISTENT: "TRUE"
+      ANONYMIZED_TELEMETRY: "FALSE"
+    volumes:
+      - chroma-data:/chroma/chroma
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  # 데이터 적재 (멱등). 업무 데이터는 업무 단위로 교체하고 평가 결과는 유지한다.
+  # 전부 비우고 다시 넣으려면: docker compose run --rm -e LOAD_ARGS=--reset db-init
+  db-init:
+    <<: *app
+    command: ["sh", "-c", "python -m db.loader.load_postgres --data /app/data --schema db/postgres/001_schema.sql $${LOAD_ARGS:-} && python -m db.loader.load_chroma"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      chroma:
+        condition: service_started
+    restart: "no"
+
+  business-mcp:
+    <<: *app
+    command: ["python", "-m", "business_mcp.server"]
+    environment:
+      <<: *app-env
+      PORT: "8001"
+    ports:
+      - "8001:8001"
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  rag-mcp:
+    <<: *app
+    command: ["python", "-m", "rag_mcp.server"]
+    environment:
+      <<: *app-env
+      PORT: "8002"
+    ports:
+      - "8002:8002"
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://localhost:8002/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # 명세 대조 검증 + DB 검증. 평가 건 상태와 초안을 바꾸므로 깨끗한 DB에서 돌린다:
+  #   docker compose down -v && docker compose up -d --build && docker compose --profile test run --rm verify
+  verify:
+    <<: *app
+    profiles: ["test"]
+    command: ["sh", "-c", "python tests/verify_spec.py && python tests/verify_db.py"]
+    environment:
+      <<: *app-env
+      BUSINESS_MCP_URL: http://business-mcp:8001
+      RAG_MCP_URL: http://rag-mcp:8002
+    depends_on:
+      business-mcp:
+        condition: service_healthy
+      rag-mcp:
+        condition: service_healthy
+    restart: "no"
+
+volumes:
+  pg-data:
+  chroma-data:

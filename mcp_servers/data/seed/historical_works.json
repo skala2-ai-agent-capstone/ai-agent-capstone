@@ -1,0 +1,18 @@
+[
+  {
+    "work_id": "W-HIST-QT-0412",
+    "company_id": "C-LGCNS-SALES",
+    "team_id": "T-SALES-01",
+    "employee_id": "E-1060",
+    "work_type": "quote",
+    "customer_id": "CUST-DH",
+    "status": "completed",
+    "completed_at": "2026-09-28T16:00:00+09:00",
+    "final_artifact": {
+      "doc_id": "Q-2026-0412",
+      "version": "v1.0"
+    },
+    "evaluated": false,
+    "note": "평가 대상이 아닌 과거 업무. 확정 견적 참조용"
+  }
+]
