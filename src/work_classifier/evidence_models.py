@@ -122,6 +122,7 @@ class WorkCaseEvidence(StrictModel):
     registration: RegistrationRecord | None
     source_message: CustomerSourceMessage | None
     artifact_refs: list[ArtifactReference] = Field(min_length=1)
+    source_documents: list[dict[str, JsonValue]] | None = None
 
     @model_validator(mode="after")
     def check_source_ids(self) -> Self:

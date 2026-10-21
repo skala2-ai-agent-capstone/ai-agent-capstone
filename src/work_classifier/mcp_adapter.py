@@ -183,6 +183,11 @@ def parse_work_case_response(
         registration=registration,
         source_message=message,
         artifact_refs=TypeAdapter(list[ArtifactReference]).validate_python(data["artifact_refs"]),
+        source_documents=(
+            TypeAdapter(list[dict[str, JsonValue]]).validate_python(data["source_documents"])
+            if "source_documents" in data
+            else None
+        ),
     )
     # work_type·정답·이벤트·회사 정보 등은 B의 근거 데이터로 복사하지 않는다.
     return result, success.meta
