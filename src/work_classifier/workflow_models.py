@@ -1,4 +1,4 @@
-"""A/B 사이의 제안 계약. 실제 MCP의 확정 명세와는 별개입니다."""
+"""분류·승인 및 평가 모듈 사이의 제안 계약. 실제 MCP의 확정 명세와는 별개입니다."""
 
 import hashlib
 import json
@@ -55,17 +55,31 @@ class Criterion(StrictModel):
         return self
 
 
+class CriteriaWarning(StrictModel):
+    """자동 판정을 보류하고 담당자에게 보여줄 업무 범위 경고."""
+
+    code: Literal["scope_review"] = "scope_review"
+    criterion_id: NonEmpty
+    field: Literal["criterion", "score_0", "score_1", "score_2"]
+    matched_terms: list[NonEmpty] = Field(min_length=1)
+    excerpt: NonEmpty
+    message: NonEmpty
+
+
 class CriteriaDraft(StrictModel):
     work_type: WorkType
     references: list[Reference] = Field(min_length=1)
     items: list[Criterion] = Field(min_length=1)
     generation: dict[str, str] = Field(default_factory=dict)
+    warnings: list[CriteriaWarning] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def check_references(self) -> Self:
         ids = [item.id for item in self.items]
         if len(ids) != len(set(ids)):
             raise ValueError("평가 항목 ID는 고유해야 합니다.")
+        if any(warning.criterion_id not in ids for warning in self.warnings):
+            raise ValueError("경고가 초안에 없는 평가 항목을 참조합니다.")
         sources = {(r.document_id, r.version, r.section_id): r.content for r in self.references}
         if len(sources) != len(self.references):
             raise ValueError("문서·버전·구간 조합은 고유해야 합니다.")

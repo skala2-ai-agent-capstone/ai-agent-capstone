@@ -1,4 +1,4 @@
-"""A의 LangGraph: 조회 → 분류 → 기준 생성 → 사람 승인 → B 연결/인계."""
+"""분류·승인 모듈의 LangGraph: 조회 → 분류 → 기준 생성 → 사람 승인 → 평가 모듈 연결/인계."""
 
 from datetime import datetime, timezone
 from typing import Protocol, Self, TypedDict
@@ -31,7 +31,7 @@ class CriteriaBuilder(Protocol):
 
 
 class MCPHandoff(StrictModel):
-    """B가 받는 입력. 기존 EvaluationInput과 서버 원본 근거·스냅샷을 함께 전달한다."""
+    """평가 모듈이 받는 입력. 기존 EvaluationInput과 서버 원본 근거·스냅샷을 함께 전달한다."""
     evaluation_input: EvaluationInput
     business: BusinessPacket
     source_map: dict[str, dict]
@@ -141,6 +141,7 @@ def build_agent_graph(
             "kind": "criteria_approval", "run_id": packet.run_id,
             "classification": state["classification"]["classification"],
             "criteria": state["criteria"], "revision": state["revision"],
+            "warnings": [warning.model_dump(mode="json") for warning in draft.warnings],
             "criteria_sha256": draft_hash, "business_sha256": packet_hash,
             "actions": ["approve", "revise", "cancel"],
         }

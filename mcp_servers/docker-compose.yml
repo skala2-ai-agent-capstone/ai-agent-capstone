@@ -39,7 +39,7 @@ services:
     volumes:
       - chroma-data:/chroma/chroma
     ports:
-      - "8000:8000"
+      - "${CHROMA_HOST_PORT:-8000}:8000"
     restart: unless-stopped
 
   # 데이터 적재 (멱등). 업무 데이터는 업무 단위로 교체하고 평가 결과는 유지한다.

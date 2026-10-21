@@ -23,7 +23,7 @@ from .rubric_builder import OpenAIRubricBuilder
 
 
 def parser():
-    root = argparse.ArgumentParser(description="A: MCP 조회·분류·평가기준 승인·B 입력 인계")
+    root = argparse.ArgumentParser(description="MCP 조회·분류·평가기준 승인·평가 입력 인계")
     root.add_argument("command", choices=["fetch", "run"])
     root.add_argument("--evaluation-id", help="개발용 내부 API로 실행 토큰 발급")
     root.add_argument("--work-id", help="발급받은 MCP_RUN_TOKEN 사용 시 필수")
@@ -66,6 +66,13 @@ async def connection_settings(args):
 
 def human_decision(pending: dict) -> dict:
     print("\n[담당자 검토: 분류 결과와 평가기준 전체]", file=sys.stderr)
+    warnings = pending.get("warnings", pending.get("criteria", {}).get("warnings", []))
+    if warnings:
+        print(f"[검토 경고 {len(warnings)}개: 아래 문맥을 확인한 뒤 결정하세요]", file=sys.stderr)
+        for warning in warnings:
+            print(f"- {warning['criterion_id']} / {warning['field']}: {warning['message']}",
+                  file=sys.stderr)
+            print(f"  해당 문장: {warning['excerpt']}", file=sys.stderr)
     print(json.dumps(pending, ensure_ascii=False, indent=2), file=sys.stderr)
     while True:
         print("승인 / 수정 / 취소: ", end="", file=sys.stderr, flush=True)

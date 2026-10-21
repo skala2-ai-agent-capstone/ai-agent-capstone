@@ -1,6 +1,6 @@
-# 업무 분류 + A Agent MCP 연결
+# 업무 분류·승인 Agent와 MCP 연결
 
-MCP 연동 실행 방법과 A/B 계약은 [MCP 연동 가이드](docs/mcp_agent_integration.md)를 참고하세요.
+MCP 연동 실행 방법과 모듈 간 데이터 계약은 [MCP 연동 가이드](docs/mcp_agent_integration.md)를 참고하세요.
 기존 JSON 분류 명령은 그대로 사용할 수 있습니다.
 
 MCP·DB 없이 업무 기록을 읽고 **RFP 분석 / 제안서 / 견적서 / 고객 질의 답변**을
@@ -9,8 +9,10 @@ MCP·DB 없이 업무 기록을 읽고 **RFP 분석 / 제안서 / 견적서 / �
 내규 PDF는 이후 유형별 평가 기준을 구성하고 평가할 때 사용하는 자료입니다.
 현재 분류 프롬프트는 `work-classification-v6`입니다.
 현재는 MCP 조회·분류·RAG 내규 조회·기준 생성·담당자 승인까지 LangGraph로 연결했습니다.
-승인 후 B의 평가기를 주입할 수 있으며, 기본 CLI는 B에게 전달할 입력까지 출력합니다.
-실제 평가·코칭 구현은 B 담당입니다. 평가 결과 DB 저장은 현재 범위에 포함하지 않습니다.
+승인 후 평가기를 주입할 수 있으며, 기본 CLI는 평가 모듈에 전달할 입력까지 출력합니다.
+평가 모듈의 GPT 평가·근거 검증·코칭 기능과 별도 실행 명령은
+[평가 Agent 안내](docs/evaluation_agent.md)를 참고하세요.
+평가 결과는 화면 또는 호출자에게 반환하며 DB에 저장하지 않습니다.
 
 ```text
 샘플 JSON → WorkContext 입력 검증 → LLM 분류 → 출력·근거 검증 → JSON 리포트
@@ -85,7 +87,7 @@ uv export --locked --format requirements-txt --no-hashes --no-annotate \
 | `openai` | OpenAI LLM 호출과 구조화된 출력 | 현재 분류 함수 |
 | `pydantic` | 입력·출력 및 MCP 응답 데이터 검증 | 현재부터 계속 |
 | `python-dotenv` | `.env` 설정 읽기 | 현재부터 계속 |
-| `langgraph` | 조회 → 분류 → 기준 생성 → 사람 승인 → B 인계의 상태·분기 | 현재 MCP 실행 흐름 |
+| `langgraph` | 조회 → 분류 → 기준 생성 → 사람 승인 → 평가 입력 인계의 상태·분기 | 현재 MCP 실행 흐름 |
 | `mcp` | Business/RAG MCP 서버 연결 및 조회 도구 호출 | 현재 MCP 실행 흐름 |
 | `langgraph-checkpoint-sqlite` | 그래프 실행 상태를 로컬 SQLite 파일에 저장·재개 | 중단·재개 및 사람 검토 실험 |
 | `pytest` / `pytest-asyncio` | 일반 테스트 및 비동기 MCP·그래프 테스트 | 개발·검증 |

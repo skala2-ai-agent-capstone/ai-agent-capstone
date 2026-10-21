@@ -1,4 +1,4 @@
-"""메모리에서만 진행하는 A의 승인 흐름. DB/MCP/평가 LLM 구현은 포함하지 않습니다."""
+"""메모리에서만 진행하는 분류·승인 모듈의 승인 흐름. DB/MCP/평가 LLM 구현은 포함하지 않습니다."""
 
 from datetime import datetime, timezone
 from typing import Protocol
@@ -21,7 +21,7 @@ class WorkflowError(ValueError):
 
 
 class EvaluationPartner(Protocol):
-    """B가 구현할 계약. prepare_criteria는 실행마다 호출하며 수정 시 이전 초안을 전달합니다."""
+    """평가 모듈의 계약. prepare_criteria는 매 실행 호출하고 수정 시 이전 초안을 전달합니다."""
 
     async def prepare_criteria(
         self, *, work_record: WorkContext, classification: ClassificationResult,
@@ -41,7 +41,7 @@ def validate_report(
     report: EvaluationOutput, request: EvaluationInput,
     *, additional_sources: dict[str, str] | None = None,
 ) -> None:
-    """구조·인용 일치 검증. 근거의 의미상 타당성 검증은 B의 별도 책임입니다."""
+    """구조·인용 일치 검증. 근거의 의미상 타당성 검증은 평가 모듈의 별도 책임입니다."""
     if report.run_id != request.run_id or report.criteria_sha256 != content_hash(
         request.approved_criteria
     ):
@@ -105,7 +105,7 @@ class ReviewWorkflow:
 
     @property
     def approved_input(self) -> EvaluationInput:
-        """승인 후 B에 전달할 전체 입력의 복사본. 기준만 승인하고 연결을 기다릴 때도 사용."""
+        """평가 모듈에 전달할 승인 입력의 복사본. 기준 승인 후 연결을 기다릴 때도 사용."""
         if self._state != "approved" or self._request is None:
             raise WorkflowError("현재 초안에 대한 담당자 승인이 필요합니다.")
         return EvaluationInput.model_validate(self._request.model_dump())
@@ -144,7 +144,7 @@ class ReviewWorkflow:
         return self.draft
 
     def approve(self, *, displayed_hash: str) -> None:
-        """A의 사용자 입력 처리부만 호출합니다. 모델/도구로 공개하지 않습니다."""
+        """분류·승인 모듈의 사용자 입력 처리부만 호출합니다. 모델/도구로 공개하지 않습니다."""
         if self._state != "awaiting_approval" or self._draft is None:
             raise WorkflowError("승인을 기다리는 초안이 없습니다.")
         if displayed_hash != content_hash(self._draft):
