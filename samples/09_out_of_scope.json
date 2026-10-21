@@ -1,0 +1,12 @@
+{
+  "work_id": "sample-009",
+  "title": "개인 일정",
+  "customer_request": "",
+  "messages": [
+    {"id": "m1", "role": "user", "content": "이번 주말 가족 여행 짐 목록을 정리해줘."},
+    {"id": "m2", "role": "assistant", "content": "옷, 세면도구, 충전기를 준비하세요."}
+  ],
+  "artifacts": [],
+  "coverage": "complete",
+  "missing_sources": []
+}

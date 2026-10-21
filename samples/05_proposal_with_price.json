@@ -1,0 +1,14 @@
+{
+  "work_id": "sample-005",
+  "title": "고객 전달 자료",
+  "customer_request": "확정된 견적을 인용하여 솔루션 도입 효과와 추진 계획을 작성해주세요.",
+  "messages": [
+    {"id": "m1", "role": "user", "content": "확정 견적의 5,100,000원은 그대로 인용하고 새로 계산하지 마. 도입 방안과 일정이 중심인 제안서를 작성해줘."}
+  ],
+  "artifacts": [
+    {"id": "a1", "version": 3, "title": "확정 견적", "stage": "reference", "content": "확정 공급가 5,100,000원."},
+    {"id": "a2", "version": 1, "title": "제안 자료", "stage": "final", "content": "권한 관리 체계를 단계적으로 도입하고 현업 교육을 진행한다. 비용은 확정 견적의 5,100,000원을 따른다."}
+  ],
+  "coverage": "complete",
+  "missing_sources": []
+}

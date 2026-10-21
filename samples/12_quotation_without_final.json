@@ -1,0 +1,12 @@
+{
+  "work_id": "sample-012",
+  "title": "진행 중인 업무",
+  "customer_request": "수량 20, 기간 6개월 기준으로 신규 견적 금액을 계산해주세요.",
+  "messages": [
+    {"id": "m1", "role": "user", "content": "월 단가 10,000원, 20명, 6개월의 공급가를 계산하고 견적 초안을 만들어줘."},
+    {"id": "m2", "role": "assistant", "content": "공급가 1,200,000원으로 견적 초안을 작성하겠습니다."}
+  ],
+  "artifacts": [],
+  "coverage": "partial",
+  "missing_sources": ["최종 산출물"]
+}

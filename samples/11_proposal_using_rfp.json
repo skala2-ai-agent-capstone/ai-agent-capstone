@@ -1,0 +1,14 @@
+{
+  "work_id": "sample-011",
+  "title": "후속 업무",
+  "customer_request": "다른 업무에서 완성된 대응표를 참고하여 고객에게 도입 방안을 제안해주세요.",
+  "messages": [
+    {"id": "m1", "role": "user", "content": "요구사항 추출은 이미 끝났어. 첨부 대응표를 근거로 제안서만 작성해줘."}
+  ],
+  "artifacts": [
+    {"id": "a1", "version": 2, "title": "기존 요구사항 대응표", "stage": "reference", "content": "R-01 필수: 접근 통제. R-02 선택: 리포트."},
+    {"id": "a2", "version": 1, "title": "고객 도입 방안", "stage": "final", "content": "접근 통제 기능을 우선 도입하고 리포트 기능은 후속 단계로 제안한다."}
+  ],
+  "coverage": "complete",
+  "missing_sources": []
+}

@@ -1,0 +1,43 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "work-classifier"
+version = "0.1.0"
+description = "MCP 없이 JSON 업무 기록을 분류하는 Sprint 1 Agent 모듈"
+requires-python = ">=3.11"
+dependencies = [
+  "langgraph>=1,<2",
+  "langgraph-checkpoint-sqlite>=3.1.2,<4",
+  "mcp>=2,<3",
+  "openai>=2,<3",
+  "pydantic>=2.10,<3",
+  "python-dotenv>=1,<2",
+]
+
+[dependency-groups]
+dev = [
+  "httpx>=0.28,<1",
+  "pytest>=8,<10",
+  "pytest-asyncio>=1,<2",
+  "ruff>=0.9,<1",
+]
+
+[project.scripts]
+work-classifier = "work_classifier.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/work_classifier"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+

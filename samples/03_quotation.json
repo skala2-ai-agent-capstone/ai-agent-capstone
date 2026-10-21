@@ -1,0 +1,14 @@
+{
+  "work_id": "sample-003",
+  "title": "고객 조건 반영",
+  "customer_request": "사용자 50명, 12개월 조건으로 금액과 계약 조건을 산출해주세요.",
+  "messages": [
+    {"id": "m1", "role": "user", "content": "가격표 기준으로 수량 50, 기간 12개월의 금액을 계산하고 15% 할인에 승인 요청이 필요한지도 확인해줘."},
+    {"id": "m2", "role": "assistant", "content": "월 단가 10,000원을 적용하면 할인 전 합계 6,000,000원이며 15% 할인 후 5,100,000원입니다. 정책상 별도 승인이 필요합니다."}
+  ],
+  "artifacts": [
+    {"id": "a1", "version": 1, "title": "금액 산출 결과", "stage": "final", "content": "견적서: 수량 50, 기간 12개월, 할인 후 공급가 5,100,000원. 승인 요청: 15% 할인 적용."}
+  ],
+  "coverage": "complete",
+  "missing_sources": []
+}

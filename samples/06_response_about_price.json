@@ -1,0 +1,13 @@
+{
+  "work_id": "sample-006",
+  "title": "금액 문의",
+  "customer_request": "이미 확정된 견적에 부가세가 포함되어 있는지 고객이 물었습니다.",
+  "messages": [
+    {"id": "m1", "role": "user", "content": "견적은 변경하지 말고 기존 확정 견적에 부가세가 별도라는 점만 답변해줘."}
+  ],
+  "artifacts": [
+    {"id": "a1", "version": 1, "title": "안내", "stage": "final", "content": "문의하신 금액은 부가세 별도이며 기존 확정 견적의 조건과 동일합니다."}
+  ],
+  "coverage": "complete",
+  "missing_sources": []
+}

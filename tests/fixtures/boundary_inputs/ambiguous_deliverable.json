@@ -1,0 +1,9 @@
+{
+  "work_id": "boundary-02",
+  "messages": [
+    {"id": "m1", "role": "user", "content": "지난번 얘기한 고객 문서 작업을 해줘. 제안서인지 견적서인지는 아직 정해지지 않았어."},
+    {"id": "m2", "role": "assistant", "content": "어떤 문서를 작성할지 확인한 후 진행하겠습니다."}
+  ],
+  "coverage": "partial",
+  "missing_sources": ["작성할 산출물의 목적과 종류"]
+}

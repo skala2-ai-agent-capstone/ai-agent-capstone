@@ -1,0 +1,12 @@
+{
+  "work_id": "sample-008",
+  "title": "작업 기록",
+  "customer_request": "",
+  "messages": [
+    {"id": "m1", "role": "user", "content": "아까 이야기한 내용을 수정해서 정리해줘."},
+    {"id": "m2", "role": "assistant", "content": "네, 수정하겠습니다."}
+  ],
+  "artifacts": [],
+  "coverage": "partial",
+  "missing_sources": ["이전 대화", "고객 요청", "산출물"]
+}

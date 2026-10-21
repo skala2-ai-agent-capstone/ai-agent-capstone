@@ -1,0 +1,12 @@
+{
+  "work_id": "boundary-03",
+  "messages": [
+    {"id": "m1", "role": "user", "content": "같은 서비스에 대해 1년 계약과 2년 계약 견적서를 각각 만들어 비교해줘. 20명, 월 1만원, 할인은 없어."},
+    {"id": "m2", "role": "assistant", "content": "1년 견적은 2,400,000원, 2년 견적은 4,800,000원입니다. 각각 별도 견적서로 정리했습니다."}
+  ],
+  "artifacts": [
+    {"id": "a1", "stage": "final", "content": "1년 견적서: 20명, 12개월, 합계 2,400,000원."},
+    {"id": "a2", "stage": "final", "content": "2년 견적서: 20명, 24개월, 합계 4,800,000원."}
+  ],
+  "coverage": "complete"
+}
