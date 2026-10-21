@@ -34,7 +34,8 @@ class PolicyChunk(StrictModel):
     clause_id: NonEmpty
     label: NonEmpty
     chapter: str | None
-    page: int = Field(ge=1, strict=True)
+    # RAG MCP는 페이지를 반환하지 않는다. 존재하지 않는 페이지를 만들어 넣지 않는다.
+    page: int | None = Field(default=None, ge=1, strict=True)
     text: NonEmpty
 
 
