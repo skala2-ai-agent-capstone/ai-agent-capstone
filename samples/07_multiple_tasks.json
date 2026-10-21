@@ -1,0 +1,15 @@
+{
+  "work_id": "sample-007",
+  "title": "고객 요청 처리",
+  "customer_request": "RFP 요구사항 대응표를 만든 다음 그 결과로 고객 맞춤 제안서도 작성해주세요.",
+  "messages": [
+    {"id": "m1", "role": "user", "content": "먼저 RFP 요구사항을 추출해 대응표를 완성하고, 이어서 도입 일정과 솔루션 구성을 포함한 제안서를 작성해줘."},
+    {"id": "m2", "role": "assistant", "content": "요구사항 대응표와 도입 제안서 두 문서를 작성했습니다."}
+  ],
+  "artifacts": [
+    {"id": "a1", "version": 1, "title": "요구사항 대응표", "stage": "final", "content": "R-01: 필수, 지원 가능. R-02: 선택, 추가 검토."},
+    {"id": "a2", "version": 1, "title": "도입 제안서", "stage": "final", "content": "고객 요구에 맞춘 솔루션 구성과 3단계 도입 계획을 제안한다."}
+  ],
+  "coverage": "complete",
+  "missing_sources": []
+}

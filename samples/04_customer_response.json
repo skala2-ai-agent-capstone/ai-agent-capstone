@@ -1,0 +1,14 @@
+{
+  "work_id": "sample-004",
+  "title": "고객 후속 요청",
+  "customer_request": "고객이 SSO 지원 여부와 설치 기간을 물었습니다. 질문별 답변을 정리해주세요.",
+  "messages": [
+    {"id": "m1", "role": "user", "content": "제품 설명서에 근거해서 SSO와 설치 기간 질문에 답변해줘. 확인되지 않은 기간은 확인 중이라고 표시해."},
+    {"id": "m2", "role": "assistant", "content": "SSO 지원 범위를 안내하고 설치 기간은 담당자 확인 후 안내한다고 작성했습니다."}
+  ],
+  "artifacts": [
+    {"id": "a1", "version": 1, "title": "회신", "stage": "final", "content": "문의하신 SSO는 지원합니다. 설치 기간은 환경 확인 후 별도 안내드리겠습니다."}
+  ],
+  "coverage": "complete",
+  "missing_sources": []
+}

@@ -1,0 +1,16 @@
+{
+  "mixed_reply_quote.json": {
+    "status": "multiple_tasks",
+    "work_type": null,
+    "candidate_types": ["customer_response", "quotation"]
+  },
+  "ambiguous_deliverable.json": {
+    "status": "needs_review",
+    "work_type": null
+  },
+  "two_quotes.json": {
+    "status": "classified",
+    "work_type": "quotation",
+    "candidate_types": ["quotation"]
+  }
+}

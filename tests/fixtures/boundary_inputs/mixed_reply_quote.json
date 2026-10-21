@@ -1,0 +1,14 @@
+{
+  "work_id": "boundary-01",
+  "messages": [
+    {"id": "m1", "role": "user", "content": "보관 기간과 SSO 지원 여부에 대한 고객 질문 회신을 작성해줘."},
+    {"id": "m2", "role": "assistant", "content": "회신 초안: 보관 기간은 1년이고 SAML SSO를 지원합니다."},
+    {"id": "m3", "role": "user", "content": "별도로 사용자가 40명에서 70명으로 늘어난 조건의 변경 견적서도 만들어줘. 월 단가는 2만원이고 계약은 12개월이야."},
+    {"id": "m4", "role": "assistant", "content": "변경 견적서: 70명 × 월 20,000원 × 12개월 = 16,800,000원, 부가세 별도."}
+  ],
+  "artifacts": [
+    {"id": "a1", "stage": "final", "content": "질문 회신: 보관 기간은 1년이며 SAML SSO를 지원합니다."},
+    {"id": "a2", "stage": "final", "content": "변경 견적: 70명, 12개월, 총액 16,800,000원."}
+  ],
+  "coverage": "complete"
+}

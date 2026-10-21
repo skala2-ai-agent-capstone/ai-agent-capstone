@@ -1,0 +1,14 @@
+{
+  "work_id": "sample-002",
+  "title": "고객 도입 검토",
+  "customer_request": "고객의 자료 접근 통제 요구를 반영해 솔루션 도입 방안과 단계별 일정을 제안해주세요.",
+  "messages": [
+    {"id": "m1", "role": "user", "content": "역할별 접근 통제 방안과 3단계 도입 일정을 제안서로 작성해줘."},
+    {"id": "m2", "role": "assistant", "content": "시범 도입, 검증, 전사 확대 순으로 구성한 초안을 작성했습니다."}
+  ],
+  "artifacts": [
+    {"id": "a1", "version": 1, "title": "도입 계획", "stage": "final", "content": "고객 맞춤 도입안: 역할별 권한을 적용하고 시범 운영 후 검증을 거쳐 전사로 확대한다."}
+  ],
+  "coverage": "complete",
+  "missing_sources": []
+}

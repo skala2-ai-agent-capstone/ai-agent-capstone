@@ -1,0 +1,14 @@
+{
+  "01_rfp.json": {"status": "classified", "work_type": "rfp_analysis", "candidate_types": ["rfp_analysis"]},
+  "02_proposal.json": {"status": "classified", "work_type": "proposal", "candidate_types": ["proposal"]},
+  "03_quotation.json": {"status": "classified", "work_type": "quotation", "candidate_types": ["quotation"]},
+  "04_customer_response.json": {"status": "classified", "work_type": "customer_response", "candidate_types": ["customer_response"]},
+  "05_proposal_with_price.json": {"status": "classified", "work_type": "proposal", "candidate_types": ["proposal"]},
+  "06_response_about_price.json": {"status": "classified", "work_type": "customer_response", "candidate_types": ["customer_response"]},
+  "07_multiple_tasks.json": {"status": "multiple_tasks", "work_type": null, "candidate_types": ["rfp_analysis", "proposal"]},
+  "08_needs_review.json": {"status": "needs_review", "work_type": null},
+  "09_out_of_scope.json": {"status": "out_of_scope", "work_type": null, "candidate_types": []},
+  "10_injection_in_record.json": {"status": "classified", "work_type": "proposal", "candidate_types": ["proposal"]},
+  "11_proposal_using_rfp.json": {"status": "classified", "work_type": "proposal", "candidate_types": ["proposal"]},
+  "12_quotation_without_final.json": {"status": "classified", "work_type": "quotation", "candidate_types": ["quotation"]}
+}
