@@ -1,0 +1,181 @@
+{
+  "case_id": "E2E-PR-09",
+  "work_type": "proposal",
+  "rfp_status": "없음",
+  "summary": "대성화학 연구 문서 AI 제안서 작성 (RFP 없음, 고객이 과거에 받은 견적 기준 가격 요청)",
+  "raw": {
+    "work_case": {
+      "work_id": "W-E2E-PR-09",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "employee_id": "E-1034",
+      "work_type": "proposal",
+      "customer_id": "CUST-DS",
+      "status": "completed",
+      "created_at": "2026-10-19T09:30:00+09:00",
+      "completed_at": "2026-10-19T10:05:00+09:00",
+      "linked_work_ids": [
+        "W-E2E-RFP-05"
+      ],
+      "rfp_status": "없음",
+      "registration": {
+        "customer_purpose": "연구 문서 재사용 촉진",
+        "scale": "사용자 150명",
+        "required_requirements": "한·영 OCR, SSO",
+        "schedule": "2027년 2월 운영 전환",
+        "constraints": "",
+        "rfp": "없음"
+      }
+    },
+    "source_documents": [],
+    "attached_references": [
+      {
+        "doc_id": "PROD-DOCAI",
+        "version": "v3.2"
+      },
+      {
+        "doc_id": "PRICE-2025.4",
+        "version": "2025.4"
+      }
+    ],
+    "messages": [
+      {
+        "message_id": "W-E2E-PR-09-M01",
+        "seq": 1,
+        "role": "user",
+        "content": "대성화학 제안서 써줘. 고객이 작년에 받은 견적 단가로 맞춰달라고 해서 가격은 2025.4 가격표로 150명 24개월 계산해줘. 장점은 OCR 정확도가 업계 최고라는 점을 강조해줘.",
+        "created_at": "2026-10-19T09:35:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-PR-09-M02",
+        "seq": 2,
+        "role": "assistant",
+        "content": "제안서 초안입니다.\n\n[제안서] 대성화학(가상) 연구 문서 AI 도입 제안\n1. 고객 과제: 연구 보고서와 실험 문서가 분산되어 재사용이 어려움\n2. 제안 솔루션: Doc AI — 한국어·영어 OCR, 업계 최고 수준의 문서 인식 정확도, SAML 2.0 SSO, 서울 리전 보관 [근거: PROD-DOCAI v3.2 §2.1, §4.1, §5.1]\n3. 기대 효과: 문서 검색 시간 대폭 단축과 연구 생산성 향상\n4. 도입 일정: 2026년 12월 계약, 2027년 1월 구축, 2027년 2월 운영 전환\n5. 가격: 사용자당 월 23,000원 × 150명 × 24개월 = 82,800,000원 (PRICE-2025.4 기준, 부가가치세 별도)",
+        "created_at": "2026-10-19T09:39:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-PR-09-M03",
+        "seq": 3,
+        "role": "user",
+        "content": "좋아, 저장.",
+        "created_at": "2026-10-19T09:55:00+09:00"
+      }
+    ],
+    "artifact_versions": [
+      {
+        "artifact_id": "ART-E2E-PR-09",
+        "version": "v1",
+        "author": "ai_draft",
+        "saved_at": "2026-10-19T09:39:00+09:00",
+        "content": "[제안서] 대성화학(가상) 연구 문서 AI 도입 제안\n1. 고객 과제: 연구 보고서와 실험 문서가 분산되어 재사용이 어려움\n2. 제안 솔루션: Doc AI — 한국어·영어 OCR, 업계 최고 수준의 문서 인식 정확도, SAML 2.0 SSO, 서울 리전 보관 [근거: PROD-DOCAI v3.2 §2.1, §4.1, §5.1]\n3. 기대 효과: 문서 검색 시간 대폭 단축과 연구 생산성 향상\n4. 도입 일정: 2026년 12월 계약, 2027년 1월 구축, 2027년 2월 운영 전환\n5. 가격: 사용자당 월 23,000원 × 150명 × 24개월 = 82,800,000원 (PRICE-2025.4 기준, 부가가치세 별도)",
+        "spans": [
+          {
+            "span_id": "ART-E2E-PR-09:v1:L01",
+            "text": "[제안서] 대성화학(가상) 연구 문서 AI 도입 제안"
+          },
+          {
+            "span_id": "ART-E2E-PR-09:v1:L02",
+            "text": "1. 고객 과제: 연구 보고서와 실험 문서가 분산되어 재사용이 어려움"
+          },
+          {
+            "span_id": "ART-E2E-PR-09:v1:L03",
+            "text": "2. 제안 솔루션: Doc AI — 한국어·영어 OCR, 업계 최고 수준의 문서 인식 정확도, SAML 2.0 SSO, 서울 리전 보관 [근거: PROD-DOCAI v3.2 §2.1, §4.1, §5.1]"
+          },
+          {
+            "span_id": "ART-E2E-PR-09:v1:L04",
+            "text": "3. 기대 효과: 문서 검색 시간 대폭 단축과 연구 생산성 향상"
+          },
+          {
+            "span_id": "ART-E2E-PR-09:v1:L05",
+            "text": "4. 도입 일정: 2026년 12월 계약, 2027년 1월 구축, 2027년 2월 운영 전환"
+          },
+          {
+            "span_id": "ART-E2E-PR-09:v1:L06",
+            "text": "5. 가격: 사용자당 월 23,000원 × 150명 × 24개월 = 82,800,000원 (PRICE-2025.4 기준, 부가가치세 별도)"
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-PR-09",
+        "version": "v2",
+        "author": "employee",
+        "saved_at": "2026-10-19T10:00:00+09:00",
+        "content": "[제안서] 대성화학(가상) 연구 문서 AI 도입 제안\n1. 고객 과제: 연구 보고서와 실험 문서가 분산되어 재사용이 어려움\n2. 제안 솔루션: Doc AI — 한국어·영어 OCR, 업계 최고 수준의 문서 인식 정확도, SAML 2.0 SSO, 서울 리전 보관 [근거: PROD-DOCAI v3.2 §2.1, §4.1, §5.1]\n3. 기대 효과: 문서 검색 시간 대폭 단축과 연구 생산성 향상\n4. 도입 일정: 2026년 12월 계약, 2027년 1월 구축, 2027년 2월 운영 전환\n5. 가격: 사용자당 월 23,000원 × 150명 × 24개월 = 82,800,000원 (PRICE-2025.4 기준, 부가가치세 별도)",
+        "spans": [
+          {
+            "span_id": "ART-E2E-PR-09:v2:L01",
+            "text": "[제안서] 대성화학(가상) 연구 문서 AI 도입 제안"
+          },
+          {
+            "span_id": "ART-E2E-PR-09:v2:L02",
+            "text": "1. 고객 과제: 연구 보고서와 실험 문서가 분산되어 재사용이 어려움"
+          },
+          {
+            "span_id": "ART-E2E-PR-09:v2:L03",
+            "text": "2. 제안 솔루션: Doc AI — 한국어·영어 OCR, 업계 최고 수준의 문서 인식 정확도, SAML 2.0 SSO, 서울 리전 보관 [근거: PROD-DOCAI v3.2 §2.1, §4.1, §5.1]"
+          },
+          {
+            "span_id": "ART-E2E-PR-09:v2:L04",
+            "text": "3. 기대 효과: 문서 검색 시간 대폭 단축과 연구 생산성 향상"
+          },
+          {
+            "span_id": "ART-E2E-PR-09:v2:L05",
+            "text": "4. 도입 일정: 2026년 12월 계약, 2027년 1월 구축, 2027년 2월 운영 전환"
+          },
+          {
+            "span_id": "ART-E2E-PR-09:v2:L06",
+            "text": "5. 가격: 사용자당 월 23,000원 × 150명 × 24개월 = 82,800,000원 (PRICE-2025.4 기준, 부가가치세 별도)"
+          }
+        ]
+      }
+    ],
+    "reference_access_log": [],
+    "evidence_links": [],
+    "events": [
+      {
+        "event_id": "EV-PR-09-1",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-PR-09",
+        "artifact_version": "v2",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-PR-09:v2:v2",
+        "occurred_at": "2026-10-19T10:05:00+09:00"
+      },
+      {
+        "event_id": "EV-PR-09-C",
+        "event_type": "employee.confirmed",
+        "work_id": "W-E2E-PR-09",
+        "occurred_at": "2026-10-19T11:15:00+09:00"
+      }
+    ],
+    "human_actions": [
+      {
+        "action_id": "HA-PR-09-1",
+        "user_id": "E-1034",
+        "action": "confirm",
+        "at": "2026-10-19T11:15:00+09:00"
+      }
+    ],
+    "fault_injection": [],
+    "access_attempts": [
+      {
+        "attempt_id": "AC-PR-09-1",
+        "user_id": "E-1034",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-PR-09"
+      },
+      {
+        "attempt_id": "AC-PR-09-2",
+        "user_id": "E-1021",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-PR-09"
+      },
+      {
+        "attempt_id": "AC-PR-09-3",
+        "user_id": "X-9001",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-PR-09"
+      }
+    ]
+  }
+}

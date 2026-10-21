@@ -1,0 +1,267 @@
+{
+  "case_id": "E2E-RFP-01",
+  "work_type": "rfp_analysis",
+  "rfp_status": "첨부",
+  "summary": "한빛제약 문서 AI 도입 RFP 요구사항 대응표 작성 (RFP 첨부, 요구사항 7건, 완료 이벤트 중복 전송, 대화 조회 일시 오류 주입)",
+  "raw": {
+    "work_case": {
+      "work_id": "W-E2E-RFP-01",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "employee_id": "E-1021",
+      "work_type": "rfp_analysis",
+      "customer_id": "CUST-HB",
+      "status": "completed",
+      "created_at": "2026-10-05T08:50:00+09:00",
+      "completed_at": "2026-10-05T09:22:00+09:00",
+      "linked_work_ids": [],
+      "registration": {
+        "rfp_document": "RFP-HB-2026-01 v1.0",
+        "submission_deadline": "2026-11-20",
+        "evaluation_method": "기술 70 : 가격 30",
+        "customer_purpose": "연구·품질 문서 검색 시간 단축",
+        "required_requirements": "한·영 OCR, SAML SSO, 국내 리전 보관, 온프레미스 설치, 500명 동시 접속"
+      },
+      "rfp_status": "첨부"
+    },
+    "source_documents": [
+      {
+        "attachment_id": "ATT-E2E-RFP-01",
+        "doc_id": "RFP-HB-2026-01",
+        "version": "v1.0",
+        "grade": "대외비",
+        "uploaded_by": "E-1021",
+        "uploaded_at": "2026-10-05T08:52:00+09:00",
+        "content": "[한빛제약(가상) 문서 AI 도입 RFP v1.0 — 3장 요구사항]\n3.1 (p.5) REQ-01 [필수] 한국어·영어 문서 OCR을 지원해야 한다.\n3.2 (p.5) REQ-02 [필수] 사내 SSO(SAML 2.0)와 연동해야 한다.\n3.3 (p.6) REQ-03 [필수] 모든 데이터는 국내 리전에 보관해야 한다.\n3.4 (p.6) REQ-04 [필수] 사내 전산실 온프레미스 설치가 가능해야 한다.\n3.5 (p.6) REQ-05 [선택] 파일당 500MB 업로드를 지원하면 가점을 부여한다.\n3.6 (p.7) REQ-06 [선택] 전자결재 시스템 연동 API를 제공하면 가점을 부여한다.\n3.7 (p.7) REQ-07 [필수] 사용자 500명이 동시에 접속할 수 있어야 한다.\n제출 기한: 2026-11-20 / 평가 방식: 기술 70 : 가격 30\n문의: 한빛제약 구매팀 김OO 과장 (010-0000-1234, kim.oo@hanbit-pharma.example)",
+        "doc_type": "rfp"
+      }
+    ],
+    "attached_references": [
+      {
+        "doc_id": "PROD-DOCAI",
+        "version": "v3.2"
+      }
+    ],
+    "messages": [
+      {
+        "message_id": "W-E2E-RFP-01-M01",
+        "seq": 1,
+        "role": "user",
+        "content": "첨부한 RFP 원문(RFP-HB-2026-01 v1.0)에서 요구사항을 하나도 빠짐없이 추출해서 대응표로 정리해줘.\n- 대응 근거는 Doc AI 제품 설명서 v3.2 기준으로 조항 번호까지 적어줘.\n- 구분은 원문 표기대로 필수/선택, 대응 수준은 충족·부분 충족·대안 제시·대응 불가 중 하나로.\n- 표 열은 번호, 원문 위치, 요구사항, 구분, 대응 수준, 대응 근거, 사유 순서로 하고, 부분 충족·대응 불가는 사유를 꼭 적어줘.\n\n[한빛제약(가상) 문서 AI 도입 RFP v1.0 — 3장 요구사항]\n3.1 (p.5) REQ-01 [필수] 한국어·영어 문서 OCR을 지원해야 한다.\n3.2 (p.5) REQ-02 [필수] 사내 SSO(SAML 2.0)와 연동해야 한다.\n3.3 (p.6) REQ-03 [필수] 모든 데이터는 국내 리전에 보관해야 한다.\n3.4 (p.6) REQ-04 [필수] 사내 전산실 온프레미스 설치가 가능해야 한다.\n3.5 (p.6) REQ-05 [선택] 파일당 500MB 업로드를 지원하면 가점을 부여한다.\n3.6 (p.7) REQ-06 [선택] 전자결재 시스템 연동 API를 제공하면 가점을 부여한다.\n3.7 (p.7) REQ-07 [필수] 사용자 500명이 동시에 접속할 수 있어야 한다.\n제출 기한: 2026-11-20 / 평가 방식: 기술 70 : 가격 30\n문의: [고객 담당자] (연락처 삭제)\n\n[제품 설명서 PROD-DOCAI v3.2]\n§1.2 제공 방식: 클라우드(SaaS) 전용, 온프레미스 설치 미지원\n§2.1 OCR 지원 언어: 한국어, 영어 (일본어·중국어 미지원)\n§2.3 업로드: 파일당 최대 200MB\n§4.1 인증: SAML 2.0 기반 SSO 지원, OIDC 미지원\n§5.1 데이터 보관: 국내(서울) 리전, 백업 30일 보관\n§6.1 연동: REST API 제공 (분당 600회 호출 제한)\n§7.2 성능: 동시 접속 1,000명까지 검증\n§8.1 SLA: 월 가용성 99.9%, 장애 접수 후 4시간 이내 1차 응답\n§9.1 체험: 30일 무료 체험 제공 (공개 정책)",
+        "created_at": "2026-10-05T09:00:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-01-M02",
+        "seq": 2,
+        "role": "assistant",
+        "content": "RFP 요구사항을 정리했습니다.\n\n| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 3.1 (p.5) | 한국어·영어 문서 OCR | 필수 | 충족 | PROD-DOCAI v3.2 §2.1 | - |\n| REQ-02 | 3.2 (p.5) | SSO(SAML 2.0) 연동 | 필수 | 충족 | PROD-DOCAI v3.2 §4.1 | - |\n| REQ-03 | 3.3 (p.6) | 데이터 국내 리전 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |\n| REQ-04 | 3.4 (p.6) | 온프레미스 설치 | 필수 | 대응 불가 | PROD-DOCAI v3.2 §1.2 | SaaS 전용 제품으로 온프레미스 설치 불가 |\n| REQ-05 | 3.5 (p.6) | 파일당 500MB 업로드 | 필수 | 부분 충족 | PROD-DOCAI v3.2 §2.3 | 파일당 최대 200MB, 초과 시 분할 업로드 |\n| REQ-07 | 3.7 (p.7) | 사용자 500명 동시 접속 | 필수 | 충족 | PROD-DOCAI v3.2 §7.2 | - |\n",
+        "created_at": "2026-10-05T09:03:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-01-M03",
+        "seq": 3,
+        "role": "user",
+        "content": "원문이랑 대조해봤는데 3.6(p.7)의 REQ-06 전자결재 연동 API가 빠졌어. 그리고 REQ-05는 원문에 [선택]으로 되어 있으니 구분 고쳐줘.",
+        "created_at": "2026-10-05T09:08:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-01-M04",
+        "seq": 4,
+        "role": "assistant",
+        "content": "말씀하신 두 가지를 반영했습니다. REQ-06을 추가하고 REQ-05의 구분을 선택으로 수정했습니다.\n\n| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 3.1 (p.5) | 한국어·영어 문서 OCR | 필수 | 충족 | PROD-DOCAI v3.2 §2.1 | - |\n| REQ-02 | 3.2 (p.5) | SSO(SAML 2.0) 연동 | 필수 | 충족 | PROD-DOCAI v3.2 §4.1 | - |\n| REQ-03 | 3.3 (p.6) | 데이터 국내 리전 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |\n| REQ-04 | 3.4 (p.6) | 온프레미스 설치 | 필수 | 대응 불가 | PROD-DOCAI v3.2 §1.2 | SaaS 전용 제품으로 온프레미스 설치 불가 |\n| REQ-05 | 3.5 (p.6) | 파일당 500MB 업로드 | 선택 | 부분 충족 | PROD-DOCAI v3.2 §2.3 | 파일당 최대 200MB, 초과 시 분할 업로드 |\n| REQ-06 | 3.6 (p.7) | 전자결재 연동 API | 선택 | 충족 | PROD-DOCAI v3.2 §6.1 | - |\n| REQ-07 | 3.7 (p.7) | 사용자 500명 동시 접속 | 필수 | 충족 | PROD-DOCAI v3.2 §7.2 | - |\n",
+        "created_at": "2026-10-05T09:11:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-01-M05",
+        "seq": 5,
+        "role": "user",
+        "content": "좋아. 대응 불가인 REQ-04 사유도 들어간 거 확인했어. 이걸로 저장할게.",
+        "created_at": "2026-10-05T09:18:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-01-M06",
+        "seq": 6,
+        "role": "assistant",
+        "content": "네, 최종 대응표는 7개 요구사항을 모두 포함하고 있습니다.",
+        "created_at": "2026-10-05T09:19:00+09:00"
+      }
+    ],
+    "artifact_versions": [
+      {
+        "artifact_id": "ART-E2E-RFP-01",
+        "version": "v1",
+        "author": "ai_draft",
+        "saved_at": "2026-10-05T09:03:00+09:00",
+        "content": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 3.1 (p.5) | 한국어·영어 문서 OCR | 필수 | 충족 | PROD-DOCAI v3.2 §2.1 | - |\n| REQ-02 | 3.2 (p.5) | SSO(SAML 2.0) 연동 | 필수 | 충족 | PROD-DOCAI v3.2 §4.1 | - |\n| REQ-03 | 3.3 (p.6) | 데이터 국내 리전 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |\n| REQ-04 | 3.4 (p.6) | 온프레미스 설치 | 필수 | 대응 불가 | PROD-DOCAI v3.2 §1.2 | SaaS 전용 제품으로 온프레미스 설치 불가 |\n| REQ-05 | 3.5 (p.6) | 파일당 500MB 업로드 | 필수 | 부분 충족 | PROD-DOCAI v3.2 §2.3 | 파일당 최대 200MB, 초과 시 분할 업로드 |\n| REQ-07 | 3.7 (p.7) | 사용자 500명 동시 접속 | 필수 | 충족 | PROD-DOCAI v3.2 §7.2 | - |\n",
+        "spans": [
+          {
+            "span_id": "ART-E2E-RFP-01:v1:HEADER",
+            "text": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-01:v1:REQ-01",
+            "text": "| REQ-01 | 3.1 (p.5) | 한국어·영어 문서 OCR | 필수 | 충족 | PROD-DOCAI v3.2 §2.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-01:v1:REQ-02",
+            "text": "| REQ-02 | 3.2 (p.5) | SSO(SAML 2.0) 연동 | 필수 | 충족 | PROD-DOCAI v3.2 §4.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-01:v1:REQ-03",
+            "text": "| REQ-03 | 3.3 (p.6) | 데이터 국내 리전 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-01:v1:REQ-04",
+            "text": "| REQ-04 | 3.4 (p.6) | 온프레미스 설치 | 필수 | 대응 불가 | PROD-DOCAI v3.2 §1.2 | SaaS 전용 제품으로 온프레미스 설치 불가 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-01:v1:REQ-05",
+            "text": "| REQ-05 | 3.5 (p.6) | 파일당 500MB 업로드 | 필수 | 부분 충족 | PROD-DOCAI v3.2 §2.3 | 파일당 최대 200MB, 초과 시 분할 업로드 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-01:v1:REQ-07",
+            "text": "| REQ-07 | 3.7 (p.7) | 사용자 500명 동시 접속 | 필수 | 충족 | PROD-DOCAI v3.2 §7.2 | - |"
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-RFP-01",
+        "version": "v2",
+        "author": "employee",
+        "saved_at": "2026-10-05T09:20:00+09:00",
+        "content": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 3.1 (p.5) | 한국어·영어 문서 OCR | 필수 | 충족 | PROD-DOCAI v3.2 §2.1 | - |\n| REQ-02 | 3.2 (p.5) | SSO(SAML 2.0) 연동 | 필수 | 충족 | PROD-DOCAI v3.2 §4.1 | - |\n| REQ-03 | 3.3 (p.6) | 데이터 국내 리전 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |\n| REQ-04 | 3.4 (p.6) | 온프레미스 설치 | 필수 | 대응 불가 | PROD-DOCAI v3.2 §1.2 | SaaS 전용 제품으로 온프레미스 설치 불가 |\n| REQ-05 | 3.5 (p.6) | 파일당 500MB 업로드 | 선택 | 부분 충족 | PROD-DOCAI v3.2 §2.3 | 파일당 최대 200MB, 초과 시 분할 업로드 |\n| REQ-06 | 3.6 (p.7) | 전자결재 연동 API | 선택 | 충족 | PROD-DOCAI v3.2 §6.1 | - |\n| REQ-07 | 3.7 (p.7) | 사용자 500명 동시 접속 | 필수 | 충족 | PROD-DOCAI v3.2 §7.2 | - |\n",
+        "spans": [
+          {
+            "span_id": "ART-E2E-RFP-01:v2:HEADER",
+            "text": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-01:v2:REQ-01",
+            "text": "| REQ-01 | 3.1 (p.5) | 한국어·영어 문서 OCR | 필수 | 충족 | PROD-DOCAI v3.2 §2.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-01:v2:REQ-02",
+            "text": "| REQ-02 | 3.2 (p.5) | SSO(SAML 2.0) 연동 | 필수 | 충족 | PROD-DOCAI v3.2 §4.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-01:v2:REQ-03",
+            "text": "| REQ-03 | 3.3 (p.6) | 데이터 국내 리전 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-01:v2:REQ-04",
+            "text": "| REQ-04 | 3.4 (p.6) | 온프레미스 설치 | 필수 | 대응 불가 | PROD-DOCAI v3.2 §1.2 | SaaS 전용 제품으로 온프레미스 설치 불가 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-01:v2:REQ-05",
+            "text": "| REQ-05 | 3.5 (p.6) | 파일당 500MB 업로드 | 선택 | 부분 충족 | PROD-DOCAI v3.2 §2.3 | 파일당 최대 200MB, 초과 시 분할 업로드 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-01:v2:REQ-06",
+            "text": "| REQ-06 | 3.6 (p.7) | 전자결재 연동 API | 선택 | 충족 | PROD-DOCAI v3.2 §6.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-01:v2:REQ-07",
+            "text": "| REQ-07 | 3.7 (p.7) | 사용자 500명 동시 접속 | 필수 | 충족 | PROD-DOCAI v3.2 §7.2 | - |"
+          }
+        ]
+      }
+    ],
+    "reference_access_log": [
+      {
+        "user_id": "E-1021",
+        "doc_id": "RFP-HB-2026-01",
+        "version": "v1.0",
+        "accessed_at": "2026-10-05T09:05:00+09:00"
+      },
+      {
+        "user_id": "E-1021",
+        "doc_id": "PROD-DOCAI",
+        "version": "v3.2",
+        "accessed_at": "2026-10-05T09:06:00+09:00"
+      }
+    ],
+    "evidence_links": [
+      {
+        "link_id": "EL-RFP-01-1",
+        "span_id": "ART-E2E-RFP-01:v2:REQ-05",
+        "doc_id": "RFP-HB-2026-01",
+        "version": "v1.0",
+        "location": "3.5 (p.6)",
+        "created_by": "E-1021",
+        "created_at": "2026-10-05T09:14:00+09:00"
+      },
+      {
+        "link_id": "EL-RFP-01-2",
+        "span_id": "ART-E2E-RFP-01:v2:REQ-06",
+        "doc_id": "RFP-HB-2026-01",
+        "version": "v1.0",
+        "location": "3.6 (p.7)",
+        "created_by": "E-1021",
+        "created_at": "2026-10-05T09:14:00+09:00"
+      }
+    ],
+    "events": [
+      {
+        "event_id": "EV-RFP-01-1",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-RFP-01",
+        "artifact_version": "v2",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-RFP-01:v2:v2",
+        "occurred_at": "2026-10-05T09:22:00+09:00"
+      },
+      {
+        "event_id": "EV-RFP-01-2",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-RFP-01",
+        "artifact_version": "v2",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-RFP-01:v2:v2",
+        "occurred_at": "2026-10-05T09:22:05+09:00",
+        "note": "업무 시스템의 재전송 (같은 키)"
+      },
+      {
+        "event_id": "EV-RFP-01-3",
+        "event_type": "employee.confirmed",
+        "work_id": "W-E2E-RFP-01",
+        "occurred_at": "2026-10-05T10:30:00+09:00"
+      }
+    ],
+    "human_actions": [
+      {
+        "action_id": "HA-RFP-01-1",
+        "user_id": "E-1021",
+        "action": "confirm",
+        "at": "2026-10-05T10:30:00+09:00"
+      }
+    ],
+    "fault_injection": [
+      {
+        "target": "business-mcp.get_conversation",
+        "error": "TEMPORARY_FAILURE",
+        "times": 1,
+        "on_call": 1
+      }
+    ],
+    "access_attempts": [
+      {
+        "attempt_id": "AC-RFP-01-1",
+        "user_id": "E-1021",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-01"
+      },
+      {
+        "attempt_id": "AC-RFP-01-2",
+        "user_id": "E-1034",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-01"
+      },
+      {
+        "attempt_id": "AC-RFP-01-3",
+        "user_id": "X-9001",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-01"
+      }
+    ]
+  }
+}

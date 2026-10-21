@@ -1,0 +1,203 @@
+{
+  "case_id": "E2E-IQ-08",
+  "work_type": "inquiry_reply",
+  "rfp_status": "없음",
+  "summary": "오름에너지 도입 사례 문의 회신 메일 작성 (RFP 없음, 고객 마스터상 승인 여부가 다른 사례가 초안에 함께 포함됨)",
+  "raw": {
+    "work_case": {
+      "work_id": "W-E2E-IQ-08",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "employee_id": "E-1082",
+      "work_type": "inquiry_reply",
+      "customer_id": "CUST-OR",
+      "status": "completed",
+      "created_at": "2026-10-16T10:00:00+09:00",
+      "completed_at": "2026-10-16T10:25:00+09:00",
+      "linked_work_ids": [
+        "W-E2E-RFP-09"
+      ],
+      "rfp_status": "없음",
+      "registration": {
+        "question_original": "오름에너지 설비관리팀입니다. Doc AI를 실제로 도입한 사례가 있으면 알려주실 수 있을까요?",
+        "question_items": [
+          "Doc AI 도입 사례"
+        ],
+        "related_rfp": null
+      },
+      "source_message": {
+        "channel": "email",
+        "received_at": "2026-10-16T09:40:00+09:00",
+        "content": "오름에너지 설비관리팀입니다. Doc AI를 실제로 도입한 사례가 있으면 알려주실 수 있을까요?\n\n설비관리팀 장OO 부장 (010-0000-9930, jang.oo@oreum-energy.example)"
+      }
+    },
+    "source_documents": [],
+    "attached_references": [
+      {
+        "doc_id": "PROD-DOCAI",
+        "version": "v3.2"
+      }
+    ],
+    "messages": [
+      {
+        "message_id": "W-E2E-IQ-08-M01",
+        "seq": 1,
+        "role": "user",
+        "content": "오름에너지가 Doc AI 도입 사례를 물어봤어. 사례를 알려주는 회신 초안 써줘. 항목당 3문장 이내.\n\n오름에너지 설비관리팀입니다. Doc AI를 실제로 도입한 사례가 있으면 알려주실 수 있을까요?",
+        "created_at": "2026-10-16T10:03:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-IQ-08-M02",
+        "seq": 2,
+        "role": "assistant",
+        "content": "회신 메일 초안입니다.\n\n[회신 메일]\n제목: 문의하신 사항 회신드립니다\n\n오름에너지(가상) 담당자님께,\n문의 주신 내용에 대해 아래와 같이 답변드립니다.\n\n1. 공급 실적으로 한빛제약(가상)과 미래교육재단(가상)이 Doc AI를 이용 중입니다.\n\n추가로 궁금하신 점이 있으시면 편하게 연락 주십시오.\n영업담당 드림",
+        "created_at": "2026-10-16T10:06:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-IQ-08-M03",
+        "seq": 3,
+        "role": "user",
+        "content": "한빛제약은 공개 승인 레퍼런스가 아니야. 고객 마스터에서 승인된 미래교육재단만 쓰고 나머지는 공개 불가라고 정중하게 써줘.",
+        "created_at": "2026-10-16T10:14:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-IQ-08-M04",
+        "seq": 4,
+        "role": "assistant",
+        "content": "수정했습니다.\n\n[회신 메일]\n제목: 문의하신 사항 회신드립니다\n\n오름에너지(가상) 담당자님께,\n문의 주신 내용에 대해 아래와 같이 답변드립니다.\n\n1. 공개 가능한 승인 레퍼런스로는 미래교육재단(가상)이 있습니다. 그 외 도입 사례는 고객사 동의 없이 공개할 수 없어 안내드리기 어렵습니다. 필요하시면 별도 설명 자리를 마련하겠습니다.\n\n추가로 궁금하신 점이 있으시면 편하게 연락 주십시오.\n영업담당 드림",
+        "created_at": "2026-10-16T10:17:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-IQ-08-M05",
+        "seq": 5,
+        "role": "user",
+        "content": "좋아. 저장하고 보낼게.",
+        "created_at": "2026-10-16T10:22:00+09:00"
+      }
+    ],
+    "artifact_versions": [
+      {
+        "artifact_id": "ART-E2E-IQ-08",
+        "version": "v1",
+        "author": "ai_draft",
+        "saved_at": "2026-10-16T10:06:00+09:00",
+        "content": "[회신 메일]\n제목: 문의하신 사항 회신드립니다\n\n오름에너지(가상) 담당자님께,\n문의 주신 내용에 대해 아래와 같이 답변드립니다.\n\n1. 공급 실적으로 한빛제약(가상)과 미래교육재단(가상)이 Doc AI를 이용 중입니다.\n\n추가로 궁금하신 점이 있으시면 편하게 연락 주십시오.\n영업담당 드림",
+        "spans": [
+          {
+            "span_id": "ART-E2E-IQ-08:v1:L01",
+            "text": "[회신 메일]"
+          },
+          {
+            "span_id": "ART-E2E-IQ-08:v1:L02",
+            "text": "제목: 문의하신 사항 회신드립니다"
+          },
+          {
+            "span_id": "ART-E2E-IQ-08:v1:L04",
+            "text": "오름에너지(가상) 담당자님께,"
+          },
+          {
+            "span_id": "ART-E2E-IQ-08:v1:L05",
+            "text": "문의 주신 내용에 대해 아래와 같이 답변드립니다."
+          },
+          {
+            "span_id": "ART-E2E-IQ-08:v1:L07",
+            "text": "1. 공급 실적으로 한빛제약(가상)과 미래교육재단(가상)이 Doc AI를 이용 중입니다."
+          },
+          {
+            "span_id": "ART-E2E-IQ-08:v1:L09",
+            "text": "추가로 궁금하신 점이 있으시면 편하게 연락 주십시오."
+          },
+          {
+            "span_id": "ART-E2E-IQ-08:v1:L10",
+            "text": "영업담당 드림"
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-IQ-08",
+        "version": "v2",
+        "author": "employee",
+        "saved_at": "2026-10-16T10:24:00+09:00",
+        "content": "[회신 메일]\n제목: 문의하신 사항 회신드립니다\n\n오름에너지(가상) 담당자님께,\n문의 주신 내용에 대해 아래와 같이 답변드립니다.\n\n1. 공개 가능한 승인 레퍼런스로는 미래교육재단(가상)이 있습니다. 그 외 도입 사례는 고객사 동의 없이 공개할 수 없어 안내드리기 어렵습니다. 필요하시면 별도 설명 자리를 마련하겠습니다.\n\n추가로 궁금하신 점이 있으시면 편하게 연락 주십시오.\n영업담당 드림",
+        "spans": [
+          {
+            "span_id": "ART-E2E-IQ-08:v2:L01",
+            "text": "[회신 메일]"
+          },
+          {
+            "span_id": "ART-E2E-IQ-08:v2:L02",
+            "text": "제목: 문의하신 사항 회신드립니다"
+          },
+          {
+            "span_id": "ART-E2E-IQ-08:v2:L04",
+            "text": "오름에너지(가상) 담당자님께,"
+          },
+          {
+            "span_id": "ART-E2E-IQ-08:v2:L05",
+            "text": "문의 주신 내용에 대해 아래와 같이 답변드립니다."
+          },
+          {
+            "span_id": "ART-E2E-IQ-08:v2:L07",
+            "text": "1. 공개 가능한 승인 레퍼런스로는 미래교육재단(가상)이 있습니다. 그 외 도입 사례는 고객사 동의 없이 공개할 수 없어 안내드리기 어렵습니다. 필요하시면 별도 설명 자리를 마련하겠습니다."
+          },
+          {
+            "span_id": "ART-E2E-IQ-08:v2:L09",
+            "text": "추가로 궁금하신 점이 있으시면 편하게 연락 주십시오."
+          },
+          {
+            "span_id": "ART-E2E-IQ-08:v2:L10",
+            "text": "영업담당 드림"
+          }
+        ]
+      }
+    ],
+    "reference_access_log": [],
+    "evidence_links": [],
+    "events": [
+      {
+        "event_id": "EV-IQ-08-1",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-IQ-08",
+        "artifact_version": "v2",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-IQ-08:v2:v2",
+        "occurred_at": "2026-10-16T10:25:00+09:00"
+      },
+      {
+        "event_id": "EV-IQ-08-C",
+        "event_type": "employee.confirmed",
+        "work_id": "W-E2E-IQ-08",
+        "occurred_at": "2026-10-16T11:35:00+09:00"
+      }
+    ],
+    "human_actions": [
+      {
+        "action_id": "HA-IQ-08-1",
+        "user_id": "E-1082",
+        "action": "confirm",
+        "at": "2026-10-16T11:35:00+09:00"
+      }
+    ],
+    "fault_injection": [],
+    "access_attempts": [
+      {
+        "attempt_id": "AC-IQ-08-1",
+        "user_id": "E-1082",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-IQ-08"
+      },
+      {
+        "attempt_id": "AC-IQ-08-2",
+        "user_id": "E-1034",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-IQ-08"
+      },
+      {
+        "attempt_id": "AC-IQ-08-3",
+        "user_id": "X-9001",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-IQ-08"
+      }
+    ]
+  }
+}

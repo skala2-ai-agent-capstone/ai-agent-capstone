@@ -1,0 +1,226 @@
+{
+  "case_id": "E2E-PR-04",
+  "work_type": "proposal",
+  "rfp_status": "첨부 + 정정 공고 반영",
+  "summary": "가온건설 통합 현황 분석 플랫폼 제안서 작성 (RFP 제안서 4개 필수 항목 지침, AI 초안에서 항목 일부 누락)",
+  "raw": {
+    "work_case": {
+      "work_id": "W-E2E-PR-04",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "employee_id": "E-1082",
+      "work_type": "proposal",
+      "customer_id": "CUST-GA",
+      "status": "completed",
+      "created_at": "2026-10-08T13:00:00+09:00",
+      "completed_at": "2026-10-08T13:55:00+09:00",
+      "linked_work_ids": [
+        "W-E2E-RFP-03"
+      ],
+      "rfp_status": "첨부 + 정정 공고 반영",
+      "registration": {
+        "customer_purpose": "20개 현장 실적 통합 모니터링",
+        "scale": "20개 현장",
+        "required_requirements": "대시보드, 보고서 자동화, ERP 연동, 현장별 테넌트",
+        "schedule": "2027년 3월 운영 전환, 제출 기한 2026-11-06",
+        "constraints": "A4 20쪽 이내",
+        "rfp": "RFP-GA-2026-02 v1.1"
+      }
+    },
+    "source_documents": [
+      {
+        "attachment_id": "ATT-PR-04",
+        "doc_id": "RFP-GA-2026-02",
+        "doc_type": "rfp",
+        "version": "v1.1",
+        "grade": "대외비",
+        "uploaded_by": "E-1082",
+        "uploaded_at": "2026-10-08T13:02:00+09:00",
+        "content": "[가온건설(가상) 통합 현황 분석 플랫폼 RFP v1.1 — 5장 제안서 작성 지침]\n5.1 (p.11) 제안서는 다음 4개 항목을 모두 포함해야 한다: ① 요구사항 대응 ② 구축 일정 ③ 투입 인력 ④ 보안 대책\n5.2 (p.11) 가격은 별도 가격 제안서로 제출한다.\n5.3 (p.12) 제안서는 A4 20쪽 이내로 작성한다.\n제출 기한: 2026-11-06"
+      }
+    ],
+    "attached_references": [
+      {
+        "doc_id": "PROD-INSIGHT",
+        "version": "v1.8"
+      }
+    ],
+    "messages": [
+      {
+        "message_id": "W-E2E-PR-04-M01",
+        "seq": 1,
+        "role": "user",
+        "content": "가온건설 제안서 초안 써줘. RFP 5장 작성 지침에 맞춰서 항목 구성하고, 근거는 Insight Hub 설명서 v1.8로. 가격은 RFP대로 별도 제출이라 제안서에는 넣지 마.\n\n[가온건설(가상) 통합 현황 분석 플랫폼 RFP v1.1 — 5장 제안서 작성 지침]\n5.1 (p.11) 제안서는 다음 4개 항목을 모두 포함해야 한다: ① 요구사항 대응 ② 구축 일정 ③ 투입 인력 ④ 보안 대책\n5.2 (p.11) 가격은 별도 가격 제안서로 제출한다.\n5.3 (p.12) 제안서는 A4 20쪽 이내로 작성한다.\n제출 기한: 2026-11-06",
+        "created_at": "2026-10-08T13:08:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-PR-04-M02",
+        "seq": 2,
+        "role": "assistant",
+        "content": "제안서 초안입니다.\n\n[제안서] 가온건설(가상) 통합 현황 분석 플랫폼 구축 제안\n1. 요구사항 대응: 경영진 대시보드·월간 보고서 자동 생성·20개 현장 테넌트 분리 운영 제공 (필수 6건 중 ERP 연동·모바일 앱은 확인 후 대안 제시) [근거: PROD-INSIGHT v1.8 §1.1, §2.1]\n2. 구축 일정: 2026년 12월 계약, 2027년 1~2월 ERP 연동 설계·구축, 2027년 3월 운영 전환\n참고: 가격은 RFP 5.2에 따라 별도 가격 제안서로 제출합니다.",
+        "created_at": "2026-10-08T13:13:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-PR-04-M03",
+        "seq": 3,
+        "role": "user",
+        "content": "RFP 5.1 보니까 ③ 투입 인력이랑 ④ 보안 대책도 들어가야 하는데 빠졌어. 추가해줘. 보안 대책은 설명서에 있는 내용만 써.",
+        "created_at": "2026-10-08T13:25:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-PR-04-M04",
+        "seq": 4,
+        "role": "assistant",
+        "content": "③ 투입 인력과 ④ 보안 대책을 추가했습니다. 보안 대책은 설명서 §1.1의 테넌트 분리 내용만 근거로 썼습니다.\n\n[제안서] 가온건설(가상) 통합 현황 분석 플랫폼 구축 제안\n1. 요구사항 대응: 경영진 대시보드·월간 보고서 자동 생성·20개 현장 테넌트 분리 운영 제공 (필수 6건 중 ERP 연동·모바일 앱은 확인 후 대안 제시) [근거: PROD-INSIGHT v1.8 §1.1, §2.1]\n2. 구축 일정: 2026년 12월 계약, 2027년 1~2월 ERP 연동 설계·구축, 2027년 3월 운영 전환\n3. 투입 인력: 프로젝트 관리자 1명, 데이터 분석가 2명, 현장 연동 개발자 2명 (상세 이력은 별첨)\n4. 보안 대책: 테넌트 단위 데이터 분리, 서울 리전 보관, 접근 통제와 감사 로그 [근거: PROD-INSIGHT v1.8 §1.1]\n참고: 가격은 RFP 5.2에 따라 별도 가격 제안서로 제출합니다.",
+        "created_at": "2026-10-08T13:29:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-PR-04-M05",
+        "seq": 5,
+        "role": "user",
+        "content": "4개 항목 다 들어갔네. 저장할게.",
+        "created_at": "2026-10-08T13:45:00+09:00"
+      }
+    ],
+    "artifact_versions": [
+      {
+        "artifact_id": "ART-E2E-PR-04",
+        "version": "v1",
+        "author": "ai_draft",
+        "saved_at": "2026-10-08T13:13:00+09:00",
+        "content": "[제안서] 가온건설(가상) 통합 현황 분석 플랫폼 구축 제안\n1. 요구사항 대응: 경영진 대시보드·월간 보고서 자동 생성·20개 현장 테넌트 분리 운영 제공 (필수 6건 중 ERP 연동·모바일 앱은 확인 후 대안 제시) [근거: PROD-INSIGHT v1.8 §1.1, §2.1]\n2. 구축 일정: 2026년 12월 계약, 2027년 1~2월 ERP 연동 설계·구축, 2027년 3월 운영 전환\n참고: 가격은 RFP 5.2에 따라 별도 가격 제안서로 제출합니다.",
+        "spans": [
+          {
+            "span_id": "ART-E2E-PR-04:v1:L01",
+            "text": "[제안서] 가온건설(가상) 통합 현황 분석 플랫폼 구축 제안"
+          },
+          {
+            "span_id": "ART-E2E-PR-04:v1:L02",
+            "text": "1. 요구사항 대응: 경영진 대시보드·월간 보고서 자동 생성·20개 현장 테넌트 분리 운영 제공 (필수 6건 중 ERP 연동·모바일 앱은 확인 후 대안 제시) [근거: PROD-INSIGHT v1.8 §1.1, §2.1]"
+          },
+          {
+            "span_id": "ART-E2E-PR-04:v1:L03",
+            "text": "2. 구축 일정: 2026년 12월 계약, 2027년 1~2월 ERP 연동 설계·구축, 2027년 3월 운영 전환"
+          },
+          {
+            "span_id": "ART-E2E-PR-04:v1:L04",
+            "text": "참고: 가격은 RFP 5.2에 따라 별도 가격 제안서로 제출합니다."
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-PR-04",
+        "version": "v2",
+        "author": "employee",
+        "saved_at": "2026-10-08T13:50:00+09:00",
+        "content": "[제안서] 가온건설(가상) 통합 현황 분석 플랫폼 구축 제안\n1. 요구사항 대응: 경영진 대시보드·월간 보고서 자동 생성·20개 현장 테넌트 분리 운영 제공 (필수 6건 중 ERP 연동·모바일 앱은 확인 후 대안 제시) [근거: PROD-INSIGHT v1.8 §1.1, §2.1]\n2. 구축 일정: 2026년 12월 계약, 2027년 1~2월 ERP 연동 설계·구축, 2027년 3월 운영 전환\n3. 투입 인력: 프로젝트 관리자 1명, 데이터 분석가 2명, 현장 연동 개발자 2명 (상세 이력은 별첨)\n4. 보안 대책: 테넌트 단위 데이터 분리, 서울 리전 보관, 접근 통제와 감사 로그 [근거: PROD-INSIGHT v1.8 §1.1]\n참고: 가격은 RFP 5.2에 따라 별도 가격 제안서로 제출합니다.",
+        "spans": [
+          {
+            "span_id": "ART-E2E-PR-04:v2:L01",
+            "text": "[제안서] 가온건설(가상) 통합 현황 분석 플랫폼 구축 제안"
+          },
+          {
+            "span_id": "ART-E2E-PR-04:v2:L02",
+            "text": "1. 요구사항 대응: 경영진 대시보드·월간 보고서 자동 생성·20개 현장 테넌트 분리 운영 제공 (필수 6건 중 ERP 연동·모바일 앱은 확인 후 대안 제시) [근거: PROD-INSIGHT v1.8 §1.1, §2.1]"
+          },
+          {
+            "span_id": "ART-E2E-PR-04:v2:L03",
+            "text": "2. 구축 일정: 2026년 12월 계약, 2027년 1~2월 ERP 연동 설계·구축, 2027년 3월 운영 전환"
+          },
+          {
+            "span_id": "ART-E2E-PR-04:v2:L04",
+            "text": "3. 투입 인력: 프로젝트 관리자 1명, 데이터 분석가 2명, 현장 연동 개발자 2명 (상세 이력은 별첨)"
+          },
+          {
+            "span_id": "ART-E2E-PR-04:v2:L05",
+            "text": "4. 보안 대책: 테넌트 단위 데이터 분리, 서울 리전 보관, 접근 통제와 감사 로그 [근거: PROD-INSIGHT v1.8 §1.1]"
+          },
+          {
+            "span_id": "ART-E2E-PR-04:v2:L06",
+            "text": "참고: 가격은 RFP 5.2에 따라 별도 가격 제안서로 제출합니다."
+          }
+        ]
+      }
+    ],
+    "reference_access_log": [
+      {
+        "user_id": "E-1082",
+        "doc_id": "RFP-GA-2026-02",
+        "version": "v1.1",
+        "accessed_at": "2026-10-08T13:20:00+09:00"
+      },
+      {
+        "user_id": "E-1082",
+        "doc_id": "PROD-INSIGHT",
+        "version": "v1.8",
+        "accessed_at": "2026-10-08T13:40:00+09:00"
+      }
+    ],
+    "evidence_links": [
+      {
+        "link_id": "EL-PR-04-1",
+        "span_id": "ART-E2E-PR-04:v2:L04",
+        "doc_id": "RFP-GA-2026-02",
+        "version": "v1.1",
+        "location": "5.1 (p.11)",
+        "created_by": "E-1082",
+        "created_at": "2026-10-08T13:47:00+09:00"
+      },
+      {
+        "link_id": "EL-PR-04-2",
+        "span_id": "ART-E2E-PR-04:v2:L05",
+        "doc_id": "RFP-GA-2026-02",
+        "version": "v1.1",
+        "location": "5.1 (p.11)",
+        "created_by": "E-1082",
+        "created_at": "2026-10-08T13:48:00+09:00"
+      }
+    ],
+    "events": [
+      {
+        "event_id": "EV-PR-04-1",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-PR-04",
+        "artifact_version": "v2",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-PR-04:v2:v2",
+        "occurred_at": "2026-10-08T13:55:00+09:00"
+      },
+      {
+        "event_id": "EV-PR-04-C",
+        "event_type": "employee.confirmed",
+        "work_id": "W-E2E-PR-04",
+        "occurred_at": "2026-10-08T15:05:00+09:00"
+      }
+    ],
+    "human_actions": [
+      {
+        "action_id": "HA-PR-04-1",
+        "user_id": "E-1082",
+        "action": "confirm",
+        "at": "2026-10-08T15:05:00+09:00"
+      }
+    ],
+    "fault_injection": [],
+    "access_attempts": [
+      {
+        "attempt_id": "AC-PR-04-1",
+        "user_id": "E-1082",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-PR-04"
+      },
+      {
+        "attempt_id": "AC-PR-04-2",
+        "user_id": "E-1034",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-PR-04"
+      },
+      {
+        "attempt_id": "AC-PR-04-3",
+        "user_id": "X-9001",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-PR-04"
+      }
+    ]
+  }
+}

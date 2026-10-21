@@ -1,0 +1,278 @@
+{
+  "case_id": "E2E-QT-02",
+  "work_type": "quote",
+  "rfp_status": "첨부",
+  "summary": "한빛제약 Doc AI 600명 증설 옵션 견적서 작성 (RFP 6장 가격 제안 지침 첨부, 합산 할인 5%)",
+  "raw": {
+    "work_case": {
+      "work_id": "W-E2E-QT-02",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "employee_id": "E-1021",
+      "work_type": "quote",
+      "customer_id": "CUST-HB",
+      "status": "completed",
+      "created_at": "2026-10-06T14:00:00+09:00",
+      "completed_at": "2026-10-06T14:50:00+09:00",
+      "linked_work_ids": [
+        "W-E2E-RFP-01"
+      ],
+      "rfp_status": "첨부",
+      "registration": {
+        "product": "Doc AI",
+        "quantity": "사용자 600명 (증설 옵션)",
+        "contract_months": 36,
+        "request_conditions": "RFP 6.2 증설 옵션 기준",
+        "budget": ""
+      }
+    },
+    "source_documents": [
+      {
+        "attachment_id": "ATT-QT-02",
+        "doc_id": "RFP-HB-2026-01",
+        "doc_type": "rfp",
+        "version": "v1.0",
+        "grade": "대외비",
+        "uploaded_by": "E-1021",
+        "uploaded_at": "2026-10-06T14:02:00+09:00",
+        "content": "[한빛제약(가상) 문서 AI 도입 RFP v1.0 — 6장 가격 제안 지침]\n6.1 (p.14) 가격은 상품별 단가, 수량, 기간, 소계를 구분하여 제시해야 한다.\n6.2 (p.14) 증설 옵션 가격은 사용자 600명 기준으로 별도 제시해야 한다.\n6.3 (p.15) 모든 금액은 부가가치세 별도로 표기한다.\n제출 기한: 2026-11-20\n문의: 한빛제약 구매팀 김OO 과장 (010-0000-1234, kim.oo@hanbit-pharma.example)"
+      }
+    ],
+    "attached_references": [
+      {
+        "doc_id": "PRICE-2026.2",
+        "version": "2026.2"
+      },
+      {
+        "doc_id": "SALES-AI-GL-001",
+        "version": "v1.0"
+      }
+    ],
+    "messages": [
+      {
+        "message_id": "W-E2E-QT-02-M01",
+        "seq": 1,
+        "role": "user",
+        "content": "한빛제약 증설 옵션 견적서 작성해줘.\n- 가격표: PRICE-2026.2\n- 조건: Doc AI 사용자 600명 36개월, 다년 3%p + 수량 2%p 할인(합산 5%).\n- 기재 항목: 가격표 버전, 상품별 단가·수량·기간·소계, 할인율, 합계(부가세 별도), 유효 기간 30일, 계약 조건. RFP 6.1에 맞춰 상품별로 구분해줘.\n\n[한빛제약(가상) 문서 AI 도입 RFP v1.0 — 6장 가격 제안 지침]\n6.1 (p.14) 가격은 상품별 단가, 수량, 기간, 소계를 구분하여 제시해야 한다.\n6.2 (p.14) 증설 옵션 가격은 사용자 600명 기준으로 별도 제시해야 한다.\n6.3 (p.15) 모든 금액은 부가가치세 별도로 표기한다.\n제출 기한: 2026-11-20",
+        "created_at": "2026-10-06T14:08:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-02-M02",
+        "seq": 2,
+        "role": "assistant",
+        "content": "견적서 초안입니다.\n\n[견적서] Q-2026-0455 / 고객사: 한빛제약(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| 스마트 문서 AI (Doc AI) | 25,000원 | 600 | 36개월 | 540,000,000원 |\n소계: 540,000,000원\n할인율: 5%\n합계: 513,000,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함",
+        "created_at": "2026-10-06T14:12:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-02-M03",
+        "seq": 3,
+        "role": "user",
+        "content": "소계 540,000,000원에 5% 빼면 513,000,000원 나오는지 검산했어. 맞네. 합산 5%는 별표 2상 담당자 재량 구간이라 승인 요청은 안 올려도 되는 거 확인했어.",
+        "created_at": "2026-10-06T14:25:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-02-M04",
+        "seq": 4,
+        "role": "assistant",
+        "content": "맞습니다. 합산 할인율 5% 이하는 별표 2에서 승인 대상이 아닙니다.",
+        "created_at": "2026-10-06T14:27:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-02-M05",
+        "seq": 5,
+        "role": "user",
+        "content": "저장할게.",
+        "created_at": "2026-10-06T14:40:00+09:00"
+      }
+    ],
+    "artifact_versions": [
+      {
+        "artifact_id": "ART-E2E-QT-02",
+        "version": "v1",
+        "author": "ai_draft",
+        "saved_at": "2026-10-06T14:12:00+09:00",
+        "content": "[견적서] Q-2026-0455 / 고객사: 한빛제약(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| 스마트 문서 AI (Doc AI) | 25,000원 | 600 | 36개월 | 540,000,000원 |\n소계: 540,000,000원\n할인율: 5%\n합계: 513,000,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함",
+        "spans": [
+          {
+            "span_id": "ART-E2E-QT-02:v1:L01",
+            "text": "[견적서] Q-2026-0455 / 고객사: 한빛제약(가상)"
+          },
+          {
+            "span_id": "ART-E2E-QT-02:v1:L02",
+            "text": "적용 가격표: PRICE-2026.2"
+          },
+          {
+            "span_id": "ART-E2E-QT-02:v1:L03",
+            "text": "| 상품 | 단가 | 수량 | 기간 | 금액 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-02:v1:L05",
+            "text": "| 스마트 문서 AI (Doc AI) | 25,000원 | 600 | 36개월 | 540,000,000원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-02:v1:L06",
+            "text": "소계: 540,000,000원"
+          },
+          {
+            "span_id": "ART-E2E-QT-02:v1:L07",
+            "text": "할인율: 5%"
+          },
+          {
+            "span_id": "ART-E2E-QT-02:v1:L08",
+            "text": "합계: 513,000,000원 (부가가치세 별도)"
+          },
+          {
+            "span_id": "ART-E2E-QT-02:v1:L09",
+            "text": "견적 유효 기간: 발행일로부터 30일"
+          },
+          {
+            "span_id": "ART-E2E-QT-02:v1:L10",
+            "text": "계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함"
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-QT-02",
+        "version": "v2",
+        "author": "employee",
+        "saved_at": "2026-10-06T14:45:00+09:00",
+        "content": "[견적서] Q-2026-0455 / 고객사: 한빛제약(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| 스마트 문서 AI (Doc AI) | 25,000원 | 600 | 36개월 | 540,000,000원 |\n소계: 540,000,000원\n할인율: 5%\n합계: 513,000,000원 (부가가치세 별도)\n견적 유효 기간: 발행일로부터 30일\n계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함",
+        "spans": [
+          {
+            "span_id": "ART-E2E-QT-02:v2:L01",
+            "text": "[견적서] Q-2026-0455 / 고객사: 한빛제약(가상)"
+          },
+          {
+            "span_id": "ART-E2E-QT-02:v2:L02",
+            "text": "적용 가격표: PRICE-2026.2"
+          },
+          {
+            "span_id": "ART-E2E-QT-02:v2:L03",
+            "text": "| 상품 | 단가 | 수량 | 기간 | 금액 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-02:v2:L05",
+            "text": "| 스마트 문서 AI (Doc AI) | 25,000원 | 600 | 36개월 | 540,000,000원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-02:v2:L06",
+            "text": "소계: 540,000,000원"
+          },
+          {
+            "span_id": "ART-E2E-QT-02:v2:L07",
+            "text": "할인율: 5%"
+          },
+          {
+            "span_id": "ART-E2E-QT-02:v2:L08",
+            "text": "합계: 513,000,000원 (부가가치세 별도)"
+          },
+          {
+            "span_id": "ART-E2E-QT-02:v2:L09",
+            "text": "견적 유효 기간: 발행일로부터 30일"
+          },
+          {
+            "span_id": "ART-E2E-QT-02:v2:L10",
+            "text": "계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함"
+          }
+        ]
+      }
+    ],
+    "reference_access_log": [
+      {
+        "user_id": "E-1021",
+        "doc_id": "PRICE-2026.2",
+        "version": "2026.2",
+        "accessed_at": "2026-10-06T14:20:00+09:00"
+      },
+      {
+        "user_id": "E-1021",
+        "doc_id": "SALES-AI-GL-001",
+        "version": "v1.0",
+        "accessed_at": "2026-10-06T14:26:00+09:00"
+      }
+    ],
+    "evidence_links": [
+      {
+        "link_id": "EL-QT-02-1",
+        "span_id": "ART-E2E-QT-02:v2:L08",
+        "doc_id": "PRICE-2026.2",
+        "version": "2026.2",
+        "location": "P-100",
+        "created_by": "E-1021",
+        "created_at": "2026-10-06T14:30:00+09:00"
+      }
+    ],
+    "events": [
+      {
+        "event_id": "EV-QT-02-1",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-QT-02",
+        "artifact_version": "v2",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-QT-02:v2:v2",
+        "occurred_at": "2026-10-06T14:50:00+09:00"
+      },
+      {
+        "event_id": "EV-QT-02-C",
+        "event_type": "employee.confirmed",
+        "work_id": "W-E2E-QT-02",
+        "occurred_at": "2026-10-06T16:00:00+09:00"
+      }
+    ],
+    "human_actions": [
+      {
+        "action_id": "HA-QT-02-1",
+        "user_id": "E-1021",
+        "action": "confirm",
+        "at": "2026-10-06T16:00:00+09:00"
+      }
+    ],
+    "fault_injection": [],
+    "access_attempts": [
+      {
+        "attempt_id": "AC-QT-02-1",
+        "user_id": "E-1021",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-QT-02"
+      },
+      {
+        "attempt_id": "AC-QT-02-2",
+        "user_id": "E-1034",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-QT-02"
+      },
+      {
+        "attempt_id": "AC-QT-02-3",
+        "user_id": "X-9001",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-QT-02"
+      }
+    ],
+    "quote_data": {
+      "v2": {
+        "quote_no": "Q-2026-0455",
+        "price_table": "PRICE-2026.2",
+        "lines": [
+          {
+            "code": "P-100",
+            "quantity": 600,
+            "months": 36
+          }
+        ],
+        "discount_components": [
+          {
+            "type": "다년",
+            "pct": 3
+          },
+          {
+            "type": "수량",
+            "pct": 2
+          }
+        ],
+        "free_items": [],
+        "exceptions": []
+      }
+    },
+    "approval_requests": []
+  }
+}

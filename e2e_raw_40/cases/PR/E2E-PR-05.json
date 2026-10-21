@@ -1,0 +1,241 @@
+{
+  "case_id": "E2E-PR-05",
+  "work_type": "proposal",
+  "rfp_status": "첨부",
+  "summary": "푸른시청 문서 관리 시스템 제안서 작성 (공공 RFP, 온프레미스 요구에 대한 AI 초안 오류를 직원이 설명서로 교차 확인)",
+  "raw": {
+    "work_case": {
+      "work_id": "W-E2E-PR-05",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "employee_id": "E-1047",
+      "work_type": "proposal",
+      "customer_id": "CUST-PN",
+      "status": "completed",
+      "created_at": "2026-10-09T10:00:00+09:00",
+      "completed_at": "2026-10-09T10:50:00+09:00",
+      "linked_work_ids": [],
+      "rfp_status": "첨부",
+      "registration": {
+        "customer_purpose": "민원 문서 검색·공유 효율화",
+        "scale": "사용자 250명",
+        "required_requirements": "국내 보관, 온프레미스, SAML SSO, 동시 200명",
+        "schedule": "2027년 4월 운영 전환, 제출 기한 2026-11-12",
+        "constraints": "RFP 온프레미스 요구",
+        "rfp": "RFP-PN-2026-06 v1.0"
+      }
+    },
+    "source_documents": [
+      {
+        "attachment_id": "ATT-PR-05",
+        "doc_id": "RFP-PN-2026-06",
+        "doc_type": "rfp",
+        "version": "v1.0",
+        "grade": "대외비",
+        "uploaded_by": "E-1047",
+        "uploaded_at": "2026-10-09T10:02:00+09:00",
+        "content": "[푸른시청(가상) 문서 관리 시스템 RFP v1.0 — 3장 요구사항]\n3.1 (p.6) 시민 민원 문서는 국내에서만 처리·보관해야 한다.\n3.2 (p.6) 시청 전산실 내부에 설치할 수 있어야 한다(온프레미스).\n3.3 (p.7) 행정 SSO(SAML 2.0)와 연동해야 한다.\n3.4 (p.7) 동시 접속 200명을 지원해야 한다.\n제출 기한: 2026-11-12 / 평가 방식: 기술 80 : 가격 20\n문의: 푸른시청 정보화담당관 이OO 팀장 (010-0000-7710, lee.oo@purun-city.example)"
+      }
+    ],
+    "attached_references": [
+      {
+        "doc_id": "PROD-DOCAI",
+        "version": "v3.2"
+      },
+      {
+        "doc_id": "PRICE-2026.2",
+        "version": "2026.2"
+      }
+    ],
+    "messages": [
+      {
+        "message_id": "W-E2E-PR-05-M01",
+        "seq": 1,
+        "role": "user",
+        "content": "푸른시청 제안서 써줘. RFP 요구사항에 대응하는 내용 포함하고, 근거는 Doc AI 설명서 v3.2로. 가격은 현행 가격표로 250명 60개월 참고가(다년 할인 5% 반영, 부가세 별도)로 넣어줘. 구성은 고객 과제/제안 솔루션/기대 효과/도입 일정/가격.\n\n[푸른시청(가상) 문서 관리 시스템 RFP v1.0 — 3장 요구사항]\n3.1 (p.6) 시민 민원 문서는 국내에서만 처리·보관해야 한다.\n3.2 (p.6) 시청 전산실 내부에 설치할 수 있어야 한다(온프레미스).\n3.3 (p.7) 행정 SSO(SAML 2.0)와 연동해야 한다.\n3.4 (p.7) 동시 접속 200명을 지원해야 한다.\n제출 기한: 2026-11-12 / 평가 방식: 기술 80 : 가격 20",
+        "created_at": "2026-10-09T10:08:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-PR-05-M02",
+        "seq": 2,
+        "role": "assistant",
+        "content": "제안서 초안입니다.\n\n[제안서] 푸른시청(가상) 문서 관리 시스템 도입 제안\n1. 고객 과제: 민원 관련 문서가 분산되어 검색과 공유에 시간이 오래 걸림\n2. 제안 솔루션: Doc AI — 한국어 OCR, SAML 2.0 SSO, 국내(서울) 리전 보관, 동시 접속 1,000명까지 검증, 시청 전산실 온프레미스 설치 지원 [근거: PROD-DOCAI v3.2 §2.1, §4.1, §5.1, §7.2]\n3. 기대 효과: 민원 문서 검색 시간 단축 (수치는 시범 운영에서 측정)\n4. 도입 일정: 2026년 12월 계약, 2027년 2~3월 구축, 2027년 4월 운영 전환\n5. 가격: PRICE-2026.2 기준 참고가 356,250,000원 (사용자 250명, 60개월, 다년 계약 할인 반영, 부가가치세 별도)",
+        "created_at": "2026-10-09T10:13:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-PR-05-M03",
+        "seq": 3,
+        "role": "user",
+        "content": "잠깐, RFP 3.2 온프레미스를 설치 지원한다고 썼는데 맞아? 설명서 §1.2 확인해서 틀리면 고치고 대안으로 써줘.",
+        "created_at": "2026-10-09T10:28:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-PR-05-M04",
+        "seq": 4,
+        "role": "assistant",
+        "content": "설명서 §1.2에 따르면 SaaS 전용이어서 온프레미스 설치는 지원하지 않습니다. 해당 문장을 삭제하고 대안을 추가했습니다.\n\n[제안서] 푸른시청(가상) 문서 관리 시스템 도입 제안\n1. 고객 과제: 민원 관련 문서가 분산되어 검색과 공유에 시간이 오래 걸림\n2. 제안 솔루션: Doc AI — 한국어 OCR, SAML 2.0 SSO, 국내(서울) 리전 보관, 동시 접속 1,000명까지 검증, [근거: PROD-DOCAI v3.2 §2.1, §4.1, §5.1, §7.2]\n   · RFP 3.2 온프레미스 요구: Doc AI는 SaaS 전용이라 시청 전산실 직접 설치는 어렵습니다. 대안으로 국내(서울) 리전 전용 보관과 SAML 2.0 SSO 기반 접근 통제를 제안합니다. [근거: PROD-DOCAI v3.2 §1.2, §5.1]\n3. 기대 효과: 민원 문서 검색 시간 단축 (수치는 시범 운영에서 측정)\n4. 도입 일정: 2026년 12월 계약, 2027년 2~3월 구축, 2027년 4월 운영 전환\n5. 가격: PRICE-2026.2 기준 참고가 356,250,000원 (사용자 250명, 60개월, 다년 계약 할인 반영, 부가가치세 별도)",
+        "created_at": "2026-10-09T10:32:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-PR-05-M05",
+        "seq": 5,
+        "role": "user",
+        "content": "그래, 이게 맞네. 저장.",
+        "created_at": "2026-10-09T10:44:00+09:00"
+      }
+    ],
+    "artifact_versions": [
+      {
+        "artifact_id": "ART-E2E-PR-05",
+        "version": "v1",
+        "author": "ai_draft",
+        "saved_at": "2026-10-09T10:13:00+09:00",
+        "content": "[제안서] 푸른시청(가상) 문서 관리 시스템 도입 제안\n1. 고객 과제: 민원 관련 문서가 분산되어 검색과 공유에 시간이 오래 걸림\n2. 제안 솔루션: Doc AI — 한국어 OCR, SAML 2.0 SSO, 국내(서울) 리전 보관, 동시 접속 1,000명까지 검증, 시청 전산실 온프레미스 설치 지원 [근거: PROD-DOCAI v3.2 §2.1, §4.1, §5.1, §7.2]\n3. 기대 효과: 민원 문서 검색 시간 단축 (수치는 시범 운영에서 측정)\n4. 도입 일정: 2026년 12월 계약, 2027년 2~3월 구축, 2027년 4월 운영 전환\n5. 가격: PRICE-2026.2 기준 참고가 356,250,000원 (사용자 250명, 60개월, 다년 계약 할인 반영, 부가가치세 별도)",
+        "spans": [
+          {
+            "span_id": "ART-E2E-PR-05:v1:L01",
+            "text": "[제안서] 푸른시청(가상) 문서 관리 시스템 도입 제안"
+          },
+          {
+            "span_id": "ART-E2E-PR-05:v1:L02",
+            "text": "1. 고객 과제: 민원 관련 문서가 분산되어 검색과 공유에 시간이 오래 걸림"
+          },
+          {
+            "span_id": "ART-E2E-PR-05:v1:L03",
+            "text": "2. 제안 솔루션: Doc AI — 한국어 OCR, SAML 2.0 SSO, 국내(서울) 리전 보관, 동시 접속 1,000명까지 검증, 시청 전산실 온프레미스 설치 지원 [근거: PROD-DOCAI v3.2 §2.1, §4.1, §5.1, §7.2]"
+          },
+          {
+            "span_id": "ART-E2E-PR-05:v1:L04",
+            "text": "3. 기대 효과: 민원 문서 검색 시간 단축 (수치는 시범 운영에서 측정)"
+          },
+          {
+            "span_id": "ART-E2E-PR-05:v1:L05",
+            "text": "4. 도입 일정: 2026년 12월 계약, 2027년 2~3월 구축, 2027년 4월 운영 전환"
+          },
+          {
+            "span_id": "ART-E2E-PR-05:v1:L06",
+            "text": "5. 가격: PRICE-2026.2 기준 참고가 356,250,000원 (사용자 250명, 60개월, 다년 계약 할인 반영, 부가가치세 별도)"
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-PR-05",
+        "version": "v2",
+        "author": "employee",
+        "saved_at": "2026-10-09T10:47:00+09:00",
+        "content": "[제안서] 푸른시청(가상) 문서 관리 시스템 도입 제안\n1. 고객 과제: 민원 관련 문서가 분산되어 검색과 공유에 시간이 오래 걸림\n2. 제안 솔루션: Doc AI — 한국어 OCR, SAML 2.0 SSO, 국내(서울) 리전 보관, 동시 접속 1,000명까지 검증, [근거: PROD-DOCAI v3.2 §2.1, §4.1, §5.1, §7.2]\n   · RFP 3.2 온프레미스 요구: Doc AI는 SaaS 전용이라 시청 전산실 직접 설치는 어렵습니다. 대안으로 국내(서울) 리전 전용 보관과 SAML 2.0 SSO 기반 접근 통제를 제안합니다. [근거: PROD-DOCAI v3.2 §1.2, §5.1]\n3. 기대 효과: 민원 문서 검색 시간 단축 (수치는 시범 운영에서 측정)\n4. 도입 일정: 2026년 12월 계약, 2027년 2~3월 구축, 2027년 4월 운영 전환\n5. 가격: PRICE-2026.2 기준 참고가 356,250,000원 (사용자 250명, 60개월, 다년 계약 할인 반영, 부가가치세 별도)",
+        "spans": [
+          {
+            "span_id": "ART-E2E-PR-05:v2:L01",
+            "text": "[제안서] 푸른시청(가상) 문서 관리 시스템 도입 제안"
+          },
+          {
+            "span_id": "ART-E2E-PR-05:v2:L02",
+            "text": "1. 고객 과제: 민원 관련 문서가 분산되어 검색과 공유에 시간이 오래 걸림"
+          },
+          {
+            "span_id": "ART-E2E-PR-05:v2:L03",
+            "text": "2. 제안 솔루션: Doc AI — 한국어 OCR, SAML 2.0 SSO, 국내(서울) 리전 보관, 동시 접속 1,000명까지 검증, [근거: PROD-DOCAI v3.2 §2.1, §4.1, §5.1, §7.2]"
+          },
+          {
+            "span_id": "ART-E2E-PR-05:v2:L04",
+            "text": "   · RFP 3.2 온프레미스 요구: Doc AI는 SaaS 전용이라 시청 전산실 직접 설치는 어렵습니다. 대안으로 국내(서울) 리전 전용 보관과 SAML 2.0 SSO 기반 접근 통제를 제안합니다. [근거: PROD-DOCAI v3.2 §1.2, §5.1]"
+          },
+          {
+            "span_id": "ART-E2E-PR-05:v2:L05",
+            "text": "3. 기대 효과: 민원 문서 검색 시간 단축 (수치는 시범 운영에서 측정)"
+          },
+          {
+            "span_id": "ART-E2E-PR-05:v2:L06",
+            "text": "4. 도입 일정: 2026년 12월 계약, 2027년 2~3월 구축, 2027년 4월 운영 전환"
+          },
+          {
+            "span_id": "ART-E2E-PR-05:v2:L07",
+            "text": "5. 가격: PRICE-2026.2 기준 참고가 356,250,000원 (사용자 250명, 60개월, 다년 계약 할인 반영, 부가가치세 별도)"
+          }
+        ]
+      }
+    ],
+    "reference_access_log": [
+      {
+        "user_id": "E-1047",
+        "doc_id": "RFP-PN-2026-06",
+        "version": "v1.0",
+        "accessed_at": "2026-10-09T10:20:00+09:00"
+      },
+      {
+        "user_id": "E-1047",
+        "doc_id": "PROD-DOCAI",
+        "version": "v3.2",
+        "accessed_at": "2026-10-09T10:30:00+09:00"
+      }
+    ],
+    "evidence_links": [
+      {
+        "link_id": "EL-PR-05-1",
+        "span_id": "ART-E2E-PR-05:v2:L04",
+        "doc_id": "PROD-DOCAI",
+        "version": "v3.2",
+        "location": "§1.2",
+        "created_by": "E-1047",
+        "created_at": "2026-10-09T10:40:00+09:00"
+      }
+    ],
+    "events": [
+      {
+        "event_id": "EV-PR-05-1",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-PR-05",
+        "artifact_version": "v2",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-PR-05:v2:v2",
+        "occurred_at": "2026-10-09T10:50:00+09:00"
+      },
+      {
+        "event_id": "EV-PR-05-2",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-PR-05",
+        "artifact_version": "v2",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-PR-05:v2:v2",
+        "occurred_at": "2026-10-09T10:50:03+09:00",
+        "note": "업무 시스템의 재전송 (같은 키)"
+      },
+      {
+        "event_id": "EV-PR-05-C",
+        "event_type": "employee.confirmed",
+        "work_id": "W-E2E-PR-05",
+        "occurred_at": "2026-10-09T12:00:00+09:00"
+      }
+    ],
+    "human_actions": [
+      {
+        "action_id": "HA-PR-05-1",
+        "user_id": "E-1047",
+        "action": "confirm",
+        "at": "2026-10-09T12:00:00+09:00"
+      }
+    ],
+    "fault_injection": [],
+    "access_attempts": [
+      {
+        "attempt_id": "AC-PR-05-1",
+        "user_id": "E-1047",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-PR-05"
+      },
+      {
+        "attempt_id": "AC-PR-05-2",
+        "user_id": "E-1034",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-PR-05"
+      },
+      {
+        "attempt_id": "AC-PR-05-3",
+        "user_id": "X-9001",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-PR-05"
+      }
+    ]
+  }
+}

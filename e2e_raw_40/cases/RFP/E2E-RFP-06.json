@@ -1,0 +1,243 @@
+{
+  "case_id": "E2E-RFP-06",
+  "work_type": "rfp_analysis",
+  "rfp_status": "첨부",
+  "summary": "청솔대학교 연구 문서 AI 플랫폼 RFP 요구사항 대응표 작성 (요구사항 12건, 짧은 지시 후 표 축약 요청)",
+  "raw": {
+    "work_case": {
+      "work_id": "W-E2E-RFP-06",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "employee_id": "E-1034",
+      "work_type": "rfp_analysis",
+      "customer_id": "CUST-CS",
+      "status": "completed",
+      "created_at": "2026-10-12T09:30:00+09:00",
+      "completed_at": "2026-10-12T10:20:00+09:00",
+      "linked_work_ids": [],
+      "rfp_status": "첨부",
+      "registration": {
+        "rfp_document": "RFP-CS-2026-07 v1.0",
+        "submission_deadline": "2026-11-18",
+        "evaluation_method": "기술 80 : 가격 20",
+        "customer_purpose": "연구자 문서 검색 통합",
+        "required_requirements": ""
+      }
+    },
+    "source_documents": [
+      {
+        "attachment_id": "ATT-RFP-06",
+        "doc_id": "RFP-CS-2026-07",
+        "doc_type": "rfp",
+        "version": "v1.0",
+        "grade": "대외비",
+        "uploaded_by": "E-1034",
+        "uploaded_at": "2026-10-12T09:32:00+09:00",
+        "content": "[청솔대학교(가상) 연구 문서 AI 플랫폼 RFP v1.0 — 3장 요구사항]\n4.1 (p.6) REQ-01 [필수] 한국어·영어 OCR을 지원해야 한다.\n4.2 (p.6) REQ-02 [필수] SAML 기반 SSO를 지원해야 한다.\n4.3 (p.6) REQ-03 [필수] 데이터는 국내에 보관해야 한다.\n4.4 (p.7) REQ-04 [필수] 파일당 200MB 이상 업로드를 지원해야 한다.\n4.5 (p.7) REQ-05 [필수] REST API를 제공해야 한다.\n4.6 (p.7) REQ-06 [필수] 동시 접속 1,000명을 지원해야 한다.\n4.7 (p.8) REQ-07 [필수] 월 가용성 99.9% 이상이어야 한다.\n4.8 (p.8) REQ-08 [선택] 장애 접수 후 4시간 이내 1차 응답을 제공하면 가점을 부여한다.\n4.9 (p.8) REQ-09 [선택] 30일 무료 체험을 제공하면 가점을 부여한다.\n4.10 (p.9) REQ-10 [필수] API 호출 한도는 분당 1,000회 이상이어야 한다.\n4.11 (p.9) REQ-11 [필수] 중국어 문서 OCR을 지원해야 한다.\n4.12 (p.9) REQ-12 [필수] 대학 전산센터 온프레미스 설치가 가능해야 한다.\n제출 기한: 2026-11-18 / 평가 방식: 기술 80 : 가격 20\n문의: 청솔대학교 전산센터 류OO 과장 (010-0000-6640, ryu.oo@cheongsol-univ.example)"
+      }
+    ],
+    "attached_references": [
+      {
+        "doc_id": "PROD-DOCAI",
+        "version": "v3.2"
+      }
+    ],
+    "messages": [
+      {
+        "message_id": "W-E2E-RFP-06-M01",
+        "seq": 1,
+        "role": "user",
+        "content": "RFP 분석해줘.\n\n[청솔대학교(가상) 연구 문서 AI 플랫폼 RFP v1.0 — 3장 요구사항]\n4.1 (p.6) REQ-01 [필수] 한국어·영어 OCR을 지원해야 한다.\n4.2 (p.6) REQ-02 [필수] SAML 기반 SSO를 지원해야 한다.\n4.3 (p.6) REQ-03 [필수] 데이터는 국내에 보관해야 한다.\n4.4 (p.7) REQ-04 [필수] 파일당 200MB 이상 업로드를 지원해야 한다.\n4.5 (p.7) REQ-05 [필수] REST API를 제공해야 한다.\n4.6 (p.7) REQ-06 [필수] 동시 접속 1,000명을 지원해야 한다.\n4.7 (p.8) REQ-07 [필수] 월 가용성 99.9% 이상이어야 한다.\n4.8 (p.8) REQ-08 [선택] 장애 접수 후 4시간 이내 1차 응답을 제공하면 가점을 부여한다.\n4.9 (p.8) REQ-09 [선택] 30일 무료 체험을 제공하면 가점을 부여한다.\n4.10 (p.9) REQ-10 [필수] API 호출 한도는 분당 1,000회 이상이어야 한다.\n4.11 (p.9) REQ-11 [필수] 중국어 문서 OCR을 지원해야 한다.\n4.12 (p.9) REQ-12 [필수] 대학 전산센터 온프레미스 설치가 가능해야 한다.\n제출 기한: 2026-11-18 / 평가 방식: 기술 80 : 가격 20",
+        "created_at": "2026-10-12T09:40:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-06-M02",
+        "seq": 2,
+        "role": "assistant",
+        "content": "RFP 요구사항을 정리했습니다.\n\n| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 4.1 (p.6) | 한·영 OCR | 필수 | 충족 | PROD-DOCAI v3.2 §2.1 | - |\n| REQ-02 | 4.2 (p.6) | SAML SSO | 필수 | 충족 | PROD-DOCAI v3.2 §4.1 | - |\n| REQ-03 | 4.3 (p.6) | 국내 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |\n| REQ-04 | 4.4 (p.7) | 파일당 200MB 업로드 | 필수 | 충족 | PROD-DOCAI v3.2 §2.3 | - |\n| REQ-05 | 4.5 (p.7) | REST API | 필수 | 충족 | PROD-DOCAI v3.2 §6.1 | - |\n| REQ-06 | 4.6 (p.7) | 동시 접속 1,000명 | 필수 | 충족 | PROD-DOCAI v3.2 §7.2 | - |\n| REQ-07 | 4.7 (p.8) | 월 가용성 99.9% | 필수 | 충족 | PROD-DOCAI v3.2 §8.1 | - |\n| REQ-08 | 4.8 (p.8) | 장애 4시간 내 1차 응답 | 선택 | 충족 | PROD-DOCAI v3.2 §8.1 | - |\n| REQ-09 | 4.9 (p.8) | 30일 무료 체험 | 선택 | 충족 | PROD-DOCAI v3.2 §9.1 | - |\n| REQ-10 | 4.10 (p.9) | API 분당 1,000회 | 필수 | 부분 충족 | PROD-DOCAI v3.2 §6.1 | 분당 600회 호출 제한 |\n| REQ-11 | 4.11 (p.9) | 중국어 OCR | 필수 | 대응 불가 | PROD-DOCAI v3.2 §2.1 | 한국어·영어만 지원 |\n| REQ-12 | 4.12 (p.9) | 온프레미스 설치 | 필수 | 대응 불가 | PROD-DOCAI v3.2 §1.2 | SaaS 전용 |\n",
+        "created_at": "2026-10-12T09:44:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-06-M03",
+        "seq": 3,
+        "role": "user",
+        "content": "너무 길어. 선택 항목은 빼고 비슷한 건 합쳐서 짧게 다시 줘.",
+        "created_at": "2026-10-12T10:02:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-06-M04",
+        "seq": 4,
+        "role": "assistant",
+        "content": "선택 항목 2건을 제외하고 동시 접속과 가용성을 하나로 합쳐 정리했습니다.\n\n| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 4.1 (p.6) | 한·영 OCR | 필수 | 충족 | PROD-DOCAI v3.2 §2.1 | - |\n| REQ-02 | 4.2 (p.6) | SAML SSO | 필수 | 충족 | PROD-DOCAI v3.2 §4.1 | - |\n| REQ-03 | 4.3 (p.6) | 국내 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |\n| REQ-04 | 4.4 (p.7) | 파일당 200MB 업로드 | 필수 | 충족 | PROD-DOCAI v3.2 §2.3 | - |\n| REQ-05 | 4.5 (p.7) | REST API | 필수 | 충족 | PROD-DOCAI v3.2 §6.1 | - |\n| REQ-06 | 4.6 (p.7) | 동시 접속 1,000명, 월 가용성 99.9% | 필수 | 충족 | PROD-DOCAI v3.2 §7.2 | - |\n| REQ-10 | 4.10 (p.9) | API 분당 1,000회 | 필수 | 부분 충족 | PROD-DOCAI v3.2 §6.1 | 분당 600회 호출 제한 |\n| REQ-11 | 4.11 (p.9) | 중국어 OCR | 필수 | 대응 불가 | PROD-DOCAI v3.2 §2.1 | 한국어·영어만 지원 |\n| REQ-12 | 4.12 (p.9) | 온프레미스 설치 | 필수 | 대응 불가 | PROD-DOCAI v3.2 §1.2 | SaaS 전용 |\n",
+        "created_at": "2026-10-12T10:05:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-RFP-06-M05",
+        "seq": 5,
+        "role": "user",
+        "content": "이거면 됐다. 저장.",
+        "created_at": "2026-10-12T10:15:00+09:00"
+      }
+    ],
+    "artifact_versions": [
+      {
+        "artifact_id": "ART-E2E-RFP-06",
+        "version": "v1",
+        "author": "ai_draft",
+        "saved_at": "2026-10-12T09:44:00+09:00",
+        "content": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 4.1 (p.6) | 한·영 OCR | 필수 | 충족 | PROD-DOCAI v3.2 §2.1 | - |\n| REQ-02 | 4.2 (p.6) | SAML SSO | 필수 | 충족 | PROD-DOCAI v3.2 §4.1 | - |\n| REQ-03 | 4.3 (p.6) | 국내 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |\n| REQ-04 | 4.4 (p.7) | 파일당 200MB 업로드 | 필수 | 충족 | PROD-DOCAI v3.2 §2.3 | - |\n| REQ-05 | 4.5 (p.7) | REST API | 필수 | 충족 | PROD-DOCAI v3.2 §6.1 | - |\n| REQ-06 | 4.6 (p.7) | 동시 접속 1,000명 | 필수 | 충족 | PROD-DOCAI v3.2 §7.2 | - |\n| REQ-07 | 4.7 (p.8) | 월 가용성 99.9% | 필수 | 충족 | PROD-DOCAI v3.2 §8.1 | - |\n| REQ-08 | 4.8 (p.8) | 장애 4시간 내 1차 응답 | 선택 | 충족 | PROD-DOCAI v3.2 §8.1 | - |\n| REQ-09 | 4.9 (p.8) | 30일 무료 체험 | 선택 | 충족 | PROD-DOCAI v3.2 §9.1 | - |\n| REQ-10 | 4.10 (p.9) | API 분당 1,000회 | 필수 | 부분 충족 | PROD-DOCAI v3.2 §6.1 | 분당 600회 호출 제한 |\n| REQ-11 | 4.11 (p.9) | 중국어 OCR | 필수 | 대응 불가 | PROD-DOCAI v3.2 §2.1 | 한국어·영어만 지원 |\n| REQ-12 | 4.12 (p.9) | 온프레미스 설치 | 필수 | 대응 불가 | PROD-DOCAI v3.2 §1.2 | SaaS 전용 |\n",
+        "spans": [
+          {
+            "span_id": "ART-E2E-RFP-06:v1:HEADER",
+            "text": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-06:v1:REQ-01",
+            "text": "| REQ-01 | 4.1 (p.6) | 한·영 OCR | 필수 | 충족 | PROD-DOCAI v3.2 §2.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-06:v1:REQ-02",
+            "text": "| REQ-02 | 4.2 (p.6) | SAML SSO | 필수 | 충족 | PROD-DOCAI v3.2 §4.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-06:v1:REQ-03",
+            "text": "| REQ-03 | 4.3 (p.6) | 국내 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-06:v1:REQ-04",
+            "text": "| REQ-04 | 4.4 (p.7) | 파일당 200MB 업로드 | 필수 | 충족 | PROD-DOCAI v3.2 §2.3 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-06:v1:REQ-05",
+            "text": "| REQ-05 | 4.5 (p.7) | REST API | 필수 | 충족 | PROD-DOCAI v3.2 §6.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-06:v1:REQ-06",
+            "text": "| REQ-06 | 4.6 (p.7) | 동시 접속 1,000명 | 필수 | 충족 | PROD-DOCAI v3.2 §7.2 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-06:v1:REQ-07",
+            "text": "| REQ-07 | 4.7 (p.8) | 월 가용성 99.9% | 필수 | 충족 | PROD-DOCAI v3.2 §8.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-06:v1:REQ-08",
+            "text": "| REQ-08 | 4.8 (p.8) | 장애 4시간 내 1차 응답 | 선택 | 충족 | PROD-DOCAI v3.2 §8.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-06:v1:REQ-09",
+            "text": "| REQ-09 | 4.9 (p.8) | 30일 무료 체험 | 선택 | 충족 | PROD-DOCAI v3.2 §9.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-06:v1:REQ-10",
+            "text": "| REQ-10 | 4.10 (p.9) | API 분당 1,000회 | 필수 | 부분 충족 | PROD-DOCAI v3.2 §6.1 | 분당 600회 호출 제한 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-06:v1:REQ-11",
+            "text": "| REQ-11 | 4.11 (p.9) | 중국어 OCR | 필수 | 대응 불가 | PROD-DOCAI v3.2 §2.1 | 한국어·영어만 지원 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-06:v1:REQ-12",
+            "text": "| REQ-12 | 4.12 (p.9) | 온프레미스 설치 | 필수 | 대응 불가 | PROD-DOCAI v3.2 §1.2 | SaaS 전용 |"
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-RFP-06",
+        "version": "v2",
+        "author": "employee",
+        "saved_at": "2026-10-12T10:18:00+09:00",
+        "content": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |\n| --- | --- | --- | --- | --- | --- | --- |\n| REQ-01 | 4.1 (p.6) | 한·영 OCR | 필수 | 충족 | PROD-DOCAI v3.2 §2.1 | - |\n| REQ-02 | 4.2 (p.6) | SAML SSO | 필수 | 충족 | PROD-DOCAI v3.2 §4.1 | - |\n| REQ-03 | 4.3 (p.6) | 국내 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |\n| REQ-04 | 4.4 (p.7) | 파일당 200MB 업로드 | 필수 | 충족 | PROD-DOCAI v3.2 §2.3 | - |\n| REQ-05 | 4.5 (p.7) | REST API | 필수 | 충족 | PROD-DOCAI v3.2 §6.1 | - |\n| REQ-06 | 4.6 (p.7) | 동시 접속 1,000명, 월 가용성 99.9% | 필수 | 충족 | PROD-DOCAI v3.2 §7.2 | - |\n| REQ-10 | 4.10 (p.9) | API 분당 1,000회 | 필수 | 부분 충족 | PROD-DOCAI v3.2 §6.1 | 분당 600회 호출 제한 |\n| REQ-11 | 4.11 (p.9) | 중국어 OCR | 필수 | 대응 불가 | PROD-DOCAI v3.2 §2.1 | 한국어·영어만 지원 |\n| REQ-12 | 4.12 (p.9) | 온프레미스 설치 | 필수 | 대응 불가 | PROD-DOCAI v3.2 §1.2 | SaaS 전용 |\n",
+        "spans": [
+          {
+            "span_id": "ART-E2E-RFP-06:v2:HEADER",
+            "text": "| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-06:v2:REQ-01",
+            "text": "| REQ-01 | 4.1 (p.6) | 한·영 OCR | 필수 | 충족 | PROD-DOCAI v3.2 §2.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-06:v2:REQ-02",
+            "text": "| REQ-02 | 4.2 (p.6) | SAML SSO | 필수 | 충족 | PROD-DOCAI v3.2 §4.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-06:v2:REQ-03",
+            "text": "| REQ-03 | 4.3 (p.6) | 국내 보관 | 필수 | 충족 | PROD-DOCAI v3.2 §5.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-06:v2:REQ-04",
+            "text": "| REQ-04 | 4.4 (p.7) | 파일당 200MB 업로드 | 필수 | 충족 | PROD-DOCAI v3.2 §2.3 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-06:v2:REQ-05",
+            "text": "| REQ-05 | 4.5 (p.7) | REST API | 필수 | 충족 | PROD-DOCAI v3.2 §6.1 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-06:v2:REQ-06",
+            "text": "| REQ-06 | 4.6 (p.7) | 동시 접속 1,000명, 월 가용성 99.9% | 필수 | 충족 | PROD-DOCAI v3.2 §7.2 | - |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-06:v2:REQ-10",
+            "text": "| REQ-10 | 4.10 (p.9) | API 분당 1,000회 | 필수 | 부분 충족 | PROD-DOCAI v3.2 §6.1 | 분당 600회 호출 제한 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-06:v2:REQ-11",
+            "text": "| REQ-11 | 4.11 (p.9) | 중국어 OCR | 필수 | 대응 불가 | PROD-DOCAI v3.2 §2.1 | 한국어·영어만 지원 |"
+          },
+          {
+            "span_id": "ART-E2E-RFP-06:v2:REQ-12",
+            "text": "| REQ-12 | 4.12 (p.9) | 온프레미스 설치 | 필수 | 대응 불가 | PROD-DOCAI v3.2 §1.2 | SaaS 전용 |"
+          }
+        ]
+      }
+    ],
+    "reference_access_log": [],
+    "evidence_links": [],
+    "events": [
+      {
+        "event_id": "EV-RFP-06-1",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-RFP-06",
+        "artifact_version": "v2",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-RFP-06:v2:v2",
+        "occurred_at": "2026-10-12T10:20:00+09:00"
+      },
+      {
+        "event_id": "EV-RFP-06-C",
+        "event_type": "employee.confirmed",
+        "work_id": "W-E2E-RFP-06",
+        "occurred_at": "2026-10-12T11:30:00+09:00"
+      }
+    ],
+    "human_actions": [
+      {
+        "action_id": "HA-RFP-06-1",
+        "user_id": "E-1034",
+        "action": "confirm",
+        "at": "2026-10-12T11:30:00+09:00"
+      }
+    ],
+    "fault_injection": [],
+    "access_attempts": [
+      {
+        "attempt_id": "AC-RFP-06-1",
+        "user_id": "E-1034",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-06"
+      },
+      {
+        "attempt_id": "AC-RFP-06-2",
+        "user_id": "E-1021",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-06"
+      },
+      {
+        "attempt_id": "AC-RFP-06-3",
+        "user_id": "X-9001",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-RFP-06"
+      }
+    ]
+  }
+}

@@ -1,0 +1,280 @@
+{
+  "case_id": "E2E-QT-03",
+  "work_type": "quote",
+  "rfp_status": "첨부",
+  "summary": "정원보험 Contact AI 200석 견적서 작성 (RFP 6장 가격 제안 지침, 고객 요청 추가 할인 8%, 승인 요청 제출)",
+  "raw": {
+    "work_case": {
+      "work_id": "W-E2E-QT-03",
+      "company_id": "C-LGCNS-SALES",
+      "team_id": "T-SALES-01",
+      "employee_id": "E-1047",
+      "work_type": "quote",
+      "customer_id": "CUST-JW",
+      "status": "completed",
+      "created_at": "2026-10-07T10:00:00+09:00",
+      "completed_at": "2026-10-07T10:55:00+09:00",
+      "linked_work_ids": [
+        "W-E2E-RFP-02"
+      ],
+      "rfp_status": "첨부",
+      "registration": {
+        "product": "Contact AI",
+        "quantity": "상담석 200석",
+        "contract_months": 24,
+        "request_conditions": "추가 할인 8%, 견적 유효 기간 60일 이상",
+        "budget": "4억 원 이내"
+      }
+    },
+    "source_documents": [
+      {
+        "attachment_id": "ATT-QT-03",
+        "doc_id": "RFP-JW-2026-03",
+        "doc_type": "rfp",
+        "version": "v1.0",
+        "grade": "대외비",
+        "uploaded_by": "E-1047",
+        "uploaded_at": "2026-10-07T10:02:00+09:00",
+        "content": "[정원보험(가상) Contact AI 도입 RFP v1.0 — 6장 가격 제안 지침]\n6.1 (p.14) 견적은 제출일로부터 60일 이상 유효해야 한다.\n6.2 (p.14) 상품별 단가, 수량, 기간, 합계를 명시해야 한다.\n6.3 (p.15) 할인이 있는 경우 할인율을 별도 표기해야 한다.\n제출 기한: 2026-11-13\n문의: 정원보험 상품전략팀 최OO 과장 (010-0000-2201, choi.oo@jungwon-ins.example)"
+      }
+    ],
+    "attached_references": [
+      {
+        "doc_id": "PRICE-2026.2",
+        "version": "2026.2"
+      },
+      {
+        "doc_id": "SALES-AI-GL-001",
+        "version": "v1.0"
+      }
+    ],
+    "messages": [
+      {
+        "message_id": "W-E2E-QT-03-M01",
+        "seq": 1,
+        "role": "user",
+        "content": "정원보험 견적서 작성해줘.\n- 가격표 PRICE-2026.2, Contact AI 200석 24개월, 고객 요청 추가 할인 8%.\n- 기재: 가격표 버전, 상품별 단가·수량·기간·금액, 소계, 할인율, 합계(부가세 별도), 계약 조건.\n- RFP 6장 지침에 맞춰줘.\n\n[정원보험(가상) Contact AI 도입 RFP v1.0 — 6장 가격 제안 지침]\n6.1 (p.14) 견적은 제출일로부터 60일 이상 유효해야 한다.\n6.2 (p.14) 상품별 단가, 수량, 기간, 합계를 명시해야 한다.\n6.3 (p.15) 할인이 있는 경우 할인율을 별도 표기해야 한다.\n제출 기한: 2026-11-13",
+        "created_at": "2026-10-07T10:08:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-03-M02",
+        "seq": 2,
+        "role": "assistant",
+        "content": "견적서 초안입니다.\n\n[견적서] Q-2026-0460 / 고객사: 정원보험(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| AI 컨택센터 (Contact AI) | 90,000원 | 200 | 24개월 | 432,000,000원 |\n소계: 432,000,000원\n할인율: 8%\n합계: 397,440,000원 (부가가치세 별도)\n계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함",
+        "created_at": "2026-10-07T10:12:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-03-M03",
+        "seq": 3,
+        "role": "user",
+        "content": "합계 검산해봤어. 소계 432,000,000원에 8% 빼면 397,440,000원 맞네. 별표 2 보니까 합산 8%는 팀장 승인 구간이라 승인 요청 올릴게.",
+        "created_at": "2026-10-07T10:25:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-03-M04",
+        "seq": 4,
+        "role": "assistant",
+        "content": "맞습니다. 합산 할인율 5% 초과~15% 이하는 소속 팀장 승인 대상입니다. 고객용 견적서에는 승인 단계를 쓰지 않도록 주의하세요.",
+        "created_at": "2026-10-07T10:27:00+09:00"
+      },
+      {
+        "message_id": "W-E2E-QT-03-M05",
+        "seq": 5,
+        "role": "user",
+        "content": "승인 요청 올렸어. 견적서 저장할게.",
+        "created_at": "2026-10-07T10:40:00+09:00"
+      }
+    ],
+    "artifact_versions": [
+      {
+        "artifact_id": "ART-E2E-QT-03",
+        "version": "v1",
+        "author": "ai_draft",
+        "saved_at": "2026-10-07T10:12:00+09:00",
+        "content": "[견적서] Q-2026-0460 / 고객사: 정원보험(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| AI 컨택센터 (Contact AI) | 90,000원 | 200 | 24개월 | 432,000,000원 |\n소계: 432,000,000원\n할인율: 8%\n합계: 397,440,000원 (부가가치세 별도)\n계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함",
+        "spans": [
+          {
+            "span_id": "ART-E2E-QT-03:v1:L01",
+            "text": "[견적서] Q-2026-0460 / 고객사: 정원보험(가상)"
+          },
+          {
+            "span_id": "ART-E2E-QT-03:v1:L02",
+            "text": "적용 가격표: PRICE-2026.2"
+          },
+          {
+            "span_id": "ART-E2E-QT-03:v1:L03",
+            "text": "| 상품 | 단가 | 수량 | 기간 | 금액 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-03:v1:L05",
+            "text": "| AI 컨택센터 (Contact AI) | 90,000원 | 200 | 24개월 | 432,000,000원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-03:v1:L06",
+            "text": "소계: 432,000,000원"
+          },
+          {
+            "span_id": "ART-E2E-QT-03:v1:L07",
+            "text": "할인율: 8%"
+          },
+          {
+            "span_id": "ART-E2E-QT-03:v1:L08",
+            "text": "합계: 397,440,000원 (부가가치세 별도)"
+          },
+          {
+            "span_id": "ART-E2E-QT-03:v1:L09",
+            "text": "계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함"
+          }
+        ]
+      },
+      {
+        "artifact_id": "ART-E2E-QT-03",
+        "version": "v2",
+        "author": "employee",
+        "saved_at": "2026-10-07T10:50:00+09:00",
+        "content": "[견적서] Q-2026-0460 / 고객사: 정원보험(가상)\n적용 가격표: PRICE-2026.2\n| 상품 | 단가 | 수량 | 기간 | 금액 |\n| --- | --- | --- | --- | --- |\n| AI 컨택센터 (Contact AI) | 90,000원 | 200 | 24개월 | 432,000,000원 |\n소계: 432,000,000원\n할인율: 8%\n합계: 397,440,000원 (부가가치세 별도)\n계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함",
+        "spans": [
+          {
+            "span_id": "ART-E2E-QT-03:v2:L01",
+            "text": "[견적서] Q-2026-0460 / 고객사: 정원보험(가상)"
+          },
+          {
+            "span_id": "ART-E2E-QT-03:v2:L02",
+            "text": "적용 가격표: PRICE-2026.2"
+          },
+          {
+            "span_id": "ART-E2E-QT-03:v2:L03",
+            "text": "| 상품 | 단가 | 수량 | 기간 | 금액 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-03:v2:L05",
+            "text": "| AI 컨택센터 (Contact AI) | 90,000원 | 200 | 24개월 | 432,000,000원 |"
+          },
+          {
+            "span_id": "ART-E2E-QT-03:v2:L06",
+            "text": "소계: 432,000,000원"
+          },
+          {
+            "span_id": "ART-E2E-QT-03:v2:L07",
+            "text": "할인율: 8%"
+          },
+          {
+            "span_id": "ART-E2E-QT-03:v2:L08",
+            "text": "합계: 397,440,000원 (부가가치세 별도)"
+          },
+          {
+            "span_id": "ART-E2E-QT-03:v2:L09",
+            "text": "계약 조건: 월 단위 후불 청구, 표준 SLA(월 가용성 99.9%) 적용, 제공 범위는 상기 상품에 한함"
+          }
+        ]
+      }
+    ],
+    "reference_access_log": [
+      {
+        "user_id": "E-1047",
+        "doc_id": "PRICE-2026.2",
+        "version": "2026.2",
+        "accessed_at": "2026-10-07T10:20:00+09:00"
+      },
+      {
+        "user_id": "E-1047",
+        "doc_id": "SALES-AI-GL-001",
+        "version": "v1.0",
+        "accessed_at": "2026-10-07T10:26:00+09:00"
+      }
+    ],
+    "evidence_links": [
+      {
+        "link_id": "EL-QT-03-1",
+        "span_id": "ART-E2E-QT-03:v2:L08",
+        "doc_id": "PRICE-2026.2",
+        "version": "2026.2",
+        "location": "P-200",
+        "created_by": "E-1047",
+        "created_at": "2026-10-07T10:30:00+09:00"
+      }
+    ],
+    "events": [
+      {
+        "event_id": "EV-QT-03-1",
+        "event_type": "work.completed",
+        "work_id": "W-E2E-QT-03",
+        "artifact_version": "v2",
+        "rubric_version": "v2",
+        "idempotency_key": "W-E2E-QT-03:v2:v2",
+        "occurred_at": "2026-10-07T10:55:00+09:00"
+      },
+      {
+        "event_id": "EV-QT-03-C",
+        "event_type": "employee.confirmed",
+        "work_id": "W-E2E-QT-03",
+        "occurred_at": "2026-10-07T12:05:00+09:00"
+      }
+    ],
+    "human_actions": [
+      {
+        "action_id": "HA-QT-03-1",
+        "user_id": "E-1047",
+        "action": "confirm",
+        "at": "2026-10-07T12:05:00+09:00"
+      }
+    ],
+    "fault_injection": [],
+    "access_attempts": [
+      {
+        "attempt_id": "AC-QT-03-1",
+        "user_id": "E-1047",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-QT-03"
+      },
+      {
+        "attempt_id": "AC-QT-03-2",
+        "user_id": "E-1034",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-QT-03"
+      },
+      {
+        "attempt_id": "AC-QT-03-3",
+        "user_id": "X-9001",
+        "action": "개인 평가 리포트 조회",
+        "target": "W-E2E-QT-03"
+      }
+    ],
+    "quote_data": {
+      "v2": {
+        "quote_no": "Q-2026-0460",
+        "price_table": "PRICE-2026.2",
+        "lines": [
+          {
+            "code": "P-200",
+            "quantity": 200,
+            "months": 24
+          }
+        ],
+        "discount_components": [
+          {
+            "type": "고객 요청 추가",
+            "pct": 8
+          }
+        ],
+        "free_items": [],
+        "exceptions": []
+      }
+    },
+    "approval_requests": [
+      {
+        "approval_id": "APR-QT-03-1",
+        "artifact_version": "v2",
+        "submitted_at": "2026-10-07T10:38:00+09:00",
+        "items": [
+          {
+            "type": "할인",
+            "value": "합산 8%",
+            "approver": "소속 팀장",
+            "reason": "고객 예산 4억 원 이내"
+          }
+        ]
+      }
+    ]
+  }
+}
