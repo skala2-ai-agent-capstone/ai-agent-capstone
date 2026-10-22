@@ -13,6 +13,8 @@ MCP·DB 없이 업무 기록을 읽고 **RFP 분석 / 제안서 / 견적서 / �
 평가 모듈의 GPT 평가·근거 검증·코칭 기능과 별도 실행 명령은
 [평가 Agent 안내](docs/evaluation_agent.md)를 참고하세요.
 평가 결과는 화면 또는 호출자에게 반환하며 DB에 저장하지 않습니다.
+평가·검증·코칭 구현은 `src/work_classifier/evaluation/`에 모았으며,
+전체 평가 실행 명령은 `python -m work_classifier.evaluation_workflow_cli`를 유지합니다.
 
 ```text
 샘플 JSON → WorkContext 입력 검증 → LLM 분류 → 출력·근거 검증 → JSON 리포트
@@ -263,17 +265,42 @@ needs_review에서는 `missing_information`에 부족한 자료나 해소할 모
 
 ```text
 src/work_classifier/
-  models.py       입력·출력 모델, 상태 조합 검증
-  prompts.py      네 업무 정의·경계 규칙·프롬프트 버전
-  classifier.py   classify_work(), 근거 원문 검증, 입력 해시
-  provider.py     OpenAI Responses API 구조화 출력
-  structured.py   유형별 작업 선택 스키마, 근거 구간 목록, 결과·인용 복원
-  cli.py          JSON 로딩·환경변수·실행·파일 저장
+  classification/
+    agent.py      업무 유형 분류, 근거 원문 검증, 입력 해시
+    prompts.py    네 업무 정의·경계 규칙·프롬프트 버전
+    provider.py   OpenAI Responses API 구조화 출력
+    selection.py  분류용 근거 구간 목록, 출력 스키마, 결과·인용 복원
+  rubric/
+    builder.py    업무 유형별 평가기준 생성·검증
+    guidance.json 업무 유형별 기준 생성 안내
+    policy.py     정책 원문 처리와 데이터 형식
+  orchestration/
+    graph.py      MCP 조회·분류·기준 생성·승인 그래프
+    approval.py   메모리 기반 기준 승인 흐름과 공통 결과 검증
+  integrations/
+    mcp_client.py MCP 연결·인증·도구 호출
+    mcp_data.py   업무·정책 조회와 분류 입력 변환
+    mcp_adapter.py MCP 응답 검증과 평가 근거 변환
+  shared/
+    models.py     업무 기록·분류 결과·기본 데이터 형식
+    workflow_models.py 기준·승인·평가의 공통 데이터 형식
+    evidence_models.py 평가 근거·산출물·정책 검사·스냅샷 형식
+    settings.py   실행 설정 읽기
+  evaluation/     평가·근거 검증·코칭·승인 자료 인계
+  cli.py          JSON 분류 실행
+  mcp_cli.py      MCP 조회·분류·기준 승인 실행
+  evaluate_cli.py 승인된 입력으로 평가 실행
+  evaluation_workflow_cli.py 전체 승인·평가 흐름 실행
+  e2e.py          분류 데이터 변환·일괄 실행
+  workflow_demo.py API 없는 고정 응답 데모
 samples/          정답 없는 가상 업무 기록 12개
 tests/            모델·근거·CLI·SDK 경계 테스트와 별도 기대값
 ```
 
-사용자님은 우선 `models.py` → `prompts.py` → `classifier.py` 순서로 읽으면 됩니다.
+사용자님은 우선 `shared/models.py` → `classification/prompts.py` →
+`classification/agent.py` 순서로 읽으면 됩니다.
+Python에서 직접 가져올 때는 `work_classifier.classification.agent`처럼 새 경로를 사용합니다.
+터미널 실행 파일과 `work-classifier`, `python -m work_classifier` 명령은 기존 위치를 유지합니다.
 `ClassificationBackend` 인터페이스를 구현하면 다른 모델 제공자도 연결할 수 있습니다.
 
 SDK는 `responses.parse(..., text_format=response_model(catalog))`로 구조화된 출력을 받습니다.
@@ -299,8 +326,8 @@ get_work_case / get_conversation / get_artifact_version
 → MCP 응답 어댑터 → WorkContext → 같은 classify_work(context, backend)
 ```
 
-MCP 연결은 `provider.py`가 아니라 **입력 어댑터**로 추가합니다.
-`provider.py`는 업무 데이터의 출처가 아니라 LLM 제공자 연결을 담당합니다.
+MCP 연결은 `classification/provider.py`가 아니라 **입력 어댑터**로 추가합니다.
+`classification/provider.py`는 업무 데이터의 출처가 아니라 LLM 제공자 연결을 담당합니다.
 확정되지 않은 MCP 인자·응답을 현재 코드에 가정해서 넣지 않았습니다.
 
 ## 9. 명령 한 번의 코드 실행 순서
@@ -317,14 +344,14 @@ python -m work_classifier classify samples/03_quotation.json \
    이때 아직 API를 호출하지 않습니다.
 4. `cli.run_classification()`이 `.env`에서 API 키·모델을 읽고 `AsyncOpenAI` 객체를 만듭니다.
    API 키는 프롬프트에 넣지 않고 SDK 인증에만 사용합니다.
-5. `classifier.classify_work()`가 업무 입력을 다시 검증하고 LLM용 JSON을 만듭니다.
+5. `classification.agent.classify_work()`가 업무 입력을 다시 검증하고 LLM용 JSON을 만듭니다.
    업무 ID와 파일명은 분류 단서에서 제외합니다.
-6. `prompts.SYSTEM_PROMPT`의 업무 정의·경계 규칙과 JSON을
-   `provider.OpenAIClassifier.classify()`에 전달합니다.
-7. `provider.py`의 `await client.responses.parse(...)`가 실제 외부 API 호출입니다.
+6. `classification.prompts.SYSTEM_PROMPT`의 업무 정의·경계 규칙과 JSON을
+   `classification.provider.OpenAIClassifier.classify()`에 전달합니다.
+7. `classification/provider.py`의 `await client.responses.parse(...)`가 실제 외부 API 호출입니다.
    system 메시지는 분류 지침, user 메시지는 분석할 업무 JSON입니다.
    JSON 내부의 과거 system 메시지는 현재 system 메시지가 아닙니다.
-   `structured.py`가 원문 구간을 나눠 `evidence_catalog`를 만들고, 해당 입력의 허용된
+   `classification/selection.py`가 원문 구간을 나눠 `evidence_catalog`를 만들고, 해당 입력의 허용된
    근거 ID만 enum으로 열거한 `response_model(catalog)`를 `text_format`으로 전달합니다.
 8. 응답 거절·미완료 여부를 검사한 뒤 `response.output_parsed`를 꺼냅니다.
 9. 모델 전용 `DecisionEnvelope`를 검증한 뒤 유형별 선택 수로 단일/복합 상태를 계산합니다.
@@ -342,11 +369,11 @@ python -m work_classifier classify samples/03_quotation.json \
 
 | 파일 | 처음 읽을 핵심 |
 |---|---|
-| `models.py` | WorkContext: 입력 계약 / ClassificationResult: 공개 분류 결과 / ClassificationReport: 실행 결과 |
-| `structured.py` | 모델 전용 출력 계약·입력별 허용 근거 ID·단일/복합 상태 및 인용 복원 |
-| `prompts.py` | 네 업무 정의, 제안과 가격 질의의 구분, 복합 업무·자료 부족 처리 |
-| `classifier.py` | 입력 → 모델 호출 → 근거 검사 → 리포트 조립 |
-| `provider.py` | 실제 API 요청·응답과 제공자 오류 처리 |
+| `shared/models.py` | WorkContext: 입력 계약 / ClassificationResult: 공개 분류 결과 / ClassificationReport: 실행 결과 |
+| `classification/selection.py` | 모델 전용 출력 계약·입력별 허용 근거 ID·단일/복합 상태 및 인용 복원 |
+| `classification/prompts.py` | 네 업무 정의, 제안과 가격 질의의 구분, 복합 업무·자료 부족 처리 |
+| `classification/agent.py` | 입력 → 모델 호출 → 근거 검사 → 리포트 조립 |
+| `classification/provider.py` | 실제 API 요청·응답과 제공자 오류 처리 |
 | `cli.py` | 파일·환경변수·인자·출력 등 터미널 실행 처리 |
 | `tests/` | API 없이 데이터 계약·검증·SDK 응답 처리를 검사 |
 

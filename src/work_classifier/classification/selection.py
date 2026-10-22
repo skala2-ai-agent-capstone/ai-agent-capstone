@@ -6,7 +6,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field, create_model
 
-from .models import ClassificationResult, Evidence, NonEmpty, StrictModel, WorkType
+from ..shared.models import ClassificationResult, Evidence, NonEmpty, StrictModel, WorkType
 
 SELECTION_VERSION = "evidence-selection-v3"
 EvidenceIds = Annotated[list[NonEmpty], Field(min_length=1, max_length=4)]

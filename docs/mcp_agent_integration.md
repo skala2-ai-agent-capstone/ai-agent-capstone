@@ -26,13 +26,13 @@
 
 | 파일 | 역할 |
 | --- | --- |
-| src/work_classifier/mcp_client.py | 두 MCP 연결 수명 관리·Bearer 인증·응답 봉투 해석·읽기 도구 허용·일시 오류 재시도·실행/스냅샷 변경 차단 |
-| src/work_classifier/mcp_data.py | 페이지 전체 수집·서버 ID/문자열 버전 보존·분류 입력 변환·내규 정확 조회 |
-| src/work_classifier/agent_graph.py | 분류·승인 모듈의 LangGraph·승인 대기/재개·수정 반복·평가 입력 인계 계약 |
+| src/work_classifier/integrations/mcp_client.py | 두 MCP 연결 수명 관리·Bearer 인증·응답 봉투 해석·읽기 도구 허용·일시 오류 재시도·실행/스냅샷 변경 차단 |
+| src/work_classifier/integrations/mcp_data.py | 페이지 전체 수집·서버 ID/문자열 버전 보존·분류 입력 변환·내규 정확 조회 |
+| src/work_classifier/orchestration/graph.py | 분류·승인 모듈의 LangGraph·승인 대기/재개·수정 반복·평가 입력 인계 계약 |
 | src/work_classifier/mcp_cli.py | 백엔드 없이 실행하는 CLI·개발용 토큰 발급·터미널 승인·JSON 출력 |
-| src/work_classifier/workflow.py | 기존 승인 흐름과 공통 평가 결과 형식·인용 검증. stash에서 복원해 재사용 |
-| src/work_classifier/rubric_builder.py | 기존 팀원 노트북의 Python 기준 생성기. 이번에 채점 로직을 추가하지 않음 |
-| src/work_classifier/policy.py | 내규 모델. MCP에 페이지 정보가 없으므로 page=null 허용 |
+| src/work_classifier/orchestration/approval.py | 기존 승인 흐름과 공통 평가 결과 형식·인용 검증. stash에서 복원해 재사용 |
+| src/work_classifier/rubric/builder.py | 기존 팀원 노트북의 Python 기준 생성기. 이번에 채점 로직을 추가하지 않음 |
+| src/work_classifier/rubric/policy.py | 내규 모델. MCP에 페이지 정보가 없으므로 page=null 허용 |
 | tests/test_mcp_integration.py | 40건 응답 재생·오류·SDK/HTTP·LangGraph 승인 계약 테스트 |
 
 추가 라이브러리는 없습니다. 현재 requirements.txt의 MCP SDK 2.3.0, LangGraph 1.2.16을 사용합니다.
@@ -118,8 +118,8 @@ python -m work_classifier.mcp_cli run \
 `MCPHandoff`를 입력으로 받는 `async evaluate()` 함수를 구현하면 됩니다.
 
 ```python
-from work_classifier.agent_graph import MCPHandoff
-from work_classifier.workflow_models import EvaluationOutput
+from work_classifier.orchestration.graph import MCPHandoff
+from work_classifier.shared.workflow_models import EvaluationOutput
 
 class WorkflowEvaluator:
     async def evaluate(self, request: MCPHandoff) -> EvaluationOutput:

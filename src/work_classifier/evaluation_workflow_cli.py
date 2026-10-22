@@ -13,17 +13,17 @@ from langgraph.types import Command
 from openai import AsyncOpenAI
 from pydantic import ValidationError
 
-from .classifier import ClassificationError
-from .evaluation_agent import render_evaluation_report
-from .evaluation_errors import error_messages
-from .evaluation_handoff import HandoffEvaluator
-from .evaluation_models import AgentEvaluationOutput
-from .evaluation_workflow import build_evaluation_workflow
+from .classification.agent import ClassificationError
+from .classification.provider import OpenAIClassifier
+from .evaluation.agent import render_evaluation_report
+from .evaluation.errors import error_messages
+from .evaluation.handoff import HandoffEvaluator
+from .evaluation.models import AgentEvaluationOutput
+from .evaluation.workflow import build_evaluation_workflow
+from .integrations.mcp_client import MCPError, MCPGateway
 from .mcp_cli import connection_settings, human_decision
-from .mcp_client import MCPError, MCPGateway
-from .provider import OpenAIClassifier
-from .rubric_builder import OpenAIRubricBuilder
-from .runtime_settings import setting
+from .rubric.builder import OpenAIRubricBuilder
+from .shared.settings import setting
 
 
 def parser():

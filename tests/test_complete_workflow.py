@@ -8,13 +8,13 @@ from langgraph.types import Command
 from test_evaluation_agent import ToolFixture, selected_result
 from test_mcp_adapter import ROOT
 
-from work_classifier.agent_graph import MCPHandoff
-from work_classifier.classifier import ModelReply
-from work_classifier.evaluation_handoff import HandoffEvaluator
-from work_classifier.evaluation_models import AgentEvaluationOutput
-from work_classifier.evaluation_workflow import build_evaluation_workflow
-from work_classifier.models import ClassificationResult
-from work_classifier.workflow_models import CriteriaDraft
+from work_classifier.classification.agent import ModelReply
+from work_classifier.evaluation.handoff import HandoffEvaluator
+from work_classifier.evaluation.models import AgentEvaluationOutput
+from work_classifier.evaluation.workflow import build_evaluation_workflow
+from work_classifier.orchestration.graph import MCPHandoff
+from work_classifier.shared.models import ClassificationResult
+from work_classifier.shared.workflow_models import CriteriaDraft
 
 
 class UnifiedGateway:
@@ -290,7 +290,7 @@ async def test_modified_handoff_is_rejected_before_evaluation():
 
 
 def test_project_dotenv_api_key_wins_over_inherited_default(monkeypatch, tmp_path):
-    from work_classifier.runtime_settings import setting
+    from work_classifier.shared.settings import setting
 
     monkeypatch.chdir(tmp_path)
     monkeypatch.setenv("OPENAI_API_KEY", "inherited-placeholder")

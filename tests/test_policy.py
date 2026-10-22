@@ -3,7 +3,7 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from work_classifier.policy import load_policy_chunks, normalize_section, split_policy_lines
+from work_classifier.rubric.policy import load_policy_chunks, normalize_section, split_policy_lines
 
 
 def test_split_preserves_paragraph_pages_and_skips_toc_noise():

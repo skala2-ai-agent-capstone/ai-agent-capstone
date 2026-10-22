@@ -2,8 +2,8 @@ from typing import Self
 
 from pydantic import ConfigDict, Field, JsonValue, model_validator
 
-from .models import NonEmpty, StrictModel
-from .workflow_models import EvaluationOutput, ItemEvaluation, Reference
+from ..shared.models import NonEmpty, StrictModel
+from ..shared.workflow_models import EvaluationOutput, ItemEvaluation, Reference
 
 
 class AgentItemEvaluation(ItemEvaluation):

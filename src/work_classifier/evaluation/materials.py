@@ -5,10 +5,15 @@ from datetime import datetime
 
 from pydantic import ConfigDict, JsonValue
 
-from .evidence_models import EvaluationEvidence, EvaluationRun
-from .mcp_adapter import BusinessToolCaller, MCPToolError, decode_mcp_result, read_mcp_response
-from .models import NonEmpty, StrictModel
-from .workflow_models import CriteriaDraft, Reference, content_hash
+from ..integrations.mcp_adapter import (
+    BusinessToolCaller,
+    MCPToolError,
+    decode_mcp_result,
+    read_mcp_response,
+)
+from ..shared.evidence_models import EvaluationEvidence, EvaluationRun
+from ..shared.models import NonEmpty, StrictModel
+from ..shared.workflow_models import CriteriaDraft, Reference, content_hash
 
 
 class EvaluationMaterials(StrictModel):

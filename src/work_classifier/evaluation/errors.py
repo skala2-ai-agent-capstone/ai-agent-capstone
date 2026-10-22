@@ -4,11 +4,11 @@ import re
 
 from pydantic import ValidationError
 
-from .classifier import ClassificationError
-from .evaluation_validation import EvaluationError
-from .mcp_client import MCPError
-from .rubric_builder import RubricError
-from .workflow import WorkflowError
+from ..classification.agent import ClassificationError
+from ..integrations.mcp_client import MCPError
+from ..orchestration.approval import WorkflowError
+from ..rubric.builder import RubricError
+from .validation import EvaluationError
 
 KNOWN_ERRORS = (MCPError, ClassificationError, RubricError, EvaluationError, WorkflowError)
 SECRET = re.compile(r"\bsk-[A-Za-z0-9_-]+|\bBearer\s+[^\s,;]+", re.IGNORECASE)

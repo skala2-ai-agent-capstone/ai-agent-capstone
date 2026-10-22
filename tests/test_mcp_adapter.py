@@ -7,10 +7,12 @@ from types import SimpleNamespace
 import pytest
 from pydantic import ValidationError
 
-from work_classifier.evaluation_models import AgentEvaluationOutput, AgentItemEvaluation
-from work_classifier.evaluator import build_evaluation_payload, prepare_mcp_evaluation_payload
-from work_classifier.evidence_models import EvaluationRun
-from work_classifier.mcp_adapter import (
+from work_classifier.evaluation.models import AgentEvaluationOutput, AgentItemEvaluation
+from work_classifier.evaluation.payload import (
+    build_evaluation_payload,
+    prepare_mcp_evaluation_payload,
+)
+from work_classifier.integrations.mcp_adapter import (
     MCPToolError,
     assemble_evaluation_evidence,
     decode_mcp_result,
@@ -18,8 +20,14 @@ from work_classifier.mcp_adapter import (
     parse_work_case_response,
     read_mcp_response,
 )
-from work_classifier.models import ClassificationResult, WorkContext
-from work_classifier.workflow_models import Approval, CriteriaDraft, EvaluationInput, content_hash
+from work_classifier.shared.evidence_models import EvaluationRun
+from work_classifier.shared.models import ClassificationResult, WorkContext
+from work_classifier.shared.workflow_models import (
+    Approval,
+    CriteriaDraft,
+    EvaluationInput,
+    content_hash,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 CASES = [

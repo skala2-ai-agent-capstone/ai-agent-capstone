@@ -4,9 +4,9 @@ from datetime import datetime, timezone
 from typing import Protocol
 from uuid import uuid4
 
-from .classifier import validate_evidence
-from .models import ClassificationReport, ClassificationResult, WorkContext
-from .workflow_models import (
+from ..classification.agent import validate_evidence
+from ..shared.models import ClassificationReport, ClassificationResult, WorkContext
+from ..shared.workflow_models import (
     Approval,
     CriteriaDraft,
     EvaluationInput,

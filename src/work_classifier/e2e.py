@@ -14,11 +14,16 @@ from dotenv import load_dotenv
 from openai import AsyncOpenAI
 from pydantic import ValidationError
 
-from .classifier import ClassificationError, classify_work
-from .models import Artifact, Message, WorkContext
-from .prompts import PROMPT_VERSION, SYSTEM_PROMPT
-from .provider import OpenAIClassifier
-from .structured import SELECTION_VERSION, DecisionEnvelope, model_payload, response_model
+from .classification.agent import ClassificationError, classify_work
+from .classification.prompts import PROMPT_VERSION, SYSTEM_PROMPT
+from .classification.provider import OpenAIClassifier
+from .classification.selection import (
+    SELECTION_VERSION,
+    DecisionEnvelope,
+    model_payload,
+    response_model,
+)
+from .shared.models import Artifact, Message, WorkContext
 
 LABELS = {
     "rfp_analysis": "rfp_analysis",

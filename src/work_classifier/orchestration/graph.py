@@ -8,19 +8,24 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
 from pydantic import model_validator
 
-from .classifier import ClassificationBackend, classify_work
-from .mcp_client import MCPError, ToolGateway
-from .mcp_data import BusinessPacket, classification_context, fetch_business, fetch_policy
-from .models import ClassificationReport, StrictModel, WorkType
-from .policy import PolicyBundle
-from .workflow import WorkflowError, validate_report
-from .workflow_models import (
+from ..classification.agent import ClassificationBackend, classify_work
+from ..integrations.mcp_client import MCPError, ToolGateway
+from ..integrations.mcp_data import (
+    BusinessPacket,
+    classification_context,
+    fetch_business,
+    fetch_policy,
+)
+from ..rubric.policy import PolicyBundle
+from ..shared.models import ClassificationReport, StrictModel, WorkType
+from ..shared.workflow_models import (
     Approval,
     CriteriaDraft,
     EvaluationInput,
     EvaluationOutput,
     content_hash,
 )
+from .approval import WorkflowError, validate_report
 
 
 class CriteriaBuilder(Protocol):

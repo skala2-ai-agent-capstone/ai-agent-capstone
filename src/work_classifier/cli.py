@@ -9,10 +9,10 @@ from dotenv import load_dotenv
 from openai import AsyncOpenAI
 from pydantic import ValidationError
 
-from .classifier import ClassificationError, classify_work
-from .models import ClassificationReport, ClassificationResult, WorkContext
-from .provider import OpenAIClassifier
-from .structured import DecisionEnvelope
+from .classification.agent import ClassificationError, classify_work
+from .classification.provider import OpenAIClassifier
+from .classification.selection import DecisionEnvelope
+from .shared.models import ClassificationReport, ClassificationResult, WorkContext
 
 MAX_FILE_BYTES = 1_000_000
 

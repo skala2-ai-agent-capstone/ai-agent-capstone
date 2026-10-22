@@ -3,10 +3,10 @@
 import json
 from copy import deepcopy
 
-from .agent_graph import MCPHandoff, build_agent_graph
-from .evaluation_models import EvaluationReceipt
-from .workflow import WorkflowError
-from .workflow_models import EvaluationInput, EvaluationOutput, Reference, content_hash
+from ..orchestration.approval import WorkflowError
+from ..orchestration.graph import MCPHandoff, build_agent_graph
+from ..shared.workflow_models import EvaluationInput, EvaluationOutput, Reference, content_hash
+from .models import EvaluationReceipt
 
 
 def _validate_report(

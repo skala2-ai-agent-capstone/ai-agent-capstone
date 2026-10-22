@@ -3,7 +3,7 @@ import json
 from dataclasses import dataclass
 from typing import Protocol
 
-from .models import ClassificationReport, ClassificationResult, WorkContext
+from ..shared.models import ClassificationReport, ClassificationResult, WorkContext
 from .prompts import PROMPT_VERSION, SYSTEM_PROMPT
 
 MAX_INPUT_CHARS = 80_000

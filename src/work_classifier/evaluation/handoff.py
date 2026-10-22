@@ -4,15 +4,15 @@ from copy import deepcopy
 
 from openai import AsyncOpenAI
 
-from .agent_graph import MCPHandoff
-from .evaluation_agent import OpenAIEvaluator
-from .evaluation_materials import collect_evaluation_materials
-from .evaluation_models import EvaluationReceipt
-from .evaluation_validation import evidence_catalog
-from .evidence_models import EvaluationRun
-from .mcp_adapter import assemble_evaluation_evidence
-from .mcp_client import MCPError, ToolGateway
-from .workflow_models import content_hash
+from ..integrations.mcp_adapter import assemble_evaluation_evidence
+from ..integrations.mcp_client import MCPError, ToolGateway
+from ..orchestration.graph import MCPHandoff
+from ..shared.evidence_models import EvaluationRun
+from ..shared.workflow_models import content_hash
+from .agent import OpenAIEvaluator
+from .materials import collect_evaluation_materials
+from .models import EvaluationReceipt
+from .validation import evidence_catalog
 
 
 class ApprovedBusinessCache:

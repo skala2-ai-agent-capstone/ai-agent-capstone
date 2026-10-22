@@ -6,11 +6,21 @@ import json
 from openai import APIConnectionError, APIStatusError, APITimeoutError, AsyncOpenAI
 from pydantic import ValidationError
 
-from .evaluation_contract import MISSING_WORK_MESSAGES
-from .evaluation_materials import EvaluationMaterials, collect_evaluation_materials
-from .evaluation_models import AgentEvaluationOutput
-from .evaluation_prompts import SYSTEM_PROMPT
-from .evaluation_selection import (
+from ..integrations.mcp_adapter import (
+    BusinessToolCaller,
+    MCPToolError,
+    collect_evaluation_evidence,
+    decode_mcp_result,
+    read_mcp_response,
+)
+from ..shared.evidence_models import EvaluationEvidence, EvaluationRun
+from ..shared.workflow_models import EvaluationInput
+from .contract import MISSING_WORK_MESSAGES
+from .materials import EvaluationMaterials, collect_evaluation_materials
+from .models import AgentEvaluationOutput
+from .payload import build_evaluation_payload
+from .prompts import SYSTEM_PROMPT
+from .selection import (
     SELECTION_VERSION,
     build_choices,
     choice_requirements,
@@ -18,7 +28,7 @@ from .evaluation_selection import (
     security_choice_ids,
     selection_model,
 )
-from .evaluation_validation import (
+from .validation import (
     EvaluationError,
     evidence_catalog,
     reference_catalog,
@@ -26,16 +36,6 @@ from .evaluation_validation import (
     validate_evaluation_result,
     validate_materials,
 )
-from .evaluator import build_evaluation_payload
-from .evidence_models import EvaluationEvidence, EvaluationRun
-from .mcp_adapter import (
-    BusinessToolCaller,
-    MCPToolError,
-    collect_evaluation_evidence,
-    decode_mcp_result,
-    read_mcp_response,
-)
-from .workflow_models import EvaluationInput
 
 MAX_INPUT_CHARS = 180_000
 
