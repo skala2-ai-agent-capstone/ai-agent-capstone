@@ -9,12 +9,12 @@ from jsonschema import Draft202012Validator
 from openai import AsyncOpenAI
 from test_mcp_adapter import CASES, approved_request, inputs, policy_response, response
 
-from work_classifier.evaluation.agent import OpenAIEvaluator, render_evaluation_report
-from work_classifier.evaluation.materials import collect_evaluation_materials
-from work_classifier.evaluation.models import AgentEvaluationOutput
-from work_classifier.evaluation.validation import EvaluationError, validate_evaluation_result
-from work_classifier.integrations.mcp_adapter import collect_evaluation_evidence
-from work_classifier.shared.workflow_models import content_hash
+from ai_agents.evaluation_agent.final.agent import OpenAIEvaluator, render_evaluation_report
+from ai_agents.evaluation_agent.final.materials import collect_evaluation_materials
+from ai_agents.evaluation_agent.final.models import AgentEvaluationOutput
+from ai_agents.evaluation_agent.final.validation import EvaluationError, validate_evaluation_result
+from ai_agents.integrations.mcp_adapter import collect_evaluation_evidence
+from ai_agents.shared.workflow_models import content_hash
 
 
 class ToolFixture:
@@ -691,7 +691,7 @@ async def test_no_calls_after_approval_changes():
 
 
 def test_cli_help_and_no_keys(monkeypatch, capsys):
-    from work_classifier import evaluate_cli
+    from ai_agents.cli import evaluate as evaluate_cli
 
     monkeypatch.setattr("sys.argv", ["evaluate_cli", "--help"])
     with pytest.raises(SystemExit) as caught:
@@ -762,7 +762,7 @@ async def test_only_retryable_temporary_mcp_failure_is_retried_once():
 
 @pytest.mark.asyncio
 async def test_security_violation_cannot_receive_two_points():
-    from work_classifier.shared.evidence_models import PolicyViolation
+    from ai_agents.shared.evidence_models import PolicyViolation
 
     fixture = ToolFixture()
     evidence, materials = await collect(fixture)
@@ -856,7 +856,7 @@ async def test_missing_policy_is_explicit_in_model_input_and_returns_no_security
 
 
 def test_cli_missing_configuration_has_actionable_error(monkeypatch, capsys, tmp_path):
-    from work_classifier import evaluate_cli
+    from ai_agents.cli import evaluate as evaluate_cli
 
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.delenv("RUN_TOKEN", raising=False)

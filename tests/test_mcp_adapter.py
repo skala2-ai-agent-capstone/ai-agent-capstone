@@ -7,12 +7,12 @@ from types import SimpleNamespace
 import pytest
 from pydantic import ValidationError
 
-from work_classifier.evaluation.models import AgentEvaluationOutput, AgentItemEvaluation
-from work_classifier.evaluation.payload import (
+from ai_agents.evaluation_agent.final.models import AgentEvaluationOutput, AgentItemEvaluation
+from ai_agents.evaluation_agent.final.payload import (
     build_evaluation_payload,
     prepare_mcp_evaluation_payload,
 )
-from work_classifier.integrations.mcp_adapter import (
+from ai_agents.integrations.mcp_adapter import (
     MCPToolError,
     assemble_evaluation_evidence,
     decode_mcp_result,
@@ -20,9 +20,9 @@ from work_classifier.integrations.mcp_adapter import (
     parse_work_case_response,
     read_mcp_response,
 )
-from work_classifier.shared.evidence_models import EvaluationRun
-from work_classifier.shared.models import ClassificationResult, WorkContext
-from work_classifier.shared.workflow_models import (
+from ai_agents.shared.evidence_models import EvaluationRun
+from ai_agents.shared.models import ClassificationResult, WorkContext
+from ai_agents.shared.workflow_models import (
     Approval,
     CriteriaDraft,
     EvaluationInput,

@@ -4,8 +4,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from work_classifier.cli import load_context
-from work_classifier.shared.models import ClassificationResult, WorkContext
+from ai_agents.cli.classification import load_context
+from ai_agents.shared.models import ClassificationResult, WorkContext
 
 ROOT = Path(__file__).resolve().parents[1]
 SAMPLES = sorted((ROOT / "samples").glob("*.json"))
