@@ -34,6 +34,8 @@ from work_classifier.shared.workflow_models import CriteriaDraft, content_hash
         ),
         ("criterion", "고객이 제시한 예산 금액 조건을 RFP 원문과 대응표에서 대조했는가."),
         ("score_2", "가격표·단가에 관한 고객 요구사항을 원문 위치와 함께 빠짐없이 추출했다."),
+        ("criterion", "예산 금액 조건이 최종 산출물에 정확히 반영됐는지 평가한다"),
+        ("score_2", "예산 금액 조건이 최종 산출물에 정확히 반영됐는지 평가한다"),
     ],
 )
 def test_rfp_financial_terms_alone_do_not_block_approval(index, field, text):
@@ -53,6 +55,7 @@ def test_rfp_financial_terms_alone_do_not_block_approval(index, field, text):
         "단가와 수량을 곱해 총액을 계산했는가.",
         "할인율을 적용해 최종 견적을 작성했는가.",
         "금액 재계산을 수행하고 견적 계산 오류를 수정했는가.",
+        "견적 금액을 산출했는지 평가한다.",
     ],
 )
 def test_rfp_still_rejects_quotation_calculation_criteria(index, text):
