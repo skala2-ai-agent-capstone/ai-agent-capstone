@@ -1,0 +1,269 @@
+{
+  "schema_version": "1",
+  "dataset_id": "execution-contract-smoke",
+  "version": "v1",
+  "purpose": "contract",
+  "data_policy": "synthetic",
+  "examples": [
+    {
+      "case_id": "CONTRACT-01",
+      "category": "normal",
+      "inputs": {
+        "schema_version": "1",
+        "request_id": "REQ-DEMO-01",
+        "purpose": "feedback",
+        "work_type": "rfp_analysis",
+        "idempotency_key": "demo-01",
+        "snapshot": {
+          "snapshot_id": "SNAP-DEMO-01",
+          "work_id": "WORK-DEMO-01",
+          "captured_at": "2026-10-22T10:00:00+09:00",
+          "conversation_range": {
+            "from_seq": 1,
+            "to_seq": 4
+          },
+          "artifact_ref": null,
+          "source_refs": [],
+          "reference_refs": [],
+          "policy_refs": [],
+          "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "rubric": {
+            "rubric_id": "RUB-rfp_analysis",
+            "version": "v2",
+            "work_type": "rfp_analysis",
+            "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "approval_id": "APPROVAL-DEMO-01",
+            "approved_at": "2026-10-21T10:00:00+09:00"
+          }
+        }
+      },
+      "expected_description": "중간 피드백은 대화만 있어도 접수할 수 있다.",
+      "evidence_ids": [],
+      "checks": [
+        {
+          "path": [
+            "status"
+          ],
+          "operation": "equals",
+          "expected": "ok"
+        },
+        {
+          "path": [
+            "output",
+            "has_artifact"
+          ],
+          "operation": "equals",
+          "expected": false
+        }
+      ]
+    },
+    {
+      "case_id": "CONTRACT-02",
+      "category": "normal",
+      "inputs": {
+        "schema_version": "1",
+        "request_id": "REQ-DEMO-01",
+        "purpose": "final",
+        "work_type": "rfp_analysis",
+        "idempotency_key": "demo-01",
+        "snapshot": {
+          "snapshot_id": "SNAP-DEMO-01",
+          "work_id": "WORK-DEMO-01",
+          "captured_at": "2026-10-22T10:00:00+09:00",
+          "conversation_range": {
+            "from_seq": 1,
+            "to_seq": 4
+          },
+          "artifact_ref": {
+            "artifact_id": "ART-DEMO-01",
+            "version": "v3"
+          },
+          "source_refs": [],
+          "reference_refs": [],
+          "policy_refs": [],
+          "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "rubric": {
+            "rubric_id": "RUB-rfp_analysis",
+            "version": "v2",
+            "work_type": "rfp_analysis",
+            "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "approval_id": "APPROVAL-DEMO-01",
+            "approved_at": "2026-10-21T10:00:00+09:00"
+          }
+        }
+      },
+      "expected_description": "최종 평가는 명시된 산출물 버전을 고정한다.",
+      "evidence_ids": [],
+      "checks": [
+        {
+          "path": [
+            "status"
+          ],
+          "operation": "equals",
+          "expected": "ok"
+        },
+        {
+          "path": [
+            "output",
+            "purpose"
+          ],
+          "operation": "equals",
+          "expected": "final"
+        }
+      ]
+    },
+    {
+      "case_id": "CONTRACT-03",
+      "category": "exception",
+      "inputs": {
+        "schema_version": "1",
+        "request_id": "REQ-DEMO-01",
+        "purpose": "final",
+        "work_type": "rfp_analysis",
+        "idempotency_key": "demo-01",
+        "snapshot": {
+          "snapshot_id": "SNAP-DEMO-01",
+          "work_id": "WORK-DEMO-01",
+          "captured_at": "2026-10-22T10:00:00+09:00",
+          "conversation_range": {
+            "from_seq": 1,
+            "to_seq": 4
+          },
+          "artifact_ref": null,
+          "source_refs": [],
+          "reference_refs": [],
+          "policy_refs": [],
+          "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "rubric": {
+            "rubric_id": "RUB-rfp_analysis",
+            "version": "v2",
+            "work_type": "rfp_analysis",
+            "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "approval_id": "APPROVAL-DEMO-01",
+            "approved_at": "2026-10-21T10:00:00+09:00"
+          }
+        }
+      },
+      "expected_description": "산출물 버전이 없는 최종 평가 요청은 거부한다.",
+      "evidence_ids": [],
+      "checks": [
+        {
+          "path": [
+            "status"
+          ],
+          "operation": "equals",
+          "expected": "error"
+        },
+        {
+          "path": [
+            "error_type"
+          ],
+          "operation": "equals",
+          "expected": "ValidationError"
+        }
+      ]
+    },
+    {
+      "case_id": "CONTRACT-04",
+      "category": "error",
+      "inputs": {
+        "schema_version": "1",
+        "request_id": "REQ-DEMO-01",
+        "purpose": "feedback",
+        "work_type": "rfp_analysis",
+        "idempotency_key": "demo-01",
+        "snapshot": {
+          "snapshot_id": "SNAP-DEMO-01",
+          "work_id": "WORK-DEMO-01",
+          "captured_at": "2026-10-22T10:00:00+09:00",
+          "conversation_range": {
+            "from_seq": 7,
+            "to_seq": 3
+          },
+          "artifact_ref": null,
+          "source_refs": [],
+          "reference_refs": [],
+          "policy_refs": [],
+          "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "rubric": {
+            "rubric_id": "RUB-rfp_analysis",
+            "version": "v2",
+            "work_type": "rfp_analysis",
+            "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "approval_id": "APPROVAL-DEMO-01",
+            "approved_at": "2026-10-21T10:00:00+09:00"
+          }
+        }
+      },
+      "expected_description": "역전된 대화 범위를 거부한다.",
+      "evidence_ids": [],
+      "checks": [
+        {
+          "path": [
+            "status"
+          ],
+          "operation": "equals",
+          "expected": "error"
+        },
+        {
+          "path": [
+            "error_type"
+          ],
+          "operation": "equals",
+          "expected": "ValidationError"
+        }
+      ]
+    },
+    {
+      "case_id": "CONTRACT-05",
+      "category": "error",
+      "inputs": {
+        "schema_version": "1",
+        "request_id": "REQ-DEMO-01",
+        "purpose": "feedback",
+        "work_type": "rfp_analysis",
+        "idempotency_key": "demo-01",
+        "snapshot": {
+          "snapshot_id": "SNAP-DEMO-01",
+          "work_id": "WORK-DEMO-01",
+          "captured_at": "2026-10-22T10:00:00+09:00",
+          "conversation_range": {
+            "from_seq": 1,
+            "to_seq": 4
+          },
+          "artifact_ref": null,
+          "source_refs": [],
+          "reference_refs": [],
+          "policy_refs": [],
+          "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "rubric": {
+            "rubric_id": "RUB-rfp_analysis",
+            "version": "v2",
+            "work_type": "quote",
+            "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "approval_id": "APPROVAL-DEMO-01",
+            "approved_at": "2026-10-21T10:00:00+09:00"
+          }
+        }
+      },
+      "expected_description": "업무 유형과 기준 유형이 다른 요청을 거부한다.",
+      "evidence_ids": [],
+      "checks": [
+        {
+          "path": [
+            "status"
+          ],
+          "operation": "equals",
+          "expected": "error"
+        },
+        {
+          "path": [
+            "error_type"
+          ],
+          "operation": "equals",
+          "expected": "ValidationError"
+        }
+      ]
+    }
+  ]
+}

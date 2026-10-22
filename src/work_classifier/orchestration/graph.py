@@ -16,6 +16,7 @@ from ..integrations.mcp_data import (
     fetch_business,
     fetch_policy,
 )
+from ..observability import trace_step
 from ..rubric.policy import PolicyBundle
 from ..shared.models import ClassificationReport, StrictModel, WorkType
 from ..shared.workflow_models import (
@@ -205,7 +206,7 @@ def build_agent_graph(
     for name, node in (("fetch_work_case", fetch), ("classify_work", classify),
                        ("enrich_context", enrich), ("prepare_criteria", prepare),
                        ("approve_criteria", approval), ("evaluate_or_handoff", evaluate)):
-        graph.add_node(name, node)
+        graph.add_node(name, trace_step(name)(node))
     graph.add_edge(START, "fetch_work_case")
     graph.add_conditional_edges("fetch_work_case", lambda s:
                                 "classify_work" if s["status"] == "fetched" else END)
