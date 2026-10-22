@@ -8,9 +8,8 @@ from typing import Literal
 from openai import APIConnectionError, APIStatusError, APITimeoutError, AsyncOpenAI
 from pydantic import Field, TypeAdapter, ValidationError
 
-from .models import ClassificationResult, NonEmpty, StrictModel, WorkContext, WorkType
-from .policy import PolicyBundle, normalize_section
-from .workflow_models import (
+from ..shared.models import ClassificationResult, NonEmpty, StrictModel, WorkContext, WorkType
+from ..shared.workflow_models import (
     CriteriaDraft,
     CriteriaWarning,
     Criterion,
@@ -21,8 +20,9 @@ from .workflow_models import (
     ScoreLevel,
     content_hash,
 )
+from .policy import PolicyBundle, normalize_section
 
-GUIDANCE = json.loads(files("work_classifier").joinpath("rubric_guidance.json").read_text("utf-8"))
+GUIDANCE = json.loads(files("work_classifier.rubric").joinpath("guidance.json").read_text("utf-8"))
 ITEM_NAMES = [item["item"] for item in GUIDANCE["rubric_items"]]
 ITEM_IDS = ["problem_definition", "instruction_quality", "verification", "security", "quality"]
 BUILDER_VERSION = "notebook-v2-adapter-v2-scope-review"

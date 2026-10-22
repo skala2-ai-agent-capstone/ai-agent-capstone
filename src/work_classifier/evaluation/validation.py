@@ -2,16 +2,16 @@
 
 import re
 
-from .evaluation_contract import (
+from ..shared.evidence_models import EvaluationEvidence
+from ..shared.workflow_models import EvaluationInput, content_hash
+from .contract import (
     ITEM_KEYS,
     MISSING_WORK_MESSAGES,
     eligible_work_sources,
     score_issue,
 )
-from .evaluation_materials import EvaluationMaterials
-from .evaluation_models import AgentEvaluationOutput
-from .evidence_models import EvaluationEvidence
-from .workflow_models import EvaluationInput, content_hash
+from .materials import EvaluationMaterials
+from .models import AgentEvaluationOutput
 
 VISIBLE_SECRET = re.compile(
     r"01[016789]-?\d{3,4}-?\d{4}|[\w.+-]+@[\w-]+(?:\.[\w-]+)+|\bsk-[A-Za-z0-9_-]{20,}\b"

@@ -1,8 +1,8 @@
 from openai import APIConnectionError, APIStatusError, APITimeoutError, AsyncOpenAI
 from pydantic import ValidationError
 
-from .classifier import ClassificationError, ModelReply
-from .structured import (
+from .agent import ClassificationError, ModelReply
+from .selection import (
     SELECTION_VERSION,
     DecisionEnvelope,
     model_payload,

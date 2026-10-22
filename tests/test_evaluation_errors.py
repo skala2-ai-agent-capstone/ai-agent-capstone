@@ -2,8 +2,8 @@ import anyio
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from work_classifier.evaluation_errors import error_messages
-from work_classifier.rubric_builder import RubricError
+from work_classifier.evaluation.errors import error_messages
+from work_classifier.rubric.builder import RubricError
 
 
 def test_nested_group_preserves_the_original_rubric_reason():

@@ -5,7 +5,7 @@ from typing import Literal, Protocol
 
 from pydantic import ConfigDict, Field, JsonValue, TypeAdapter
 
-from .evidence_models import (
+from ..shared.evidence_models import (
     ArtifactRecord,
     ArtifactReference,
     CustomerSourceMessage,
@@ -15,7 +15,7 @@ from .evidence_models import (
     RegistrationRecord,
     WorkCaseEvidence,
 )
-from .models import NonEmpty, StrictModel
+from ..shared.models import NonEmpty, StrictModel
 
 
 class MCPMeta(StrictModel):

@@ -1,8 +1,8 @@
 """평가 입력 준비. GPT 평가·리포트는 후속 단위에서 연결하며 DB에는 저장하지 않는다."""
 
-from .evidence_models import EvaluationEvidence, EvaluationRun
-from .mcp_adapter import BusinessToolCaller, collect_evaluation_evidence
-from .workflow_models import EvaluationInput, content_hash
+from ..integrations.mcp_adapter import BusinessToolCaller, collect_evaluation_evidence
+from ..shared.evidence_models import EvaluationEvidence, EvaluationRun
+from ..shared.workflow_models import EvaluationInput, content_hash
 
 
 def build_evaluation_payload(

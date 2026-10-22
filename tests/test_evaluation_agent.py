@@ -9,12 +9,12 @@ from jsonschema import Draft202012Validator
 from openai import AsyncOpenAI
 from test_mcp_adapter import CASES, approved_request, inputs, policy_response, response
 
-from work_classifier.evaluation_agent import OpenAIEvaluator, render_evaluation_report
-from work_classifier.evaluation_materials import collect_evaluation_materials
-from work_classifier.evaluation_models import AgentEvaluationOutput
-from work_classifier.evaluation_validation import EvaluationError, validate_evaluation_result
-from work_classifier.mcp_adapter import collect_evaluation_evidence
-from work_classifier.workflow_models import content_hash
+from work_classifier.evaluation.agent import OpenAIEvaluator, render_evaluation_report
+from work_classifier.evaluation.materials import collect_evaluation_materials
+from work_classifier.evaluation.models import AgentEvaluationOutput
+from work_classifier.evaluation.validation import EvaluationError, validate_evaluation_result
+from work_classifier.integrations.mcp_adapter import collect_evaluation_evidence
+from work_classifier.shared.workflow_models import content_hash
 
 
 class ToolFixture:
@@ -762,7 +762,7 @@ async def test_only_retryable_temporary_mcp_failure_is_retried_once():
 
 @pytest.mark.asyncio
 async def test_security_violation_cannot_receive_two_points():
-    from work_classifier.evidence_models import PolicyViolation
+    from work_classifier.shared.evidence_models import PolicyViolation
 
     fixture = ToolFixture()
     evidence, materials = await collect(fixture)

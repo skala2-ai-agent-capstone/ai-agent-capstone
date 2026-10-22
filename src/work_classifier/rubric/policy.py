@@ -6,7 +6,7 @@ from typing import Self
 
 from pydantic import Field, TypeAdapter, model_validator
 
-from .models import NonEmpty, StrictModel
+from ..shared.models import NonEmpty, StrictModel
 
 ARTICLE = re.compile(r"^제(\d+)조\s*\((.+?)\)")
 APPENDIX = re.compile(r"^별표\s*(\d+)\.\s*(.+)$")

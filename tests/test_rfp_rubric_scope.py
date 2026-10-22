@@ -10,9 +10,9 @@ from pydantic import ValidationError
 from test_mcp_integration import ReplayGateway, StubClassifier
 from test_rubric_builder import fake_policy, fake_rubric, response
 
-from work_classifier.agent_graph import build_agent_graph
 from work_classifier.mcp_cli import human_decision
-from work_classifier.rubric_builder import (
+from work_classifier.orchestration.graph import build_agent_graph
+from work_classifier.rubric.builder import (
     GUIDANCE,
     OpenAIRubricBuilder,
     RubricError,
@@ -20,7 +20,7 @@ from work_classifier.rubric_builder import (
     adapt_rubric,
     rubric_issues,
 )
-from work_classifier.workflow_models import CriteriaDraft, content_hash
+from work_classifier.shared.workflow_models import CriteriaDraft, content_hash
 
 
 @pytest.mark.parametrize("index", [2, 4])

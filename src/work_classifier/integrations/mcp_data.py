@@ -4,10 +4,10 @@ import json
 
 from pydantic import Field
 
+from ..rubric.builder import check_policy, required_sections
+from ..rubric.policy import PolicyBundle, PolicyChunk
+from ..shared.models import Artifact, Message, NonEmpty, StrictModel, WorkContext, WorkType
 from .mcp_client import MCPError, ToolGateway
-from .models import Artifact, Message, NonEmpty, StrictModel, WorkContext, WorkType
-from .policy import PolicyBundle, PolicyChunk
-from .rubric_builder import check_policy, required_sections
 
 
 class BusinessPacket(StrictModel):

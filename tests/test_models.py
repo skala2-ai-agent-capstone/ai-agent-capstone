@@ -5,7 +5,7 @@ import pytest
 from pydantic import ValidationError
 
 from work_classifier.cli import load_context
-from work_classifier.models import ClassificationResult, WorkContext
+from work_classifier.shared.models import ClassificationResult, WorkContext
 
 ROOT = Path(__file__).resolve().parents[1]
 SAMPLES = sorted((ROOT / "samples").glob("*.json"))

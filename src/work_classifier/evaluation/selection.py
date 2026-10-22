@@ -7,10 +7,10 @@ from typing import Annotated, Literal, Union
 from pydantic import BeforeValidator, Field, ValidationError, WrapValidator, create_model
 from pydantic_core import PydanticCustomError
 
-from .evaluation_contract import MISSING_WORK_MESSAGES, eligible_work_sources, score_issue
-from .evaluation_models import AgentEvaluationOutput
-from .evaluation_validation import EvaluationError
-from .models import NonEmpty, StrictModel
+from ..shared.models import NonEmpty, StrictModel
+from .contract import MISSING_WORK_MESSAGES, eligible_work_sources, score_issue
+from .models import AgentEvaluationOutput
+from .validation import EvaluationError
 
 SELECTION_VERSION = "evaluation-evidence-selection-v4-all-criteria"
 MAX_CHOICES = 900

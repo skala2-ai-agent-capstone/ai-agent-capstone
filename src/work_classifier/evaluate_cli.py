@@ -14,12 +14,12 @@ from mcp.shared._httpx_utils import create_mcp_http_client
 from openai import AsyncOpenAI
 from pydantic import ValidationError
 
-from .evaluation_agent import OpenAIEvaluator, render_evaluation_report
-from .evaluation_validation import EvaluationError
-from .evidence_models import EvaluationRun
-from .mcp_adapter import MCPToolError
-from .runtime_settings import setting
-from .workflow_models import EvaluationInput
+from .evaluation.agent import OpenAIEvaluator, render_evaluation_report
+from .evaluation.validation import EvaluationError
+from .integrations.mcp_adapter import MCPToolError
+from .shared.evidence_models import EvaluationRun
+from .shared.settings import setting
+from .shared.workflow_models import EvaluationInput
 
 
 async def run(args) -> None:
