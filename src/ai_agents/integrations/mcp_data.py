@@ -4,8 +4,8 @@ import json
 
 from pydantic import Field
 
-from ..rubric.builder import check_policy, required_sections
-from ..rubric.policy import PolicyBundle, PolicyChunk
+from ..criteria_agent.builder import check_policy, required_sections
+from ..criteria_agent.policy import PolicyBundle, PolicyChunk
 from ..shared.models import Artifact, Message, NonEmpty, StrictModel, WorkContext, WorkType
 from .mcp_client import MCPError, ToolGateway
 

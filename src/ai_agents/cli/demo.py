@@ -6,10 +6,10 @@ from pathlib import Path
 
 from pydantic import Field
 
-from .classification.agent import ModelReply, classify_work
-from .orchestration.approval import ReviewWorkflow, WorkflowError
-from .shared.models import ClassificationResult, StrictModel, WorkContext
-from .shared.workflow_models import (
+from ..classification.agent import ModelReply, classify_work
+from ..orchestration.approval import ReviewWorkflow, WorkflowError
+from ..shared.models import ClassificationResult, StrictModel, WorkContext
+from ..shared.workflow_models import (
     Coaching,
     CriteriaDraft,
     EvaluationInput,

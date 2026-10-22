@@ -4,10 +4,10 @@ import re
 
 from pydantic import ValidationError
 
-from ..classification.agent import ClassificationError
-from ..integrations.mcp_client import MCPError
-from ..orchestration.approval import WorkflowError
-from ..rubric.builder import RubricError
+from ...classification.agent import ClassificationError
+from ...criteria_agent.builder import RubricError
+from ...integrations.mcp_client import MCPError
+from ...orchestration.approval import WorkflowError
 from .validation import EvaluationError
 
 KNOWN_ERRORS = (MCPError, ClassificationError, RubricError, EvaluationError, WorkflowError)

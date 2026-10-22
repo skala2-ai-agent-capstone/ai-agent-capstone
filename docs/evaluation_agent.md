@@ -7,17 +7,17 @@
 ## 전체 워크플로를 한 번에 실행하기
 
 ```bash
-python -m work_classifier.evaluation_workflow_cli \
+python -m ai_agents.cli.workflow \
   --evaluation-id EVAL-E2E-RFP-01-v2 \
   --output outputs/mcp/rfp-evaluation.json
 ```
 
 업무 조회 → 분류 → RAG 내규 조회 → 기준 생성 → 터미널에서 담당자 승인/수정/취소
-→ 평가·근거 검증 → 리포트 순서입니다. 기존 `mcp_cli run`은 승인 후 인계 자료까지만
-만들고, `mcp_cli fetch`는 LLM 없이 MCP 조회만 실행합니다. 위 전체 평가 명령은 업무 자료를
+→ 평가·근거 검증 → 리포트 순서입니다. `python -m ai_agents.cli.mcp run`은 승인 후 인계 자료까지만
+만들고, `python -m ai_agents.cli.mcp fetch`는 LLM 없이 MCP 조회만 실행합니다. 위 전체 평가 명령은 업무 자료를
 외부 OpenAI API로 전송하므로 전송이 허용된 자료로만 실행하세요.
 
-`evaluation/handoff.py`는 승인된 `MCPHandoff`의 해시를 다시 검사하고 그때의 원문을
+`evaluation_agent/final/handoff.py`는 승인된 `MCPHandoff`의 해시를 다시 검사하고 그때의 원문을
 평가 모듈에 전달합니다. 추가 RAG 조회도 같은 실행 범위에서 원문·버전을 대조합니다.
 결과에는 추가 근거 카탈로그와 스냅샷 해시가 함께 반환됩니다. 승인 대기는 현재 프로세스의
 메모리에만 남으며, 웹 관리자 인증이나 종료 후 재개 기능은 포함하지 않습니다.
@@ -46,7 +46,7 @@ python -m work_classifier.evaluation_workflow_cli \
 ## 평가 근거 구간 선택
 
 평가 모델은 인용문을 직접 작성하지 않고 현재 입력에 제공된 구간 ID만 선택합니다.
-`evaluation/selection.py`가 업무 원문을 `w0001` 등의 구간으로, 기준·자료 원문을
+`evaluation_agent/final/selection.py`가 업무 원문을 `w0001` 등의 구간으로, 기준·자료 원문을
 `r0001` 등의 구간으로 나누고 원본 ID·문서 버전·문자 위치를 보존합니다.
 실제 API 응답 스키마도 이번 입력에 존재하는 구간 ID와 승인된 항목 ID로 제한합니다.
 
@@ -75,7 +75,7 @@ python -m work_classifier.evaluation_workflow_cli \
 
 ## 항목별 공통 평가 계약
 
-`evaluation/contract.py`의 규칙을 응답 스키마와 최종 검증에서 함께 사용합니다.
+`evaluation_agent/final/contract.py`의 규칙을 응답 스키마와 최종 검증에서 함께 사용합니다.
 `criterion_requirements`에는 항목별 필수 업무 구간·승인 기준 구간·허용 점수·채점 가능 여부를
 전달합니다. 채점할 때 필수 업무 구간과 승인 기준 구간을 각각 선택해야 하며, 다른 자료는
 추가 비교 근거로 인용할 수 있습니다.
@@ -100,29 +100,29 @@ python -m work_classifier.evaluation_workflow_cli \
 
 ## 파일 역할
 
-평가·검증·코칭 코드는 `src/work_classifier/evaluation/`에 모았습니다.
+평가·검증·코칭 코드는 `src/ai_agents/evaluation_agent/final/`에 모았습니다.
 공통 모델은 `shared/`, MCP 연결은 `integrations/`, 분류는 `classification/`,
-기준 생성은 `rubric/`, 기준 승인 흐름은 `orchestration/`에 있습니다.
-실행 진입점인 `evaluation_workflow_cli.py`와 `evaluate_cli.py`는 기존 위치를 유지합니다.
-Python에서 직접 가져올 때는 `work_classifier.evaluation.agent`처럼 새 모듈 경로를 사용합니다.
+기준 생성은 `criteria_agent/`, 기준 승인 흐름은 `orchestration/`에 있습니다.
+실행 진입점은 `cli/workflow.py`와 `cli/evaluate.py`로 이동했습니다.
+Python에서 직접 가져올 때는 `ai_agents.evaluation_agent.final.agent`처럼 새 모듈 경로를 사용합니다.
 
 | 파일 | 역할 |
 | --- | --- |
-| `src/work_classifier/shared/workflow_models.py` | 분류·승인 및 평가 모듈의 공통 입력, 기준, 승인, 결과 계약 |
-| `src/work_classifier/shared/evidence_models.py` | 등록 내용, 고객 원문, 산출물 구간, 정책 검사, 실행 범위 |
-| `src/work_classifier/evaluation/models.py` | 평가 결과의 점수 범위, 보안 점수, 5개 항목 및 중복 제한 |
-| `src/work_classifier/evaluation/contract.py` | 응답 스키마·최종 검증이 공유하는 항목별 필수 근거와 점수 제약 |
-| `src/work_classifier/evaluation/selection.py` | 필수/추가 구간 선택 스키마와 원문 인용 복원 |
-| `src/work_classifier/integrations/mcp_adapter.py` | SDK 결과 읽기, 응답 변환, 실행·스냅샷·버전 검사, 읽기 도구 연결 |
-| `src/work_classifier/evaluation/payload.py` | 승인된 입력과 MCP 근거를 평가용 딕셔너리로 연결 |
-| `src/work_classifier/evaluation/materials.py` | 추가 대화·원문·열람·변경·승인 요청·기준 견적·RAG 출처 조회 |
-| `src/work_classifier/evaluation/agent.py` | `gpt-4o-mini` 호출, 검증 재시도, 화면용 리포트 |
-| `src/work_classifier/evaluation/validation.py` | 승인 항목·점수·인용문·버전·직원 행동 근거 대조 |
-| `src/work_classifier/evaluation/handoff.py` | 승인받은 업무 스냅샷과 추가 자료를 평가기에 전달 |
-| `src/work_classifier/evaluation/errors.py` | 중첩된 오류를 펼치고 민감정보를 제외한 메시지 출력 |
-| `src/work_classifier/evaluate_cli.py` | 승인된 JSON 입력으로 실행하는 독립 명령 |
-| `src/work_classifier/evaluation/workflow.py` | 기존 그래프를 수정하지 않고 승인 후 평가 연결 |
-| `src/work_classifier/evaluation_workflow_cli.py` | 전체 승인·평가 흐름의 독립 실행 명령 |
+| `src/ai_agents/shared/workflow_models.py` | 분류·승인 및 평가 모듈의 공통 입력, 기준, 승인, 결과 계약 |
+| `src/ai_agents/shared/evidence_models.py` | 등록 내용, 고객 원문, 산출물 구간, 정책 검사, 실행 범위 |
+| `src/ai_agents/evaluation_agent/final/models.py` | 평가 결과의 점수 범위, 보안 점수, 5개 항목 및 중복 제한 |
+| `src/ai_agents/evaluation_agent/final/contract.py` | 응답 스키마·최종 검증이 공유하는 항목별 필수 근거와 점수 제약 |
+| `src/ai_agents/evaluation_agent/final/selection.py` | 필수/추가 구간 선택 스키마와 원문 인용 복원 |
+| `src/ai_agents/integrations/mcp_adapter.py` | SDK 결과 읽기, 응답 변환, 실행·스냅샷·버전 검사, 읽기 도구 연결 |
+| `src/ai_agents/evaluation_agent/final/payload.py` | 승인된 입력과 MCP 근거를 평가용 딕셔너리로 연결 |
+| `src/ai_agents/evaluation_agent/final/materials.py` | 추가 대화·원문·열람·변경·승인 요청·기준 견적·RAG 출처 조회 |
+| `src/ai_agents/evaluation_agent/final/agent.py` | `gpt-4o-mini` 호출, 검증 재시도, 화면용 리포트 |
+| `src/ai_agents/evaluation_agent/final/validation.py` | 승인 항목·점수·인용문·버전·직원 행동 근거 대조 |
+| `src/ai_agents/evaluation_agent/final/handoff.py` | 승인받은 업무 스냅샷과 추가 자료를 평가기에 전달 |
+| `src/ai_agents/evaluation_agent/final/errors.py` | 중첩된 오류를 펼치고 민감정보를 제외한 메시지 출력 |
+| `src/ai_agents/cli/evaluate.py` | 승인된 JSON 입력으로 실행하는 독립 명령 |
+| `src/ai_agents/evaluation_agent/final/workflow.py` | 기존 그래프를 수정하지 않고 승인 후 평가 연결 |
+| `src/ai_agents/cli/workflow.py` | 전체 승인·평가 흐름의 독립 실행 명령 |
 
 ## 승인 워크플로에서 연결하기
 
@@ -134,8 +134,8 @@ Python에서 직접 가져올 때는 `work_classifier.evaluation.agent`처럼 �
 호출자가 같은 실행에서 수집한 입력임을 보장해야 합니다.
 
 ```python
-from work_classifier.evaluation.payload import prepare_mcp_evaluation_payload
-from work_classifier.shared.evidence_models import EvaluationRun
+from ai_agents.evaluation_agent.final.payload import prepare_mcp_evaluation_payload
+from ai_agents.shared.evidence_models import EvaluationRun
 
 # approved_input: 담당자 승인 이후 만들어진 EvaluationInput
 # run_data: 백엔드 POST /internal/runs 성공 응답의 data
@@ -168,7 +168,7 @@ MCP SDK의 구조화 결과와 JSON 텍스트 결과를 모두 받을 수 있습
 
 ```python
 from openai import AsyncOpenAI
-from work_classifier.evaluation.agent import OpenAIEvaluator, render_evaluation_report
+from ai_agents.evaluation_agent.final.agent import OpenAIEvaluator, render_evaluation_report
 
 async def call_rag_tool(name, arguments):
     return await rag_client.call_tool(name, arguments)
@@ -220,12 +220,12 @@ SDK의 구조화 출력 방식은 [OpenAI 공식 문서](https://developers.open
 실행 토큰, 승인 입력, 실행 정보는 같은 평가 실행의 값이어야 합니다.
 
 ```bash
-python -m work_classifier.evaluate_cli \
+python -m ai_agents.cli.evaluate \
   --input /path/to/approved_input.json \
   --run-context /path/to/run_context.json
 
 # 화면 대신 프론트엔드용 JSON을 표준 출력으로 확인
-python -m work_classifier.evaluate_cli \
+python -m ai_agents.cli.evaluate \
   --input /path/to/approved_input.json \
   --run-context /path/to/run_context.json --json
 ```

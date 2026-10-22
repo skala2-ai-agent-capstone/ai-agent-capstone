@@ -4,11 +4,11 @@ from copy import deepcopy
 
 from openai import AsyncOpenAI
 
-from ..integrations.mcp_adapter import assemble_evaluation_evidence
-from ..integrations.mcp_client import MCPError, ToolGateway
-from ..orchestration.graph import MCPHandoff
-from ..shared.evidence_models import EvaluationRun
-from ..shared.workflow_models import content_hash
+from ...integrations.mcp_adapter import assemble_evaluation_evidence
+from ...integrations.mcp_client import MCPError, ToolGateway
+from ...orchestration.graph import MCPHandoff
+from ...shared.evidence_models import EvaluationRun
+from ...shared.workflow_models import content_hash
 from .agent import OpenAIEvaluator
 from .materials import collect_evaluation_materials
 from .models import EvaluationReceipt

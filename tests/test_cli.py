@@ -1,13 +1,13 @@
 import json
 from pathlib import Path
 
-from work_classifier import cli
+from ai_agents.cli import classification as cli
 
 SAMPLE = Path(__file__).resolve().parents[1] / "samples/03_quotation.json"
 
 
 def invoke(monkeypatch, *args):
-    monkeypatch.setattr("sys.argv", ["work-classifier", *map(str, args)])
+    monkeypatch.setattr("sys.argv", ["ai-agents", *map(str, args)])
     return cli.main()
 
 

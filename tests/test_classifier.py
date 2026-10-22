@@ -4,15 +4,15 @@ from pathlib import Path
 
 import pytest
 
-from work_classifier.classification.agent import (
+from ai_agents.classification.agent import (
     ClassificationError,
     ModelReply,
     classify_work,
     validate_evidence,
 )
-from work_classifier.classification.prompts import PROMPT_VERSION, SYSTEM_PROMPT
-from work_classifier.cli import load_context
-from work_classifier.shared.models import ClassificationResult, WorkContext
+from ai_agents.classification.prompts import PROMPT_VERSION, SYSTEM_PROMPT
+from ai_agents.cli.classification import load_context
+from ai_agents.shared.models import ClassificationResult, WorkContext
 
 SAMPLE = Path(__file__).resolve().parents[1] / "samples/02_proposal.json"
 

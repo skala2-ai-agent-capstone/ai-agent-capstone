@@ -1,5 +1,8 @@
 # 실제 MCP 연결 테스트 결과 — 2026-10-21
 
+이 문서는 당시 실행 결과를 보관합니다. 아래 재실행 명령은 현재 `ai_agents` 경로로
+갱신했으며, 폴더 정리 과정에서 실제 MCP·LLM 검증을 다시 수행한 것은 아닙니다.
+
 결과: **업무 조회·분류·승인 범위의 실제 조회·분류·기준 생성·승인 대기까지 통과**했습니다.
 평가 모듈의 실제 채점·코칭은 연결하지 않았습니다. 생성된 기준의 담당자 승인도 대신하지 않았습니다.
 
@@ -59,7 +62,7 @@
 
 ```bash
 source .venv/bin/activate
-python -m work_classifier.mcp_cli run \
+python -m ai_agents.cli.mcp run \
   --evaluation-id EVAL-E2E-RFP-01-v2 \
   --output outputs/mcp/manual-rfp-handoff.json
 ```

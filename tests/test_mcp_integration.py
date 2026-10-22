@@ -15,16 +15,16 @@ from mcp.server.mcpserver import MCPServer
 from mcp.server.transport_security import TransportSecuritySettings
 from pydantic import ValidationError
 
-from work_classifier.classification.agent import ModelReply
-from work_classifier.integrations.mcp_client import MCPError, MCPGateway, unpack_result
-from work_classifier.integrations.mcp_data import (
+from ai_agents.classification.agent import ModelReply
+from ai_agents.integrations.mcp_client import MCPError, MCPGateway, unpack_result
+from ai_agents.integrations.mcp_data import (
     classification_context,
     fetch_business,
     fetch_policy,
 )
-from work_classifier.orchestration.graph import MCPHandoff, build_agent_graph
-from work_classifier.shared.models import ClassificationResult
-from work_classifier.shared.workflow_models import (
+from ai_agents.orchestration.graph import MCPHandoff, build_agent_graph
+from ai_agents.shared.models import ClassificationResult
+from ai_agents.shared.workflow_models import (
     CriteriaDraft,
     Criterion,
     EvaluationOutput,
@@ -341,7 +341,7 @@ async def test_streamable_http_lifecycle_auth_and_tool_result(monkeypatch):
         return httpx2.AsyncClient(transport=httpx2.ASGITransport(app=asgi), headers=headers)
 
     monkeypatch.setattr(
-        "work_classifier.integrations.mcp_client.create_mcp_http_client", http_client,
+        "ai_agents.integrations.mcp_client.create_mcp_http_client", http_client,
     )
     async with app.router.lifespan_context(app):
         async with MCPGateway("test-secret", business_url="http://testserver/mcp",

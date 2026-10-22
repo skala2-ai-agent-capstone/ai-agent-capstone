@@ -2,7 +2,7 @@ from copy import deepcopy
 
 import pytest
 
-from work_classifier.e2e import adapt_case
+from ai_agents.cli.e2e import adapt_case
 
 
 @pytest.fixture

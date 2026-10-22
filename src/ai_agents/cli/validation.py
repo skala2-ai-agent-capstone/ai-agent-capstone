@@ -1,4 +1,4 @@
-"""python -m work_classifier.validation.cli {schemas,run,compare}."""
+"""python -m ai_agents.cli.validation {schemas,run,compare}."""
 
 import argparse
 import asyncio
@@ -7,8 +7,8 @@ import json
 from pathlib import Path
 
 from ..shared.execution_contracts import EvaluationRequest, FeedbackResult
-from .models import Dataset, ExperimentResult
-from .runner import compare_experiments, run_experiment, write_json
+from ..validation.models import Dataset, ExperimentResult
+from ..validation.runner import compare_experiments, run_experiment, write_json
 
 
 def parser():

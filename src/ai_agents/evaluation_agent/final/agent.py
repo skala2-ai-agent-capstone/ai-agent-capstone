@@ -6,15 +6,15 @@ import json
 from openai import APIConnectionError, APIStatusError, APITimeoutError, AsyncOpenAI
 from pydantic import ValidationError
 
-from ..integrations.mcp_adapter import (
+from ...integrations.mcp_adapter import (
     BusinessToolCaller,
     MCPToolError,
     collect_evaluation_evidence,
     decode_mcp_result,
     read_mcp_response,
 )
-from ..shared.evidence_models import EvaluationEvidence, EvaluationRun
-from ..shared.workflow_models import EvaluationInput
+from ...shared.evidence_models import EvaluationEvidence, EvaluationRun
+from ...shared.workflow_models import EvaluationInput
 from .contract import MISSING_WORK_MESSAGES
 from .materials import EvaluationMaterials, collect_evaluation_materials
 from .models import AgentEvaluationOutput

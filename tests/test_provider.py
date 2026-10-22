@@ -9,8 +9,8 @@ import httpx
 import pytest
 from openai import AsyncOpenAI
 
-from work_classifier.classification.agent import ClassificationError
-from work_classifier.classification.provider import OpenAIClassifier
+from ai_agents.classification.agent import ClassificationError
+from ai_agents.classification.provider import OpenAIClassifier
 
 DECISION = {
     "decision": {
