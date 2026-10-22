@@ -7,7 +7,10 @@ JSON 분류의 인자와 동작은 유지하며 import와 실행 경로가 변�
 
 중간·최종 요청 계약, 로컬/LangSmith 추적, 고정 평가셋 실행과 커밋별 결과 비교는
 [실행 계약·추적·검증 기반](docs/execution_contracts_observability.md)을 참고하세요.
-기준 생성 로직은 유지하며, 중간 피드백 실행과 MCP 저장 연결은 후속 구현입니다.
+버튼 요청형 최근 질문·응답 5회 피드백 Agent/Worker를 추가했습니다.
+[중간 피드백 구현·서버 계약·검증 가이드](docs/recent_five_feedback.md)를 참고하세요.
+Agent 쪽 MCP 호출·저장 어댑터는 구현했으며, 새 MCP 도구 3개와 백엔드 연동은 필요합니다.
+기준 생성 및 기존 최종 평가 로직은 수정하지 않았습니다.
 
 업무 기록을 읽고 **RFP 분석 / 제안서 / 견적서 / 고객 질의 답변**을 분류한 뒤
 평가 기준 생성·승인·평가로 연결하는 Python 애플리케이션입니다.
@@ -18,7 +21,7 @@ JSON 분류의 인자와 동작은 유지하며 import와 실행 경로가 변�
 승인 후 평가기를 주입할 수 있으며, `ai_agents.cli.mcp run`은 평가 모듈에 전달할 입력까지 출력합니다.
 평가 모듈의 GPT 평가·근거 검증·코칭 기능과 별도 실행 명령은
 [평가 Agent 안내](docs/evaluation_agent.md)를 참고하세요.
-평가 결과는 화면 또는 호출자에게 반환하며 DB에 저장하지 않습니다.
+기존 최종 평가 실행 명령은 결과를 화면 또는 호출자에게 반환하며 DB에 저장하지 않습니다.
 평가·검증·코칭 구현은 `src/ai_agents/evaluation_agent/final/`에 모았으며,
 전체 평가 실행 명령은 `python -m ai_agents.cli.workflow`입니다.
 

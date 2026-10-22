@@ -29,6 +29,11 @@ dev = [
 [project.scripts]
 ai-agents = "ai_agents.cli.classification:main"
 
+[project.optional-dependencies]
+worker = [
+    "aio-pika>=9.5,<10",
+]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/ai_agents"]
 

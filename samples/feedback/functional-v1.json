@@ -1,0 +1,1965 @@
+{
+  "schema_version": "1",
+  "dataset_id": "recent-five-functional",
+  "version": "v1",
+  "purpose": "feedback",
+  "data_policy": "synthetic",
+  "examples": [
+    {
+      "case_id": "FB-F01",
+      "category": "normal",
+      "inputs": {
+        "event": {
+          "message_id": "00000000-0000-4000-8000-000000000001",
+          "type": "LIVE_EVALUATE",
+          "live_eval_id": "LIVE-DEMO",
+          "company_id": "C-DEMO",
+          "work_id": "W-DEMO",
+          "requested_by": "U-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "rubric_version": null,
+          "attempt": 0
+        },
+        "context": {
+          "live_eval_id": "LIVE-DEMO",
+          "company_id": "C-DEMO",
+          "work_id": "W-DEMO",
+          "requested_by": "U-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "rubric_version": null,
+          "requested_at": "2026-10-22T10:00:00+09:00",
+          "status": "생성 중",
+          "work_type": null,
+          "rubric_doc_id": null,
+          "rubric": null
+        },
+        "batch": {
+          "live_eval_id": "LIVE-DEMO",
+          "work_id": "W-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "masking_applied": true,
+          "masking_version": "fixture-mask-v1",
+          "complete": true,
+          "messages": [
+            {
+              "message_id": "W-DEMO-M01",
+              "exchange_id": 101,
+              "seq": 1,
+              "role": "user",
+              "content": "제안서 작성을 도와줘.",
+              "created_at": "2026-10-22T09:01:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M02",
+              "exchange_id": 101,
+              "seq": 2,
+              "role": "assistant",
+              "content": "어떤 고객과 목적을 위한 제안서인가요?",
+              "created_at": "2026-10-22T09:02:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M03",
+              "exchange_id": 102,
+              "seq": 3,
+              "role": "user",
+              "content": "독자는 구매 담당자야.",
+              "created_at": "2026-10-22T09:03:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M04",
+              "exchange_id": 102,
+              "seq": 4,
+              "role": "assistant",
+              "content": "구매 담당자를 대상으로 구성하겠습니다.",
+              "created_at": "2026-10-22T09:04:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M05",
+              "exchange_id": 103,
+              "seq": 5,
+              "role": "user",
+              "content": "목표는 도입 검토 회의를 잡는 거야.",
+              "created_at": "2026-10-22T09:05:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M06",
+              "exchange_id": 103,
+              "seq": 6,
+              "role": "assistant",
+              "content": "도입 검토 회의 제안으로 마무리하겠습니다.",
+              "created_at": "2026-10-22T09:06:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M07",
+              "exchange_id": 104,
+              "seq": 7,
+              "role": "user",
+              "content": "근거가 없는 비용 절감 수치는 빼줘.",
+              "created_at": "2026-10-22T09:07:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M08",
+              "exchange_id": 104,
+              "seq": 8,
+              "role": "assistant",
+              "content": "확인된 수치만 사용하겠습니다.",
+              "created_at": "2026-10-22T09:08:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M09",
+              "exchange_id": 105,
+              "seq": 9,
+              "role": "user",
+              "content": "제안서를 더 좋게 써줘.",
+              "created_at": "2026-10-22T09:09:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M10",
+              "exchange_id": 105,
+              "seq": 10,
+              "role": "assistant",
+              "content": "핵심 가치와 다음 단계를 강조하겠습니다.",
+              "created_at": "2026-10-22T09:10:00+09:00"
+            }
+          ]
+        },
+        "model_output": {
+          "items": [
+            {
+              "item_id": "feedback-1",
+              "criterion_id": null,
+              "kind": "improvement",
+              "diagnosis": "마지막 요청의 수정 기준이 구체적이지 않습니다.",
+              "evidence": [
+                {
+                  "message_id": "W-DEMO-M09",
+                  "quote": "제안서를 더 좋게 써줘."
+                }
+              ]
+            }
+          ],
+          "coaching": [
+            {
+              "item_id": "feedback-1",
+              "target_message_id": "W-DEMO-M09",
+              "next_action": "수정할 부분과 출력 형식을 지정하세요.",
+              "suggested_prompt": "구매 담당자가 도입 검토 회의를 결정할 수 있도록 핵심 가치와 다음 단계를 구분해 제안서를 수정해줘. 근거가 없는 수치는 넣지 말고 변경 이유를 표로 정리해줘."
+            }
+          ]
+        }
+      },
+      "expected_description": "질문·답변 5쌍(10개 메시지)을 한 번 평가하고 저장한다.",
+      "evidence_ids": [],
+      "checks": [
+        {
+          "path": [
+            "output",
+            "status"
+          ],
+          "operation": "equals",
+          "expected": "완료"
+        },
+        {
+          "path": [
+            "output",
+            "model_calls"
+          ],
+          "operation": "equals",
+          "expected": 1
+        },
+        {
+          "path": [
+            "output",
+            "saved"
+          ],
+          "operation": "equals",
+          "expected": true
+        }
+      ]
+    },
+    {
+      "case_id": "FB-F02",
+      "category": "normal",
+      "inputs": {
+        "event": {
+          "message_id": "00000000-0000-4000-8000-000000000001",
+          "type": "LIVE_EVALUATE",
+          "live_eval_id": "LIVE-DEMO",
+          "company_id": "C-DEMO",
+          "work_id": "W-DEMO",
+          "requested_by": "U-DEMO",
+          "from_seq": 1,
+          "to_seq": 2,
+          "rubric_version": null,
+          "attempt": 0
+        },
+        "context": {
+          "live_eval_id": "LIVE-DEMO",
+          "company_id": "C-DEMO",
+          "work_id": "W-DEMO",
+          "requested_by": "U-DEMO",
+          "from_seq": 1,
+          "to_seq": 2,
+          "rubric_version": null,
+          "requested_at": "2026-10-22T10:00:00+09:00",
+          "status": "생성 중",
+          "work_type": null,
+          "rubric_doc_id": null,
+          "rubric": null
+        },
+        "batch": {
+          "live_eval_id": "LIVE-DEMO",
+          "work_id": "W-DEMO",
+          "from_seq": 1,
+          "to_seq": 2,
+          "masking_applied": true,
+          "masking_version": "fixture-mask-v1",
+          "complete": true,
+          "messages": [
+            {
+              "message_id": "W-DEMO-M01",
+              "exchange_id": 101,
+              "seq": 1,
+              "role": "user",
+              "content": "제안서 작성을 도와줘.",
+              "created_at": "2026-10-22T09:01:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M02",
+              "exchange_id": 101,
+              "seq": 2,
+              "role": "assistant",
+              "content": "어떤 고객과 목적을 위한 제안서인가요?",
+              "created_at": "2026-10-22T09:02:00+09:00"
+            }
+          ]
+        },
+        "model_output": {
+          "items": [
+            {
+              "item_id": "feedback-1",
+              "criterion_id": null,
+              "kind": "improvement",
+              "diagnosis": "마지막 요청의 수정 기준이 구체적이지 않습니다.",
+              "evidence": [
+                {
+                  "message_id": "W-DEMO-M01",
+                  "quote": "제안서 작성을 도와줘."
+                }
+              ]
+            }
+          ],
+          "coaching": [
+            {
+              "item_id": "feedback-1",
+              "target_message_id": "W-DEMO-M01",
+              "next_action": "수정할 부분과 출력 형식을 지정하세요.",
+              "suggested_prompt": "구매 담당자가 도입 검토 회의를 결정할 수 있도록 핵심 가치와 다음 단계를 구분해 제안서를 수정해줘. 근거가 없는 수치는 넣지 말고 변경 이유를 표로 정리해줘."
+            }
+          ]
+        }
+      },
+      "expected_description": "대화가 1회뿐이면 1회를 사용한다.",
+      "evidence_ids": [],
+      "checks": [
+        {
+          "path": [
+            "output",
+            "status"
+          ],
+          "operation": "equals",
+          "expected": "완료"
+        },
+        {
+          "path": [
+            "output",
+            "model_calls"
+          ],
+          "operation": "equals",
+          "expected": 1
+        }
+      ]
+    },
+    {
+      "case_id": "FB-F03",
+      "category": "exception",
+      "inputs": {
+        "event": {
+          "message_id": "00000000-0000-4000-8000-000000000001",
+          "type": "LIVE_EVALUATE",
+          "live_eval_id": "LIVE-DEMO",
+          "company_id": "C-DEMO",
+          "work_id": "W-DEMO",
+          "requested_by": "U-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "rubric_version": null,
+          "attempt": 0
+        },
+        "context": {
+          "live_eval_id": "LIVE-DEMO",
+          "company_id": "C-DEMO",
+          "work_id": "W-DEMO",
+          "requested_by": "U-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "rubric_version": null,
+          "requested_at": "2026-10-22T10:00:00+09:00",
+          "status": "완료",
+          "work_type": null,
+          "rubric_doc_id": null,
+          "rubric": null
+        },
+        "batch": {
+          "live_eval_id": "LIVE-DEMO",
+          "work_id": "W-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "masking_applied": true,
+          "masking_version": "fixture-mask-v1",
+          "complete": true,
+          "messages": [
+            {
+              "message_id": "W-DEMO-M01",
+              "exchange_id": 101,
+              "seq": 1,
+              "role": "user",
+              "content": "제안서 작성을 도와줘.",
+              "created_at": "2026-10-22T09:01:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M02",
+              "exchange_id": 101,
+              "seq": 2,
+              "role": "assistant",
+              "content": "어떤 고객과 목적을 위한 제안서인가요?",
+              "created_at": "2026-10-22T09:02:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M03",
+              "exchange_id": 102,
+              "seq": 3,
+              "role": "user",
+              "content": "독자는 구매 담당자야.",
+              "created_at": "2026-10-22T09:03:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M04",
+              "exchange_id": 102,
+              "seq": 4,
+              "role": "assistant",
+              "content": "구매 담당자를 대상으로 구성하겠습니다.",
+              "created_at": "2026-10-22T09:04:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M05",
+              "exchange_id": 103,
+              "seq": 5,
+              "role": "user",
+              "content": "목표는 도입 검토 회의를 잡는 거야.",
+              "created_at": "2026-10-22T09:05:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M06",
+              "exchange_id": 103,
+              "seq": 6,
+              "role": "assistant",
+              "content": "도입 검토 회의 제안으로 마무리하겠습니다.",
+              "created_at": "2026-10-22T09:06:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M07",
+              "exchange_id": 104,
+              "seq": 7,
+              "role": "user",
+              "content": "근거가 없는 비용 절감 수치는 빼줘.",
+              "created_at": "2026-10-22T09:07:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M08",
+              "exchange_id": 104,
+              "seq": 8,
+              "role": "assistant",
+              "content": "확인된 수치만 사용하겠습니다.",
+              "created_at": "2026-10-22T09:08:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M09",
+              "exchange_id": 105,
+              "seq": 9,
+              "role": "user",
+              "content": "제안서를 더 좋게 써줘.",
+              "created_at": "2026-10-22T09:09:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M10",
+              "exchange_id": 105,
+              "seq": 10,
+              "role": "assistant",
+              "content": "핵심 가치와 다음 단계를 강조하겠습니다.",
+              "created_at": "2026-10-22T09:10:00+09:00"
+            }
+          ]
+        },
+        "model_output": {
+          "items": [
+            {
+              "item_id": "feedback-1",
+              "criterion_id": null,
+              "kind": "improvement",
+              "diagnosis": "마지막 요청의 수정 기준이 구체적이지 않습니다.",
+              "evidence": [
+                {
+                  "message_id": "W-DEMO-M09",
+                  "quote": "제안서를 더 좋게 써줘."
+                }
+              ]
+            }
+          ],
+          "coaching": [
+            {
+              "item_id": "feedback-1",
+              "target_message_id": "W-DEMO-M09",
+              "next_action": "수정할 부분과 출력 형식을 지정하세요.",
+              "suggested_prompt": "구매 담당자가 도입 검토 회의를 결정할 수 있도록 핵심 가치와 다음 단계를 구분해 제안서를 수정해줘. 근거가 없는 수치는 넣지 말고 변경 이유를 표로 정리해줘."
+            }
+          ]
+        }
+      },
+      "expected_description": "완료 요청 재전달은 모델 호출과 재저장을 생략한다.",
+      "evidence_ids": [],
+      "checks": [
+        {
+          "path": [
+            "output",
+            "status"
+          ],
+          "operation": "equals",
+          "expected": "완료"
+        },
+        {
+          "path": [
+            "output",
+            "model_calls"
+          ],
+          "operation": "equals",
+          "expected": 0
+        },
+        {
+          "path": [
+            "output",
+            "saved"
+          ],
+          "operation": "equals",
+          "expected": false
+        }
+      ]
+    },
+    {
+      "case_id": "FB-F04",
+      "category": "exception",
+      "inputs": {
+        "event": {
+          "message_id": "00000000-0000-4000-8000-000000000001",
+          "type": "LIVE_EVALUATE",
+          "live_eval_id": "LIVE-DEMO",
+          "company_id": "C-DEMO",
+          "work_id": "W-DEMO",
+          "requested_by": "U-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "rubric_version": null,
+          "attempt": 0
+        },
+        "context": {
+          "live_eval_id": "LIVE-DEMO",
+          "company_id": "C-DEMO",
+          "work_id": "W-DEMO",
+          "requested_by": "U-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "rubric_version": null,
+          "requested_at": "2026-10-22T10:00:00+09:00",
+          "status": "실패",
+          "work_type": null,
+          "rubric_doc_id": null,
+          "rubric": null
+        },
+        "batch": {
+          "live_eval_id": "LIVE-DEMO",
+          "work_id": "W-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "masking_applied": true,
+          "masking_version": "fixture-mask-v1",
+          "complete": true,
+          "messages": [
+            {
+              "message_id": "W-DEMO-M01",
+              "exchange_id": 101,
+              "seq": 1,
+              "role": "user",
+              "content": "제안서 작성을 도와줘.",
+              "created_at": "2026-10-22T09:01:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M02",
+              "exchange_id": 101,
+              "seq": 2,
+              "role": "assistant",
+              "content": "어떤 고객과 목적을 위한 제안서인가요?",
+              "created_at": "2026-10-22T09:02:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M03",
+              "exchange_id": 102,
+              "seq": 3,
+              "role": "user",
+              "content": "독자는 구매 담당자야.",
+              "created_at": "2026-10-22T09:03:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M04",
+              "exchange_id": 102,
+              "seq": 4,
+              "role": "assistant",
+              "content": "구매 담당자를 대상으로 구성하겠습니다.",
+              "created_at": "2026-10-22T09:04:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M05",
+              "exchange_id": 103,
+              "seq": 5,
+              "role": "user",
+              "content": "목표는 도입 검토 회의를 잡는 거야.",
+              "created_at": "2026-10-22T09:05:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M06",
+              "exchange_id": 103,
+              "seq": 6,
+              "role": "assistant",
+              "content": "도입 검토 회의 제안으로 마무리하겠습니다.",
+              "created_at": "2026-10-22T09:06:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M07",
+              "exchange_id": 104,
+              "seq": 7,
+              "role": "user",
+              "content": "근거가 없는 비용 절감 수치는 빼줘.",
+              "created_at": "2026-10-22T09:07:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M08",
+              "exchange_id": 104,
+              "seq": 8,
+              "role": "assistant",
+              "content": "확인된 수치만 사용하겠습니다.",
+              "created_at": "2026-10-22T09:08:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M09",
+              "exchange_id": 105,
+              "seq": 9,
+              "role": "user",
+              "content": "제안서를 더 좋게 써줘.",
+              "created_at": "2026-10-22T09:09:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M10",
+              "exchange_id": 105,
+              "seq": 10,
+              "role": "assistant",
+              "content": "핵심 가치와 다음 단계를 강조하겠습니다.",
+              "created_at": "2026-10-22T09:10:00+09:00"
+            }
+          ]
+        },
+        "model_output": {
+          "items": [
+            {
+              "item_id": "feedback-1",
+              "criterion_id": null,
+              "kind": "improvement",
+              "diagnosis": "마지막 요청의 수정 기준이 구체적이지 않습니다.",
+              "evidence": [
+                {
+                  "message_id": "W-DEMO-M09",
+                  "quote": "제안서를 더 좋게 써줘."
+                }
+              ]
+            }
+          ],
+          "coaching": [
+            {
+              "item_id": "feedback-1",
+              "target_message_id": "W-DEMO-M09",
+              "next_action": "수정할 부분과 출력 형식을 지정하세요.",
+              "suggested_prompt": "구매 담당자가 도입 검토 회의를 결정할 수 있도록 핵심 가치와 다음 단계를 구분해 제안서를 수정해줘. 근거가 없는 수치는 넣지 말고 변경 이유를 표로 정리해줘."
+            }
+          ]
+        }
+      },
+      "expected_description": "실패 요청 재전달도 모델을 호출하지 않는다.",
+      "evidence_ids": [],
+      "checks": [
+        {
+          "path": [
+            "output",
+            "status"
+          ],
+          "operation": "equals",
+          "expected": "실패"
+        },
+        {
+          "path": [
+            "output",
+            "model_calls"
+          ],
+          "operation": "equals",
+          "expected": 0
+        }
+      ]
+    },
+    {
+      "case_id": "FB-F05",
+      "category": "error",
+      "inputs": {
+        "event": {
+          "message_id": "00000000-0000-4000-8000-000000000001",
+          "type": "LIVE_EVALUATE",
+          "live_eval_id": "LIVE-DEMO",
+          "company_id": "OTHER",
+          "work_id": "W-DEMO",
+          "requested_by": "U-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "rubric_version": null,
+          "attempt": 0
+        },
+        "context": {
+          "live_eval_id": "LIVE-DEMO",
+          "company_id": "C-DEMO",
+          "work_id": "W-DEMO",
+          "requested_by": "U-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "rubric_version": null,
+          "requested_at": "2026-10-22T10:00:00+09:00",
+          "status": "생성 중",
+          "work_type": null,
+          "rubric_doc_id": null,
+          "rubric": null
+        },
+        "batch": {
+          "live_eval_id": "LIVE-DEMO",
+          "work_id": "W-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "masking_applied": true,
+          "masking_version": "fixture-mask-v1",
+          "complete": true,
+          "messages": [
+            {
+              "message_id": "W-DEMO-M01",
+              "exchange_id": 101,
+              "seq": 1,
+              "role": "user",
+              "content": "제안서 작성을 도와줘.",
+              "created_at": "2026-10-22T09:01:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M02",
+              "exchange_id": 101,
+              "seq": 2,
+              "role": "assistant",
+              "content": "어떤 고객과 목적을 위한 제안서인가요?",
+              "created_at": "2026-10-22T09:02:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M03",
+              "exchange_id": 102,
+              "seq": 3,
+              "role": "user",
+              "content": "독자는 구매 담당자야.",
+              "created_at": "2026-10-22T09:03:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M04",
+              "exchange_id": 102,
+              "seq": 4,
+              "role": "assistant",
+              "content": "구매 담당자를 대상으로 구성하겠습니다.",
+              "created_at": "2026-10-22T09:04:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M05",
+              "exchange_id": 103,
+              "seq": 5,
+              "role": "user",
+              "content": "목표는 도입 검토 회의를 잡는 거야.",
+              "created_at": "2026-10-22T09:05:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M06",
+              "exchange_id": 103,
+              "seq": 6,
+              "role": "assistant",
+              "content": "도입 검토 회의 제안으로 마무리하겠습니다.",
+              "created_at": "2026-10-22T09:06:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M07",
+              "exchange_id": 104,
+              "seq": 7,
+              "role": "user",
+              "content": "근거가 없는 비용 절감 수치는 빼줘.",
+              "created_at": "2026-10-22T09:07:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M08",
+              "exchange_id": 104,
+              "seq": 8,
+              "role": "assistant",
+              "content": "확인된 수치만 사용하겠습니다.",
+              "created_at": "2026-10-22T09:08:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M09",
+              "exchange_id": 105,
+              "seq": 9,
+              "role": "user",
+              "content": "제안서를 더 좋게 써줘.",
+              "created_at": "2026-10-22T09:09:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M10",
+              "exchange_id": 105,
+              "seq": 10,
+              "role": "assistant",
+              "content": "핵심 가치와 다음 단계를 강조하겠습니다.",
+              "created_at": "2026-10-22T09:10:00+09:00"
+            }
+          ]
+        },
+        "model_output": {
+          "items": [
+            {
+              "item_id": "feedback-1",
+              "criterion_id": null,
+              "kind": "improvement",
+              "diagnosis": "마지막 요청의 수정 기준이 구체적이지 않습니다.",
+              "evidence": [
+                {
+                  "message_id": "W-DEMO-M09",
+                  "quote": "제안서를 더 좋게 써줘."
+                }
+              ]
+            }
+          ],
+          "coaching": [
+            {
+              "item_id": "feedback-1",
+              "target_message_id": "W-DEMO-M09",
+              "next_action": "수정할 부분과 출력 형식을 지정하세요.",
+              "suggested_prompt": "구매 담당자가 도입 검토 회의를 결정할 수 있도록 핵심 가치와 다음 단계를 구분해 제안서를 수정해줘. 근거가 없는 수치는 넣지 말고 변경 이유를 표로 정리해줘."
+            }
+          ]
+        }
+      },
+      "expected_description": "큐의 회사 정보와 MCP 정본이 다르면 거부한다.",
+      "evidence_ids": [],
+      "checks": [
+        {
+          "path": [
+            "output",
+            "code"
+          ],
+          "operation": "equals",
+          "expected": "SCOPE_MISMATCH"
+        },
+        {
+          "path": [
+            "output",
+            "model_calls"
+          ],
+          "operation": "equals",
+          "expected": 0
+        }
+      ]
+    },
+    {
+      "case_id": "FB-F06",
+      "category": "error",
+      "inputs": {
+        "event": {
+          "message_id": "00000000-0000-4000-8000-000000000001",
+          "type": "LIVE_EVALUATE",
+          "live_eval_id": "LIVE-DEMO",
+          "company_id": "C-DEMO",
+          "work_id": "W-DEMO",
+          "requested_by": "U-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "rubric_version": null,
+          "attempt": 0
+        },
+        "context": {
+          "live_eval_id": "LIVE-DEMO",
+          "company_id": "C-DEMO",
+          "work_id": "W-DEMO",
+          "requested_by": "U-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "rubric_version": null,
+          "requested_at": "2026-10-22T10:00:00+09:00",
+          "status": "생성 중",
+          "work_type": null,
+          "rubric_doc_id": null,
+          "rubric": null
+        },
+        "batch": {
+          "live_eval_id": "LIVE-DEMO",
+          "work_id": "W-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "masking_applied": false,
+          "masking_version": "fixture-mask-v1",
+          "complete": true,
+          "messages": [
+            {
+              "message_id": "W-DEMO-M01",
+              "exchange_id": 101,
+              "seq": 1,
+              "role": "user",
+              "content": "제안서 작성을 도와줘.",
+              "created_at": "2026-10-22T09:01:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M02",
+              "exchange_id": 101,
+              "seq": 2,
+              "role": "assistant",
+              "content": "어떤 고객과 목적을 위한 제안서인가요?",
+              "created_at": "2026-10-22T09:02:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M03",
+              "exchange_id": 102,
+              "seq": 3,
+              "role": "user",
+              "content": "독자는 구매 담당자야.",
+              "created_at": "2026-10-22T09:03:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M04",
+              "exchange_id": 102,
+              "seq": 4,
+              "role": "assistant",
+              "content": "구매 담당자를 대상으로 구성하겠습니다.",
+              "created_at": "2026-10-22T09:04:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M05",
+              "exchange_id": 103,
+              "seq": 5,
+              "role": "user",
+              "content": "목표는 도입 검토 회의를 잡는 거야.",
+              "created_at": "2026-10-22T09:05:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M06",
+              "exchange_id": 103,
+              "seq": 6,
+              "role": "assistant",
+              "content": "도입 검토 회의 제안으로 마무리하겠습니다.",
+              "created_at": "2026-10-22T09:06:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M07",
+              "exchange_id": 104,
+              "seq": 7,
+              "role": "user",
+              "content": "근거가 없는 비용 절감 수치는 빼줘.",
+              "created_at": "2026-10-22T09:07:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M08",
+              "exchange_id": 104,
+              "seq": 8,
+              "role": "assistant",
+              "content": "확인된 수치만 사용하겠습니다.",
+              "created_at": "2026-10-22T09:08:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M09",
+              "exchange_id": 105,
+              "seq": 9,
+              "role": "user",
+              "content": "제안서를 더 좋게 써줘.",
+              "created_at": "2026-10-22T09:09:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M10",
+              "exchange_id": 105,
+              "seq": 10,
+              "role": "assistant",
+              "content": "핵심 가치와 다음 단계를 강조하겠습니다.",
+              "created_at": "2026-10-22T09:10:00+09:00"
+            }
+          ]
+        },
+        "model_output": {
+          "items": [
+            {
+              "item_id": "feedback-1",
+              "criterion_id": null,
+              "kind": "improvement",
+              "diagnosis": "마지막 요청의 수정 기준이 구체적이지 않습니다.",
+              "evidence": [
+                {
+                  "message_id": "W-DEMO-M09",
+                  "quote": "제안서를 더 좋게 써줘."
+                }
+              ]
+            }
+          ],
+          "coaching": [
+            {
+              "item_id": "feedback-1",
+              "target_message_id": "W-DEMO-M09",
+              "next_action": "수정할 부분과 출력 형식을 지정하세요.",
+              "suggested_prompt": "구매 담당자가 도입 검토 회의를 결정할 수 있도록 핵심 가치와 다음 단계를 구분해 제안서를 수정해줘. 근거가 없는 수치는 넣지 말고 변경 이유를 표로 정리해줘."
+            }
+          ]
+        }
+      },
+      "expected_description": "마스킹을 보장하지 않은 입력은 모델에 전달하지 않는다.",
+      "evidence_ids": [],
+      "checks": [
+        {
+          "path": [
+            "output",
+            "code"
+          ],
+          "operation": "equals",
+          "expected": "UNMASKED_INPUT"
+        },
+        {
+          "path": [
+            "output",
+            "model_calls"
+          ],
+          "operation": "equals",
+          "expected": 0
+        }
+      ]
+    },
+    {
+      "case_id": "FB-F07",
+      "category": "exception",
+      "inputs": {
+        "event": {
+          "message_id": "00000000-0000-4000-8000-000000000001",
+          "type": "LIVE_EVALUATE",
+          "live_eval_id": "LIVE-DEMO",
+          "company_id": "C-DEMO",
+          "work_id": "W-DEMO",
+          "requested_by": "U-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "rubric_version": null,
+          "attempt": 0
+        },
+        "context": {
+          "live_eval_id": "LIVE-DEMO",
+          "company_id": "C-DEMO",
+          "work_id": "W-DEMO",
+          "requested_by": "U-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "rubric_version": null,
+          "requested_at": "2026-10-22T10:00:00+09:00",
+          "status": "생성 중",
+          "work_type": null,
+          "rubric_doc_id": null,
+          "rubric": null
+        },
+        "batch": {
+          "live_eval_id": "LIVE-DEMO",
+          "work_id": "W-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "masking_applied": true,
+          "masking_version": "fixture-mask-v1",
+          "complete": true,
+          "messages": [
+            {
+              "message_id": "W-DEMO-M01",
+              "exchange_id": 101,
+              "seq": 1,
+              "role": "user",
+              "content": "제안서 작성을 도와줘.",
+              "created_at": "2026-10-22T09:01:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M02",
+              "exchange_id": 101,
+              "seq": 2,
+              "role": "assistant",
+              "content": "어떤 고객과 목적을 위한 제안서인가요?",
+              "created_at": "2026-10-22T09:02:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M03",
+              "exchange_id": 102,
+              "seq": 3,
+              "role": "user",
+              "content": "독자는 구매 담당자야.",
+              "created_at": "2026-10-22T09:03:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M05",
+              "exchange_id": 103,
+              "seq": 5,
+              "role": "user",
+              "content": "목표는 도입 검토 회의를 잡는 거야.",
+              "created_at": "2026-10-22T09:05:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M06",
+              "exchange_id": 103,
+              "seq": 6,
+              "role": "assistant",
+              "content": "도입 검토 회의 제안으로 마무리하겠습니다.",
+              "created_at": "2026-10-22T09:06:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M07",
+              "exchange_id": 104,
+              "seq": 7,
+              "role": "user",
+              "content": "근거가 없는 비용 절감 수치는 빼줘.",
+              "created_at": "2026-10-22T09:07:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M08",
+              "exchange_id": 104,
+              "seq": 8,
+              "role": "assistant",
+              "content": "확인된 수치만 사용하겠습니다.",
+              "created_at": "2026-10-22T09:08:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M09",
+              "exchange_id": 105,
+              "seq": 9,
+              "role": "user",
+              "content": "제안서를 더 좋게 써줘.",
+              "created_at": "2026-10-22T09:09:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M10",
+              "exchange_id": 105,
+              "seq": 10,
+              "role": "assistant",
+              "content": "핵심 가치와 다음 단계를 강조하겠습니다.",
+              "created_at": "2026-10-22T09:10:00+09:00"
+            }
+          ]
+        },
+        "model_output": {
+          "items": [
+            {
+              "item_id": "feedback-1",
+              "criterion_id": null,
+              "kind": "improvement",
+              "diagnosis": "마지막 요청의 수정 기준이 구체적이지 않습니다.",
+              "evidence": [
+                {
+                  "message_id": "W-DEMO-M09",
+                  "quote": "제안서를 더 좋게 써줘."
+                }
+              ]
+            }
+          ],
+          "coaching": [
+            {
+              "item_id": "feedback-1",
+              "target_message_id": "W-DEMO-M09",
+              "next_action": "수정할 부분과 출력 형식을 지정하세요.",
+              "suggested_prompt": "구매 담당자가 도입 검토 회의를 결정할 수 있도록 핵심 가치와 다음 단계를 구분해 제안서를 수정해줘. 근거가 없는 수치는 넣지 말고 변경 이유를 표로 정리해줘."
+            }
+          ]
+        }
+      },
+      "expected_description": "범위 안에 질문만 있고 답변이 없는 회차는 거부한다.",
+      "evidence_ids": [],
+      "checks": [
+        {
+          "path": [
+            "output",
+            "code"
+          ],
+          "operation": "equals",
+          "expected": "INCOMPLETE_EXCHANGE"
+        },
+        {
+          "path": [
+            "output",
+            "model_calls"
+          ],
+          "operation": "equals",
+          "expected": 0
+        }
+      ]
+    },
+    {
+      "case_id": "FB-F08",
+      "category": "error",
+      "inputs": {
+        "event": {
+          "message_id": "00000000-0000-4000-8000-000000000001",
+          "type": "LIVE_EVALUATE",
+          "live_eval_id": "LIVE-DEMO",
+          "company_id": "C-DEMO",
+          "work_id": "W-DEMO",
+          "requested_by": "U-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "rubric_version": null,
+          "attempt": 0
+        },
+        "context": {
+          "live_eval_id": "LIVE-DEMO",
+          "company_id": "C-DEMO",
+          "work_id": "W-DEMO",
+          "requested_by": "U-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "rubric_version": null,
+          "requested_at": "2026-10-22T10:00:00+09:00",
+          "status": "생성 중",
+          "work_type": null,
+          "rubric_doc_id": null,
+          "rubric": null
+        },
+        "batch": {
+          "live_eval_id": "LIVE-DEMO",
+          "work_id": "W-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "masking_applied": true,
+          "masking_version": "fixture-mask-v1",
+          "complete": true,
+          "messages": [
+            {
+              "message_id": "W-DEMO-M01",
+              "exchange_id": 101,
+              "seq": 1,
+              "role": "user",
+              "content": "제안서 작성을 도와줘.",
+              "created_at": "2026-10-22T09:01:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M02",
+              "exchange_id": 101,
+              "seq": 1,
+              "role": "assistant",
+              "content": "어떤 고객과 목적을 위한 제안서인가요?",
+              "created_at": "2026-10-22T09:02:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M03",
+              "exchange_id": 102,
+              "seq": 3,
+              "role": "user",
+              "content": "독자는 구매 담당자야.",
+              "created_at": "2026-10-22T09:03:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M04",
+              "exchange_id": 102,
+              "seq": 4,
+              "role": "assistant",
+              "content": "구매 담당자를 대상으로 구성하겠습니다.",
+              "created_at": "2026-10-22T09:04:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M05",
+              "exchange_id": 103,
+              "seq": 5,
+              "role": "user",
+              "content": "목표는 도입 검토 회의를 잡는 거야.",
+              "created_at": "2026-10-22T09:05:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M06",
+              "exchange_id": 103,
+              "seq": 6,
+              "role": "assistant",
+              "content": "도입 검토 회의 제안으로 마무리하겠습니다.",
+              "created_at": "2026-10-22T09:06:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M07",
+              "exchange_id": 104,
+              "seq": 7,
+              "role": "user",
+              "content": "근거가 없는 비용 절감 수치는 빼줘.",
+              "created_at": "2026-10-22T09:07:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M08",
+              "exchange_id": 104,
+              "seq": 8,
+              "role": "assistant",
+              "content": "확인된 수치만 사용하겠습니다.",
+              "created_at": "2026-10-22T09:08:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M09",
+              "exchange_id": 105,
+              "seq": 9,
+              "role": "user",
+              "content": "제안서를 더 좋게 써줘.",
+              "created_at": "2026-10-22T09:09:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M10",
+              "exchange_id": 105,
+              "seq": 10,
+              "role": "assistant",
+              "content": "핵심 가치와 다음 단계를 강조하겠습니다.",
+              "created_at": "2026-10-22T09:10:00+09:00"
+            }
+          ]
+        },
+        "model_output": {
+          "items": [
+            {
+              "item_id": "feedback-1",
+              "criterion_id": null,
+              "kind": "improvement",
+              "diagnosis": "마지막 요청의 수정 기준이 구체적이지 않습니다.",
+              "evidence": [
+                {
+                  "message_id": "W-DEMO-M09",
+                  "quote": "제안서를 더 좋게 써줘."
+                }
+              ]
+            }
+          ],
+          "coaching": [
+            {
+              "item_id": "feedback-1",
+              "target_message_id": "W-DEMO-M09",
+              "next_action": "수정할 부분과 출력 형식을 지정하세요.",
+              "suggested_prompt": "구매 담당자가 도입 검토 회의를 결정할 수 있도록 핵심 가치와 다음 단계를 구분해 제안서를 수정해줘. 근거가 없는 수치는 넣지 말고 변경 이유를 표로 정리해줘."
+            }
+          ]
+        }
+      },
+      "expected_description": "같은 메시지 순번이 중복되면 거부한다.",
+      "evidence_ids": [],
+      "checks": [
+        {
+          "path": [
+            "output",
+            "code"
+          ],
+          "operation": "equals",
+          "expected": "INVALID_SEQUENCE"
+        },
+        {
+          "path": [
+            "output",
+            "model_calls"
+          ],
+          "operation": "equals",
+          "expected": 0
+        }
+      ]
+    },
+    {
+      "case_id": "FB-F09",
+      "category": "error",
+      "inputs": {
+        "event": {
+          "message_id": "00000000-0000-4000-8000-000000000001",
+          "type": "LIVE_EVALUATE",
+          "live_eval_id": "LIVE-DEMO",
+          "company_id": "C-DEMO",
+          "work_id": "W-DEMO",
+          "requested_by": "U-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "rubric_version": null,
+          "attempt": 0
+        },
+        "context": {
+          "live_eval_id": "LIVE-DEMO",
+          "company_id": "C-DEMO",
+          "work_id": "W-DEMO",
+          "requested_by": "U-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "rubric_version": null,
+          "requested_at": "2026-10-22T10:00:00+09:00",
+          "status": "생성 중",
+          "work_type": null,
+          "rubric_doc_id": null,
+          "rubric": null
+        },
+        "batch": {
+          "live_eval_id": "LIVE-DEMO",
+          "work_id": "W-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "masking_applied": true,
+          "masking_version": "fixture-mask-v1",
+          "complete": true,
+          "messages": [
+            {
+              "message_id": "W-DEMO-M01",
+              "exchange_id": 101,
+              "seq": 1,
+              "role": "user",
+              "content": "제안서 작성을 도와줘.",
+              "created_at": "2026-10-22T09:01:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M02",
+              "exchange_id": 101,
+              "seq": 2,
+              "role": "assistant",
+              "content": "어떤 고객과 목적을 위한 제안서인가요?",
+              "created_at": "2026-10-22T09:02:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M03",
+              "exchange_id": 102,
+              "seq": 3,
+              "role": "user",
+              "content": "독자는 구매 담당자야.",
+              "created_at": "2026-10-22T09:03:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M04",
+              "exchange_id": 102,
+              "seq": 4,
+              "role": "assistant",
+              "content": "구매 담당자를 대상으로 구성하겠습니다.",
+              "created_at": "2026-10-22T09:04:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M05",
+              "exchange_id": 103,
+              "seq": 5,
+              "role": "user",
+              "content": "목표는 도입 검토 회의를 잡는 거야.",
+              "created_at": "2026-10-22T09:05:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M06",
+              "exchange_id": 103,
+              "seq": 6,
+              "role": "assistant",
+              "content": "도입 검토 회의 제안으로 마무리하겠습니다.",
+              "created_at": "2026-10-22T09:06:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M07",
+              "exchange_id": 104,
+              "seq": 7,
+              "role": "user",
+              "content": "근거가 없는 비용 절감 수치는 빼줘.",
+              "created_at": "2026-10-22T09:07:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M08",
+              "exchange_id": 104,
+              "seq": 8,
+              "role": "assistant",
+              "content": "확인된 수치만 사용하겠습니다.",
+              "created_at": "2026-10-22T09:08:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M09",
+              "exchange_id": 105,
+              "seq": 9,
+              "role": "user",
+              "content": "제안서를 더 좋게 써줘.",
+              "created_at": "2026-10-22T09:09:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M10",
+              "exchange_id": 105,
+              "seq": 10,
+              "role": "assistant",
+              "content": "핵심 가치와 다음 단계를 강조하겠습니다.",
+              "created_at": "2026-10-22T09:10:00+09:00"
+            }
+          ]
+        },
+        "model_output": {
+          "items": [
+            {
+              "item_id": "feedback-1",
+              "criterion_id": null,
+              "kind": "improvement",
+              "diagnosis": "마지막 요청의 수정 기준이 구체적이지 않습니다.",
+              "evidence": [
+                {
+                  "message_id": "W-DEMO-M09",
+                  "quote": "없는 문장"
+                }
+              ]
+            }
+          ],
+          "coaching": [
+            {
+              "item_id": "feedback-1",
+              "target_message_id": "W-DEMO-M09",
+              "next_action": "수정할 부분과 출력 형식을 지정하세요.",
+              "suggested_prompt": "구매 담당자가 도입 검토 회의를 결정할 수 있도록 핵심 가치와 다음 단계를 구분해 제안서를 수정해줘. 근거가 없는 수치는 넣지 말고 변경 이유를 표로 정리해줘."
+            }
+          ]
+        }
+      },
+      "expected_description": "제공되지 않은 문장을 인용하면 1회 재생성 후 실패한다.",
+      "evidence_ids": [],
+      "checks": [
+        {
+          "path": [
+            "output",
+            "code"
+          ],
+          "operation": "equals",
+          "expected": "INVALID_FEEDBACK"
+        },
+        {
+          "path": [
+            "output",
+            "model_calls"
+          ],
+          "operation": "equals",
+          "expected": 2
+        },
+        {
+          "path": [
+            "output",
+            "saved"
+          ],
+          "operation": "equals",
+          "expected": false
+        }
+      ]
+    },
+    {
+      "case_id": "FB-F10",
+      "category": "error",
+      "inputs": {
+        "event": {
+          "message_id": "00000000-0000-4000-8000-000000000001",
+          "type": "LIVE_EVALUATE",
+          "live_eval_id": "LIVE-DEMO",
+          "company_id": "C-DEMO",
+          "work_id": "W-DEMO",
+          "requested_by": "U-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "rubric_version": null,
+          "attempt": 0
+        },
+        "context": {
+          "live_eval_id": "LIVE-DEMO",
+          "company_id": "C-DEMO",
+          "work_id": "W-DEMO",
+          "requested_by": "U-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "rubric_version": null,
+          "requested_at": "2026-10-22T10:00:00+09:00",
+          "status": "생성 중",
+          "work_type": null,
+          "rubric_doc_id": null,
+          "rubric": null
+        },
+        "batch": {
+          "live_eval_id": "LIVE-DEMO",
+          "work_id": "W-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "masking_applied": true,
+          "masking_version": "fixture-mask-v1",
+          "complete": true,
+          "messages": [
+            {
+              "message_id": "W-DEMO-M01",
+              "exchange_id": 101,
+              "seq": 1,
+              "role": "user",
+              "content": "제안서 작성을 도와줘.",
+              "created_at": "2026-10-22T09:01:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M02",
+              "exchange_id": 101,
+              "seq": 2,
+              "role": "assistant",
+              "content": "어떤 고객과 목적을 위한 제안서인가요?",
+              "created_at": "2026-10-22T09:02:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M03",
+              "exchange_id": 102,
+              "seq": 3,
+              "role": "user",
+              "content": "독자는 구매 담당자야.",
+              "created_at": "2026-10-22T09:03:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M04",
+              "exchange_id": 102,
+              "seq": 4,
+              "role": "assistant",
+              "content": "구매 담당자를 대상으로 구성하겠습니다.",
+              "created_at": "2026-10-22T09:04:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M05",
+              "exchange_id": 103,
+              "seq": 5,
+              "role": "user",
+              "content": "목표는 도입 검토 회의를 잡는 거야.",
+              "created_at": "2026-10-22T09:05:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M06",
+              "exchange_id": 103,
+              "seq": 6,
+              "role": "assistant",
+              "content": "도입 검토 회의 제안으로 마무리하겠습니다.",
+              "created_at": "2026-10-22T09:06:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M07",
+              "exchange_id": 104,
+              "seq": 7,
+              "role": "user",
+              "content": "근거가 없는 비용 절감 수치는 빼줘.",
+              "created_at": "2026-10-22T09:07:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M08",
+              "exchange_id": 104,
+              "seq": 8,
+              "role": "assistant",
+              "content": "확인된 수치만 사용하겠습니다.",
+              "created_at": "2026-10-22T09:08:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M09",
+              "exchange_id": 105,
+              "seq": 9,
+              "role": "user",
+              "content": "제안서를 더 좋게 써줘.",
+              "created_at": "2026-10-22T09:09:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M10",
+              "exchange_id": 105,
+              "seq": 10,
+              "role": "assistant",
+              "content": "핵심 가치와 다음 단계를 강조하겠습니다.",
+              "created_at": "2026-10-22T09:10:00+09:00"
+            }
+          ]
+        },
+        "model_output": {
+          "items": [
+            {
+              "item_id": "feedback-1",
+              "criterion_id": null,
+              "kind": "improvement",
+              "diagnosis": "마지막 요청의 수정 기준이 구체적이지 않습니다.",
+              "evidence": [
+                {
+                  "message_id": "W-DEMO-M09",
+                  "quote": "제안서를 더 좋게 써줘."
+                }
+              ]
+            }
+          ],
+          "coaching": [
+            {
+              "item_id": "feedback-1",
+              "target_message_id": "W-DEMO-M10",
+              "next_action": "수정할 부분과 출력 형식을 지정하세요.",
+              "suggested_prompt": "구매 담당자가 도입 검토 회의를 결정할 수 있도록 핵심 가치와 다음 단계를 구분해 제안서를 수정해줘. 근거가 없는 수치는 넣지 말고 변경 이유를 표로 정리해줘."
+            }
+          ]
+        }
+      },
+      "expected_description": "프롬프트 추천 대상을 AI 응답으로 잡으면 거부한다.",
+      "evidence_ids": [],
+      "checks": [
+        {
+          "path": [
+            "output",
+            "code"
+          ],
+          "operation": "equals",
+          "expected": "INVALID_FEEDBACK"
+        },
+        {
+          "path": [
+            "output",
+            "saved"
+          ],
+          "operation": "equals",
+          "expected": false
+        }
+      ]
+    },
+    {
+      "case_id": "FB-F11",
+      "category": "exception",
+      "inputs": {
+        "event": {
+          "message_id": "00000000-0000-4000-8000-000000000001",
+          "type": "LIVE_EVALUATE",
+          "live_eval_id": "LIVE-DEMO",
+          "company_id": "C-DEMO",
+          "work_id": "W-DEMO",
+          "requested_by": "U-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "rubric_version": null,
+          "attempt": 0
+        },
+        "context": {
+          "live_eval_id": "LIVE-DEMO",
+          "company_id": "C-DEMO",
+          "work_id": "W-DEMO",
+          "requested_by": "U-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "rubric_version": null,
+          "requested_at": "2026-10-22T10:00:00+09:00",
+          "status": "생성 중",
+          "work_type": null,
+          "rubric_doc_id": null,
+          "rubric": null
+        },
+        "batch": {
+          "live_eval_id": "LIVE-DEMO",
+          "work_id": "W-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "masking_applied": true,
+          "masking_version": "fixture-mask-v1",
+          "complete": true,
+          "messages": [
+            {
+              "message_id": "W-DEMO-M01",
+              "exchange_id": 101,
+              "seq": 1,
+              "role": "user",
+              "content": "제안서 작성을 도와줘.",
+              "created_at": "2026-10-22T09:01:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M02",
+              "exchange_id": 101,
+              "seq": 2,
+              "role": "assistant",
+              "content": "어떤 고객과 목적을 위한 제안서인가요?",
+              "created_at": "2026-10-22T09:02:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M03",
+              "exchange_id": 102,
+              "seq": 3,
+              "role": "user",
+              "content": "독자는 구매 담당자야.",
+              "created_at": "2026-10-22T09:03:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M04",
+              "exchange_id": 102,
+              "seq": 4,
+              "role": "assistant",
+              "content": "구매 담당자를 대상으로 구성하겠습니다.",
+              "created_at": "2026-10-22T09:04:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M05",
+              "exchange_id": 103,
+              "seq": 5,
+              "role": "user",
+              "content": "목표는 도입 검토 회의를 잡는 거야.",
+              "created_at": "2026-10-22T09:05:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M06",
+              "exchange_id": 103,
+              "seq": 6,
+              "role": "assistant",
+              "content": "도입 검토 회의 제안으로 마무리하겠습니다.",
+              "created_at": "2026-10-22T09:06:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M07",
+              "exchange_id": 104,
+              "seq": 7,
+              "role": "user",
+              "content": "근거가 없는 비용 절감 수치는 빼줘.",
+              "created_at": "2026-10-22T09:07:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M08",
+              "exchange_id": 104,
+              "seq": 8,
+              "role": "assistant",
+              "content": "확인된 수치만 사용하겠습니다.",
+              "created_at": "2026-10-22T09:08:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M09",
+              "exchange_id": 105,
+              "seq": 9,
+              "role": "user",
+              "content": "제안서를 더 좋게 써줘.",
+              "created_at": "2026-10-22T09:09:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M10",
+              "exchange_id": 105,
+              "seq": 10,
+              "role": "assistant",
+              "content": "핵심 가치와 다음 단계를 강조하겠습니다.",
+              "created_at": "2026-10-23T00:00:00+09:00"
+            }
+          ]
+        },
+        "model_output": {
+          "items": [
+            {
+              "item_id": "feedback-1",
+              "criterion_id": null,
+              "kind": "improvement",
+              "diagnosis": "마지막 요청의 수정 기준이 구체적이지 않습니다.",
+              "evidence": [
+                {
+                  "message_id": "W-DEMO-M09",
+                  "quote": "제안서를 더 좋게 써줘."
+                }
+              ]
+            }
+          ],
+          "coaching": [
+            {
+              "item_id": "feedback-1",
+              "target_message_id": "W-DEMO-M09",
+              "next_action": "수정할 부분과 출력 형식을 지정하세요.",
+              "suggested_prompt": "구매 담당자가 도입 검토 회의를 결정할 수 있도록 핵심 가치와 다음 단계를 구분해 제안서를 수정해줘. 근거가 없는 수치는 넣지 말고 변경 이유를 표로 정리해줘."
+            }
+          ]
+        }
+      },
+      "expected_description": "요청 시점 뒤에 생성된 메시지를 섞지 않는다.",
+      "evidence_ids": [],
+      "checks": [
+        {
+          "path": [
+            "output",
+            "code"
+          ],
+          "operation": "equals",
+          "expected": "SCOPE_MISMATCH"
+        },
+        {
+          "path": [
+            "output",
+            "model_calls"
+          ],
+          "operation": "equals",
+          "expected": 0
+        }
+      ]
+    },
+    {
+      "case_id": "FB-F12",
+      "category": "exception",
+      "inputs": {
+        "event": {
+          "message_id": "00000000-0000-4000-8000-000000000001",
+          "type": "LIVE_EVALUATE",
+          "live_eval_id": "LIVE-DEMO",
+          "company_id": "C-DEMO",
+          "work_id": "W-DEMO",
+          "requested_by": "U-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "rubric_version": null,
+          "attempt": 0
+        },
+        "context": {
+          "live_eval_id": "LIVE-DEMO",
+          "company_id": "C-DEMO",
+          "work_id": "W-DEMO",
+          "requested_by": "U-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "rubric_version": null,
+          "requested_at": "2026-10-22T10:00:00+09:00",
+          "status": "생성 중",
+          "work_type": null,
+          "rubric_doc_id": null,
+          "rubric": null
+        },
+        "batch": {
+          "live_eval_id": "LIVE-DEMO",
+          "work_id": "W-DEMO",
+          "from_seq": 1,
+          "to_seq": 10,
+          "masking_applied": true,
+          "masking_version": "fixture-mask-v1",
+          "complete": false,
+          "messages": [
+            {
+              "message_id": "W-DEMO-M01",
+              "exchange_id": 101,
+              "seq": 1,
+              "role": "user",
+              "content": "제안서 작성을 도와줘.",
+              "created_at": "2026-10-22T09:01:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M02",
+              "exchange_id": 101,
+              "seq": 2,
+              "role": "assistant",
+              "content": "어떤 고객과 목적을 위한 제안서인가요?",
+              "created_at": "2026-10-22T09:02:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M03",
+              "exchange_id": 102,
+              "seq": 3,
+              "role": "user",
+              "content": "독자는 구매 담당자야.",
+              "created_at": "2026-10-22T09:03:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M04",
+              "exchange_id": 102,
+              "seq": 4,
+              "role": "assistant",
+              "content": "구매 담당자를 대상으로 구성하겠습니다.",
+              "created_at": "2026-10-22T09:04:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M05",
+              "exchange_id": 103,
+              "seq": 5,
+              "role": "user",
+              "content": "목표는 도입 검토 회의를 잡는 거야.",
+              "created_at": "2026-10-22T09:05:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M06",
+              "exchange_id": 103,
+              "seq": 6,
+              "role": "assistant",
+              "content": "도입 검토 회의 제안으로 마무리하겠습니다.",
+              "created_at": "2026-10-22T09:06:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M07",
+              "exchange_id": 104,
+              "seq": 7,
+              "role": "user",
+              "content": "근거가 없는 비용 절감 수치는 빼줘.",
+              "created_at": "2026-10-22T09:07:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M08",
+              "exchange_id": 104,
+              "seq": 8,
+              "role": "assistant",
+              "content": "확인된 수치만 사용하겠습니다.",
+              "created_at": "2026-10-22T09:08:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M09",
+              "exchange_id": 105,
+              "seq": 9,
+              "role": "user",
+              "content": "제안서를 더 좋게 써줘.",
+              "created_at": "2026-10-22T09:09:00+09:00"
+            },
+            {
+              "message_id": "W-DEMO-M10",
+              "exchange_id": 105,
+              "seq": 10,
+              "role": "assistant",
+              "content": "핵심 가치와 다음 단계를 강조하겠습니다.",
+              "created_at": "2026-10-22T09:10:00+09:00"
+            }
+          ]
+        },
+        "model_output": {
+          "items": [
+            {
+              "item_id": "feedback-1",
+              "criterion_id": null,
+              "kind": "improvement",
+              "diagnosis": "마지막 요청의 수정 기준이 구체적이지 않습니다.",
+              "evidence": [
+                {
+                  "message_id": "W-DEMO-M09",
+                  "quote": "제안서를 더 좋게 써줘."
+                }
+              ]
+            }
+          ],
+          "coaching": [
+            {
+              "item_id": "feedback-1",
+              "target_message_id": "W-DEMO-M09",
+              "next_action": "수정할 부분과 출력 형식을 지정하세요.",
+              "suggested_prompt": "구매 담당자가 도입 검토 회의를 결정할 수 있도록 핵심 가치와 다음 단계를 구분해 제안서를 수정해줘. 근거가 없는 수치는 넣지 말고 변경 이유를 표로 정리해줘."
+            }
+          ]
+        }
+      },
+      "expected_description": "대화가 일부만 전달됐다고 표시되면 평가하지 않는다.",
+      "evidence_ids": [],
+      "checks": [
+        {
+          "path": [
+            "output",
+            "code"
+          ],
+          "operation": "equals",
+          "expected": "CONTRACT_MISMATCH"
+        },
+        {
+          "path": [
+            "output",
+            "model_calls"
+          ],
+          "operation": "equals",
+          "expected": 0
+        }
+      ]
+    }
+  ]
+}
