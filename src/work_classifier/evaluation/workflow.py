@@ -3,6 +3,8 @@
 import json
 from copy import deepcopy
 
+from ..observability import trace_step
+from ..observability.tracing import trace_span
 from ..orchestration.approval import WorkflowError
 from ..orchestration.graph import MCPHandoff, build_agent_graph
 from ..shared.workflow_models import EvaluationInput, EvaluationOutput, Reference, content_hash
@@ -66,6 +68,7 @@ class EvaluationWorkflow:
         self.evaluator = evaluator
         self.completed = {}
 
+    @trace_step("evaluation_workflow")
     async def ainvoke(self, request, config):
         result = await self.graph.ainvoke(request, config)
         if result.get("status") != "ready_for_evaluation" or self.evaluator is None:
@@ -73,11 +76,14 @@ class EvaluationWorkflow:
         handoff = MCPHandoff.model_validate(result["handoff"])
         key = content_hash(handoff)
         if key not in self.completed:
-            output = await self.evaluator.evaluate(handoff.model_copy(deep=True))
+            with trace_span("evaluate_approved_work", inputs=handoff) as span:
+                output = await self.evaluator.evaluate(handoff.model_copy(deep=True))
+                span.result(output)
             self.completed[key] = self.complete(handoff, output)
         return {**result, **deepcopy(self.completed[key])}
 
     @staticmethod
+    @trace_step("validate_evaluation_receipt")
     def complete(handoff, output):
         sources = handoff.business.evidence_sources()
         references = []

@@ -10,6 +10,8 @@ from mcp.client import Client
 from mcp.client.streamable_http import streamable_http_client
 from mcp.shared._httpx_utils import create_mcp_http_client
 
+from ..observability.tracing import trace_span
+
 READ_TOOLS = {
     "business": frozenset({
         "get_work_case", "get_conversation", "get_source_document", "get_artifact_version",
@@ -83,11 +85,20 @@ class MCPGateway:
     async def call(self, server: str, tool: str, arguments: dict) -> dict:
         if tool not in READ_TOOLS.get(server, ()):
             raise MCPError("TOOL_NOT_ALLOWED", tool)
+        with trace_span(f"mcp.{server}.{tool}", inputs=arguments, run_type="tool") as span:
+            result = await self._call(server, tool, arguments)
+            span.result(result)
+            return result
+
+    async def _call(self, server: str, tool: str, arguments: dict) -> dict:
         if server not in self._clients:
             raise MCPError("NOT_CONNECTED", tool)
         for attempt in range(4):  # 최초 1회 + TEMPORARY_FAILURE 재시도 최대 3회
             try:
-                result = await self._clients[server].call_tool(tool, arguments)
+                with trace_span("mcp.attempt", inputs={"attempt": attempt},
+                                run_type="tool") as span:
+                    result = await self._clients[server].call_tool(tool, arguments)
+                    span.result(result)
             except Exception:
                 raise MCPError("TRANSPORT_ERROR", tool) from None
             envelope = unpack_result(result)

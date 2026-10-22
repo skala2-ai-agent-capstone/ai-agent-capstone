@@ -10,6 +10,7 @@ from uuid import uuid4
 
 from dotenv import load_dotenv
 from langgraph.types import Command
+from langsmith import tracing_context
 from openai import AsyncOpenAI
 from pydantic import ValidationError
 
@@ -22,6 +23,8 @@ from .evaluation.models import AgentEvaluationOutput
 from .evaluation.workflow import build_evaluation_workflow
 from .integrations.mcp_client import MCPError, MCPGateway
 from .mcp_cli import connection_settings, human_decision
+from .observability import TraceSession
+from .observability.tracing import TracedLLMClient
 from .rubric.builder import OpenAIRubricBuilder
 from .shared.settings import setting
 
@@ -33,10 +36,30 @@ def parser():
     root.add_argument("--output", type=Path, help="전체 결과 JSON 파일(덮어쓰기 금지)")
     root.add_argument("--model", help="OPENAI_MODEL보다 우선")
     root.add_argument("--json", action="store_true", help="화면 결과를 JSON으로 출력")
+    root.add_argument("--trace-dir", type=Path, help="원문 없는 실행 JSONL 저장 디렉터리")
+    root.add_argument("--langsmith", action="store_true", help="정제된 추적을 LangSmith에도 전송")
     return root
 
 
 async def run(args):
+    load_dotenv(Path.cwd() / ".env", override=True)
+    trace_dir = getattr(args, "trace_dir", None)
+    if getattr(args, "langsmith", False) and trace_dir is None:
+        raise ValueError("--langsmith에는 --trace-dir도 필요합니다.")
+    if trace_dir is None:
+        # 환경변수만으로 LangGraph 전체 상태가 외부에 전송되지 않게 한다.
+        with tracing_context(enabled=False):
+            return await _run(args)
+    with TraceSession(trace_dir, langsmith=getattr(args, "langsmith", False), metadata={
+        "purpose": "final", "model": args.model or setting("OPENAI_MODEL", "gpt-4o-mini"),
+    }) as session:
+        with session.span("evaluation_request") as span:
+            result = await _run(args)
+            span.result(result)
+            return result
+
+
+async def _run(args):
     # 이 평가 실행에만 프로젝트 설정을 우선 적용한다. 기존 분류 CLI는 변경하지 않는다.
     load_dotenv(Path.cwd() / ".env", override=True)
     if not os.getenv("MCP_RUN_TOKEN") and setting("RUN_TOKEN"):
@@ -50,11 +73,12 @@ async def run(args):
     model = args.model or setting("OPENAI_MODEL", "gpt-4o-mini")
     async with MCPGateway(token, business_url=business, rag_url=rag) as gateway:
         async with AsyncOpenAI(api_key=key, timeout=60, max_retries=1) as llm:
+            traced_llm = TracedLLMClient(llm)
             workflow = build_evaluation_workflow(
                 gateway,
-                OpenAIClassifier(llm, model),
-                OpenAIRubricBuilder(llm, model),
-                evaluator=HandoffEvaluator(llm, gateway, model=model),
+                OpenAIClassifier(traced_llm, model),
+                OpenAIRubricBuilder(traced_llm, model),
+                evaluator=HandoffEvaluator(traced_llm, gateway, model=model),
             )
             config = {"configurable": {"thread_id": str(uuid4())}, "recursion_limit": 100}
             result = await workflow.ainvoke({"work_id": work_id}, config)
