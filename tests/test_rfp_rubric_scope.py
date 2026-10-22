@@ -91,6 +91,10 @@ def test_exclusions_and_requirement_mentions_are_review_warnings(text):
         "견적 금액을 재계산했는지 평가한다",
         "금액 계산은 제외한다. 견적 금액을 재계산했는지 평가한다.",
         "금액 계산은 제외하되 할인율을 적용해 최종 견적을 작성했는지 평가한다.",
+        "예산 금액 조건이 최종 산출물에 정확히 반영됐는지 평가한다. "
+        "견적 금액을 산출했는지 평가한다.",
+        "예산 금액 조건이 산출물에 정확히 반영됐는지와 "
+        "견적 금액을 산출했는지 평가한다.",
     ],
 )
 def test_clear_foreign_assessment_requests_revision_even_after_exclusion(text):
@@ -138,9 +142,16 @@ def test_warning_does_not_bypass_strict_validation(invalid):
 
 
 @pytest.mark.asyncio
-async def test_warning_does_not_trigger_another_generation_request():
+@pytest.mark.parametrize(
+    "text",
+    [
+        "금액 계산은 평가 대상에서 제외한다",
+        "예산 금액 조건이 최종 산출물에 정확히 반영됐는지 평가한다",
+    ],
+)
+async def test_warning_does_not_trigger_another_generation_request(text):
     rubric = fake_rubric("rfp_analysis")
-    rubric.rows[4].criterion = "금액 계산은 평가 대상에서 제외한다"
+    rubric.rows[4].criterion = text
     parse = AsyncMock(return_value=response(rubric))
     builder = OpenAIRubricBuilder(SimpleNamespace(responses=SimpleNamespace(parse=parse)), "test")
     draft = await builder.generate("rfp_analysis", fake_policy("rfp_analysis"))
@@ -180,9 +191,16 @@ async def test_generation_payload_contains_only_the_selected_task_scope(work_typ
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("answer,status", [("승인", "ready_for_evaluation"), ("취소", "cancelled")])
-async def test_warnings_reach_approval_screen(monkeypatch, capsys, answer, status):
+@pytest.mark.parametrize(
+    "text",
+    [
+        "금액 계산은 평가 대상에서 제외한다",
+        "예산 금액 조건이 최종 산출물에 정확히 반영됐는지 평가한다",
+    ],
+)
+async def test_warnings_reach_approval_screen(monkeypatch, capsys, answer, status, text):
     rubric = fake_rubric("rfp_analysis")
-    rubric.rows[4].criterion = "금액 계산은 평가 대상에서 제외한다"
+    rubric.rows[4].criterion = text
     parse = AsyncMock(return_value=response(rubric))
     builder = OpenAIRubricBuilder(SimpleNamespace(responses=SimpleNamespace(parse=parse)), "test")
     gateway = ReplayGateway()
