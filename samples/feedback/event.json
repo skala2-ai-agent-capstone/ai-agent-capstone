@@ -1,0 +1,12 @@
+{
+  "message_id": "00000000-0000-4000-8000-000000000001",
+  "type": "LIVE_EVALUATE",
+  "live_eval_id": "LIVE-DEMO",
+  "company_id": "C-DEMO",
+  "work_id": "W-DEMO",
+  "requested_by": "U-DEMO",
+  "from_seq": 1,
+  "to_seq": 10,
+  "rubric_version": null,
+  "attempt": 0
+}
