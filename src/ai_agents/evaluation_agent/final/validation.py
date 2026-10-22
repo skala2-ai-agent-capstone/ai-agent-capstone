@@ -2,8 +2,8 @@
 
 import re
 
-from ..shared.evidence_models import EvaluationEvidence
-from ..shared.workflow_models import EvaluationInput, content_hash
+from ...shared.evidence_models import EvaluationEvidence
+from ...shared.workflow_models import EvaluationInput, content_hash
 from .contract import (
     ITEM_KEYS,
     MISSING_WORK_MESSAGES,

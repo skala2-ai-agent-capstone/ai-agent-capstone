@@ -7,8 +7,8 @@ import httpx
 import pytest
 from openai import AsyncOpenAI
 
-from work_classifier.orchestration.approval import ReviewWorkflow
-from work_classifier.rubric.builder import (
+from ai_agents.cli.demo import DemoClassifier, DemoFixture
+from ai_agents.criteria_agent.builder import (
     GUIDANCE,
     ITEM_NAMES,
     GenerationRubric,
@@ -21,8 +21,8 @@ from work_classifier.rubric.builder import (
     canonical_work_type,
     required_sections,
 )
-from work_classifier.rubric.policy import PolicyBundle, PolicyChunk
-from work_classifier.workflow_demo import DemoClassifier, DemoFixture
+from ai_agents.criteria_agent.policy import PolicyBundle, PolicyChunk
+from ai_agents.orchestration.approval import ReviewWorkflow
 
 
 def fake_policy(work_type):
@@ -208,7 +208,7 @@ async def test_required_policy_missing_stops_before_api():
 async def test_real_sdk_structured_parse_and_approval_integration():
     from pathlib import Path
 
-    from work_classifier.classification.agent import classify_work
+    from ai_agents.classification.agent import classify_work
 
     fixture = DemoFixture.model_validate_json(
         (Path(__file__).parent.parent / "samples/workflow/rfp_demo.json").read_text()
@@ -241,7 +241,7 @@ async def test_real_sdk_structured_parse_and_approval_integration():
             flow = ReviewWorkflow(fixture.work_record, report, partner)
             draft = await flow.prepare()
             assert len(draft.items) == 5
-            from work_classifier.shared.workflow_models import content_hash
+            from ai_agents.shared.workflow_models import content_hash
 
             flow.approve(displayed_hash=content_hash(draft))
             assert flow.approved_input.approved_criteria == draft

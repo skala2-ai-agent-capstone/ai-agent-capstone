@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from work_classifier.shared.execution_contracts import (
+from ai_agents.shared.execution_contracts import (
     EvaluationRequest,
     FeedbackResult,
     canonical_work_type,

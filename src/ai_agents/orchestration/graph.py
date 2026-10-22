@@ -9,6 +9,7 @@ from langgraph.types import interrupt
 from pydantic import model_validator
 
 from ..classification.agent import ClassificationBackend, classify_work
+from ..criteria_agent.policy import PolicyBundle
 from ..integrations.mcp_client import MCPError, ToolGateway
 from ..integrations.mcp_data import (
     BusinessPacket,
@@ -17,7 +18,6 @@ from ..integrations.mcp_data import (
     fetch_policy,
 )
 from ..observability import trace_step
-from ..rubric.policy import PolicyBundle
 from ..shared.models import ClassificationReport, StrictModel, WorkType
 from ..shared.workflow_models import (
     Approval,

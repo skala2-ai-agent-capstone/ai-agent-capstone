@@ -22,7 +22,9 @@ from ..shared.workflow_models import (
 )
 from .policy import PolicyBundle, normalize_section
 
-GUIDANCE = json.loads(files("work_classifier.rubric").joinpath("guidance.json").read_text("utf-8"))
+GUIDANCE = json.loads(
+    files("ai_agents.criteria_agent").joinpath("guidance.json").read_text("utf-8")
+)
 ITEM_NAMES = [item["item"] for item in GUIDANCE["rubric_items"]]
 ITEM_IDS = ["problem_definition", "instruction_quality", "verification", "security", "quality"]
 BUILDER_VERSION = "notebook-v2-adapter-v2-scope-review"

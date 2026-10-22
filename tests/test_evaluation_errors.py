@@ -2,8 +2,8 @@ import anyio
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from work_classifier.evaluation.errors import error_messages
-from work_classifier.rubric.builder import RubricError
+from ai_agents.criteria_agent.builder import RubricError
+from ai_agents.evaluation_agent.final.errors import error_messages
 
 
 def test_nested_group_preserves_the_original_rubric_reason():
@@ -16,7 +16,7 @@ def test_nested_group_preserves_the_original_rubric_reason():
 
 @pytest.mark.asyncio
 async def test_task_group_error_is_reported_by_cli(monkeypatch, capsys):
-    from work_classifier import evaluation_workflow_cli as cli
+    from ai_agents.cli import workflow as cli
 
     async def fail(args):
         async with anyio.create_task_group():

@@ -1,7 +1,8 @@
 # 실행 계약·추적·검증 기반
 
 작업 기준: 폴더 개편을 반영한 `origin/main`의 `8f12065`.
-개발 브랜치: `codex/evaluation-contracts-observability`.
+기반 개발 브랜치: `feat/evaluation-contracts-observability`.
+이 문서의 명령과 파일 경로는 후속 `ai_agents` 패키지 구조를 반영합니다.
 
 이번 단계는 서비스 요청 계약과 관측·검증 기반을 추가한다. 기존 평가 기준 생성,
 점수 계산, 프롬프트, 기준 승인 규칙은 변경하지 않는다.
@@ -9,7 +10,7 @@
 
 ## 1. 공통 실행 계약 v1
 
-구현: `src/work_classifier/shared/execution_contracts.py`.
+구현: `src/ai_agents/shared/execution_contracts.py`.
 기존 `EvaluationInput`, `EvaluationReceipt`, `AgentEvaluationOutput`을 대체하지 않는
 추가 계약이다. 새 요청을 기존 평가기에 연결하는 어댑터는 아직 구현하지 않았다.
 
@@ -47,7 +48,7 @@
 계약 확인:
 
 ```bash
-.venv/bin/python -m work_classifier.validation.cli schemas
+.venv/bin/python -m ai_agents.cli.validation schemas
 ```
 
 요청 예시는 `samples/validation/contracts-v1.json`의 `examples[].inputs`에 있다.
@@ -55,7 +56,7 @@
 
 ## 2. 추적: 로컬 기본, LangSmith 선택
 
-구현: `src/work_classifier/observability/`.
+구현: `src/ai_agents/observability/`.
 
 추적 트리는 요청 → 워크플로 → 기존 그래프 노드 / 평가기 → MCP 호출·재시도 /
 LLM 호출 → 평가 결과 검증이다. 수동 승인 대기를 포함한 루트 시간은 전체 경과시간이며,
@@ -77,11 +78,11 @@ LLM 호출 → 평가 결과 검증이다. 수동 승인 대기를 포함한 루
 
 ```bash
 # 실제 MCP와 LLM을 호출하는 명령: 서버와 인증 설정 후 실행
-.venv/bin/python -m work_classifier.evaluation_workflow_cli \
+.venv/bin/python -m ai_agents.cli.workflow \
   --evaluation-id EVAL-ID --trace-dir outputs/traces
 
 # .env의 LANGSMITH_API_KEY, LANGSMITH_PROJECT를 설정한 후 명시적으로 활성화
-.venv/bin/python -m work_classifier.evaluation_workflow_cli \
+.venv/bin/python -m ai_agents.cli.workflow \
   --evaluation-id EVAL-ID --trace-dir outputs/traces --langsmith
 ```
 
@@ -95,7 +96,7 @@ LangSmith 업로드 실패는 경고하고 로컬 실행을 계속한다. 로컬
 
 ```python
 from pathlib import Path
-from work_classifier.observability import TraceSession, trace_step
+from ai_agents.observability import TraceSession, trace_step
 
 @trace_step("load_snapshot", run_type="tool")
 async def load_snapshot(request):
@@ -117,24 +118,24 @@ SDK 구현 근거: [수동 추적](https://docs.langchain.com/langsmith/annotate
 
 ## 3. 검증 실행과 전후 비교
 
-구현: `src/work_classifier/validation/`.
+구현: `src/ai_agents/validation/`.
 다음 명령은 서버·모델·LangSmith 없이 가상 계약 사례 5개를 검증한다.
 같은 디렉터리 덮어쓰기는 거부하므로 재실행할 때 새 경로를 쓴다.
 
 ```bash
-.venv/bin/python -m work_classifier.validation.cli run \
+.venv/bin/python -m ai_agents.cli.validation run \
   --dataset samples/validation/contracts-v1.json \
-  --target work_classifier.validation.targets:validate_request \
+  --target ai_agents.validation.targets:validate_request \
   --output-dir outputs/validation/contract-a --label contract-a \
   --model none --prompt-version none --rubric-version fixture-v2 --data-version fixture-v1
 
-.venv/bin/python -m work_classifier.validation.cli run \
+.venv/bin/python -m ai_agents.cli.validation run \
   --dataset samples/validation/contracts-v1.json \
-  --target work_classifier.validation.targets:validate_request \
+  --target ai_agents.validation.targets:validate_request \
   --output-dir outputs/validation/contract-b --label contract-b \
   --model none --prompt-version none --rubric-version fixture-v2 --data-version fixture-v1
 
-.venv/bin/python -m work_classifier.validation.cli compare \
+.venv/bin/python -m ai_agents.cli.validation compare \
   outputs/validation/contract-a/experiment.json \
   outputs/validation/contract-b/experiment.json \
   --output outputs/validation/contract-comparison.json
@@ -187,7 +188,7 @@ SDK 구현 근거: [수동 추적](https://docs.langchain.com/langsmith/annotate
 
 ## 4. 팀원과 다음 구현 순서
 
-1. 기준 담당자는 기존 `src/work_classifier/rubric/`의 생성·수정·검증을 진행한다.
+1. 기준 담당자는 기존 `src/ai_agents/criteria_agent/`의 생성·수정·검증을 진행한다.
    승인된 기준 ID, 버전, 항목 ID, 업무 유형, 내용 해시, 승인 정보를 연결부에 제공한다.
    이 브랜치는 그 기준의 내용과 채점 로직을 수정하지 않는다.
 2. 서버 담당자와 위 계약을 합의한다. 서버가 요청 시 스냅샷과 기준 버전을 확정하고,
@@ -207,8 +208,8 @@ SDK 구현 근거: [수동 추적](https://docs.langchain.com/langsmith/annotate
 
 ```bash
 .venv/bin/python -m pytest -q
-.venv/bin/ruff check src/work_classifier/observability src/work_classifier/validation \
-  src/work_classifier/shared/execution_contracts.py \
+.venv/bin/ruff check src/ai_agents/observability src/ai_agents/validation \
+  src/ai_agents/shared/execution_contracts.py \
   tests/test_execution_contracts.py tests/test_observability.py tests/test_validation_runner.py
 ```
 

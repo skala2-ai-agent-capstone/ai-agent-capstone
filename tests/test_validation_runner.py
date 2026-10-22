@@ -5,15 +5,15 @@ from pathlib import Path
 
 import pytest
 
-from work_classifier.validation.cli import main
-from work_classifier.validation.models import Check, Dataset
-from work_classifier.validation.runner import (
+from ai_agents.cli.validation import main
+from ai_agents.validation.models import Check, Dataset
+from ai_agents.validation.runner import (
     check_output,
     compare_experiments,
     git_provenance,
     run_experiment,
 )
-from work_classifier.validation.targets import validate_request
+from ai_agents.validation.targets import validate_request
 
 SAMPLE = Path(__file__).resolve().parents[1] / "samples/validation/contracts-v1.json"
 

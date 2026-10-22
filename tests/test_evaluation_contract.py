@@ -9,16 +9,16 @@ from test_evaluation_agent import ToolFixture, collect, selected_result, valid_r
 from test_evaluation_selection import catalogs
 from test_mcp_adapter import CASES
 
-from work_classifier.evaluation.contract import ITEM_KEYS, MISSING_WORK_MESSAGES
-from work_classifier.evaluation.selection import (
+from ai_agents.evaluation_agent.final.contract import ITEM_KEYS, MISSING_WORK_MESSAGES
+from ai_agents.evaluation_agent.final.selection import (
     choice_requirements,
     resolve_selection,
     selection_model,
 )
-from work_classifier.evaluation.validation import EvaluationError, validate_evaluation_result
-from work_classifier.shared.evidence_models import PolicyViolation
-from work_classifier.shared.models import Evidence
-from work_classifier.shared.workflow_models import content_hash
+from ai_agents.evaluation_agent.final.validation import EvaluationError, validate_evaluation_result
+from ai_agents.shared.evidence_models import PolicyViolation
+from ai_agents.shared.models import Evidence
+from ai_agents.shared.workflow_models import content_hash
 
 
 @pytest.mark.asyncio

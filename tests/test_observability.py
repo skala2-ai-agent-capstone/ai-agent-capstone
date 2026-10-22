@@ -7,8 +7,8 @@ import pytest
 from langsmith import Client
 from langsmith.run_helpers import get_tracing_context
 
-from work_classifier.observability import TraceSession, trace_step
-from work_classifier.observability.tracing import LangSmithSink, TracedLLMClient
+from ai_agents.observability import TraceSession, trace_step
+from ai_agents.observability.tracing import LangSmithSink, TracedLLMClient
 
 
 def events(path):
@@ -116,7 +116,7 @@ async def test_llm_proxy_preserves_arguments_and_returns_usage_only(tmp_path):
 
 @pytest.mark.asyncio
 async def test_cli_disables_ambient_auto_tracing_without_trace_directory(monkeypatch):
-    from work_classifier import evaluation_workflow_cli as cli
+    from ai_agents.cli import workflow as cli
 
     monkeypatch.setenv("LANGSMITH_TRACING", "true")
     monkeypatch.setattr(cli, "load_dotenv", lambda *args, **kwargs: None)
@@ -142,8 +142,8 @@ async def test_existing_graph_approval_and_evaluation_are_traced_without_network
         client_fixture,
     )
 
-    from work_classifier.evaluation.handoff import HandoffEvaluator
-    from work_classifier.evaluation.workflow import build_evaluation_workflow
+    from ai_agents.evaluation_agent.final.handoff import HandoffEvaluator
+    from ai_agents.evaluation_agent.final.workflow import build_evaluation_workflow
 
     gateway, client = UnifiedGateway(), client_fixture()
     workflow = build_evaluation_workflow(

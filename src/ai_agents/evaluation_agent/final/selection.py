@@ -7,7 +7,7 @@ from typing import Annotated, Literal, Union
 from pydantic import BeforeValidator, Field, ValidationError, WrapValidator, create_model
 from pydantic_core import PydanticCustomError
 
-from ..shared.models import NonEmpty, StrictModel
+from ...shared.models import NonEmpty, StrictModel
 from .contract import MISSING_WORK_MESSAGES, eligible_work_sources, score_issue
 from .models import AgentEvaluationOutput
 from .validation import EvaluationError

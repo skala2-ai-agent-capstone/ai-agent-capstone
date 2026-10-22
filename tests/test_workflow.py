@@ -4,10 +4,10 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from work_classifier.classification.agent import classify_work
-from work_classifier.orchestration.approval import ReviewWorkflow, WorkflowError, validate_report
-from work_classifier.shared.workflow_models import EvaluationInput, EvaluationOutput, content_hash
-from work_classifier.workflow_demo import DemoClassifier, DemoFixture, DemoPartner
+from ai_agents.classification.agent import classify_work
+from ai_agents.cli.demo import DemoClassifier, DemoFixture, DemoPartner
+from ai_agents.orchestration.approval import ReviewWorkflow, WorkflowError, validate_report
+from ai_agents.shared.workflow_models import EvaluationInput, EvaluationOutput, content_hash
 
 FIXTURE = Path(__file__).resolve().parents[1] / "samples/workflow/rfp_demo.json"
 
@@ -195,7 +195,7 @@ def test_draft_invalid_document_version_or_quote(version):
 
 
 def test_review_needed_is_not_given_a_score():
-    from work_classifier.shared.workflow_models import ItemEvaluation
+    from ai_agents.shared.workflow_models import ItemEvaluation
 
     raw = json.loads(FIXTURE.read_text())["items"][0]
     raw["observation"] = "needs_review"

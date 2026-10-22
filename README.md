@@ -1,24 +1,26 @@
-# 업무 분류·승인 Agent와 MCP 연결
+# 업무 분류·평가 기준 생성·업무 평가 Agent
 
 MCP 연동 실행 방법과 모듈 간 데이터 계약은 [MCP 연동 가이드](docs/mcp_agent_integration.md)를 참고하세요.
-기존 JSON 분류 명령은 그대로 사용할 수 있습니다.
+Python 패키지는 `ai_agents`, 설치 패키지와 분류 실행 명령은 `ai-agents`입니다.
+이전 버전에서 업데이트했다면 [폴더 구조 변경 안내](docs/agent_package_layout.md)를 먼저 확인하세요.
+JSON 분류의 인자와 동작은 유지하며 import와 실행 경로가 변경되었습니다.
 
 중간·최종 요청 계약, 로컬/LangSmith 추적, 고정 평가셋 실행과 커밋별 결과 비교는
 [실행 계약·추적·검증 기반](docs/execution_contracts_observability.md)을 참고하세요.
 기준 생성 로직은 유지하며, 중간 피드백 실행과 MCP 저장 연결은 후속 구현입니다.
 
-MCP·DB 없이 업무 기록을 읽고 **RFP 분석 / 제안서 / 견적서 / 고객 질의 답변**을
-분류하는 Python 모듈입니다. 업무 유형은 입력에 없으며 LLM이 판단합니다.
-현재 목표는 **내규 없이 업무 기록으로 유형을 분류**하는 것입니다.
-내규 PDF는 이후 유형별 평가 기준을 구성하고 평가할 때 사용하는 자료입니다.
+업무 기록을 읽고 **RFP 분석 / 제안서 / 견적서 / 고객 질의 답변**을 분류한 뒤
+평가 기준 생성·승인·평가로 연결하는 Python 애플리케이션입니다.
+분류 기능은 MCP·DB 없이 JSON 입력만으로도 사용할 수 있습니다.
+업무 유형은 내규 없이 업무 기록으로 판단하고, 내규는 유형별 평가 기준 생성에 사용합니다.
 현재 분류 프롬프트는 `work-classification-v6`입니다.
 현재는 MCP 조회·분류·RAG 내규 조회·기준 생성·담당자 승인까지 LangGraph로 연결했습니다.
-승인 후 평가기를 주입할 수 있으며, 기본 CLI는 평가 모듈에 전달할 입력까지 출력합니다.
+승인 후 평가기를 주입할 수 있으며, `ai_agents.cli.mcp run`은 평가 모듈에 전달할 입력까지 출력합니다.
 평가 모듈의 GPT 평가·근거 검증·코칭 기능과 별도 실행 명령은
 [평가 Agent 안내](docs/evaluation_agent.md)를 참고하세요.
 평가 결과는 화면 또는 호출자에게 반환하며 DB에 저장하지 않습니다.
-평가·검증·코칭 구현은 `src/work_classifier/evaluation/`에 모았으며,
-전체 평가 실행 명령은 `python -m work_classifier.evaluation_workflow_cli`를 유지합니다.
+평가·검증·코칭 구현은 `src/ai_agents/evaluation_agent/final/`에 모았으며,
+전체 평가 실행 명령은 `python -m ai_agents.cli.workflow`입니다.
 
 ```text
 샘플 JSON → WorkContext 입력 검증 → LLM 분류 → 출력·근거 검증 → JSON 리포트
@@ -44,8 +46,8 @@ python -m pip install -r requirements.txt
 ```
 
 `requirements.txt`의 `-e .`는 현재 프로젝트를 편집 가능한 패키지로 설치합니다.
-따라서 `src/work_classifier/` 코드를 수정하면 재설치 없이 반영되고
-`work-classifier` 명령을 사용할 수 있습니다.
+따라서 `src/ai_agents/` 코드를 수정하면 재설치 없이 반영되고
+`ai-agents` 명령을 사용할 수 있습니다.
 Windows PowerShell의 활성화 명령은 `.venv\\Scripts\\Activate.ps1`입니다.
 
 매일 새 터미널을 열면 아래 두 단계만 반복합니다. 패키지 설치는 처음 또는 의존성 변경 시 수행합니다.
@@ -62,7 +64,7 @@ deactivate
 ```
 
 가상환경을 활성화한 경우 아래 예시의 `uv run`은 생략해도 됩니다.
-예: `work-classifier validate samples/*.json`, `python -m work_classifier classify ...`.
+예: `ai-agents validate samples/*.json`, `python -m ai_agents classify ...`.
 VS Code에서도 이 프로젝트의 `.venv/bin/python`을 인터프리터로 선택하세요.
 
 기존 [uv](https://docs.astral.sh/uv/) 흐름을 선호하면 다음을 사용해도 됩니다.
@@ -70,7 +72,7 @@ uv는 `uv run` 시 프로젝트 가상환경을 사용하므로 수동 활성화
 
 ```bash
 uv sync --locked
-uv run work-classifier validate samples/*.json
+uv run ai-agents validate samples/*.json
 ```
 
 의존성의 원본 정의는 `pyproject.toml`, 해석된 버전은 `uv.lock`입니다.
@@ -127,10 +129,10 @@ RAG용 Chroma·pgvector, 업무 DB용 SQLAlchemy·psycopg, 별도 API용 FastAPI
 
 ```bash
 # 12개 샘플 입력의 Schema 검사. 분류를 수행하는 명령은 아닙니다.
-uv run work-classifier validate samples/*.json
+uv run ai-agents validate samples/*.json
 
 # 입력 / LLM 출력 / 저장 리포트의 JSON Schema
-uv run work-classifier schemas
+uv run ai-agents schemas
 
 # 외부 API를 호출하지 않는 테스트
 uv run pytest -q
@@ -161,14 +163,14 @@ Responses API와 Structured Outputs를 지원해야 합니다.
 현재 작업 폴더의 `.env`만 읽습니다.
 
 ```bash
-uv run work-classifier classify samples/03_quotation.json
+uv run ai-agents classify samples/03_quotation.json
 
 # 결과를 파일에도 저장: 기존 파일은 덮어쓰지 않습니다.
-uv run work-classifier classify samples/03_quotation.json \
+uv run ai-agents classify samples/03_quotation.json \
   --output outputs/quotation-run-01.json
 
 # 프로젝트 패키지를 직접 실행해도 같습니다.
-uv run python -m work_classifier classify samples/08_needs_review.json
+uv run python -m ai_agents classify samples/08_needs_review.json
 ```
 
 이 명령은 업무 자료를 OpenAI API로 보내며 유료 호출이 발생할 수 있습니다.
@@ -268,13 +270,13 @@ needs_review에서는 `missing_information`에 부족한 자료나 해소할 모
 ## 7. 코드 구조와 사용자님이 수정할 곳
 
 ```text
-src/work_classifier/
+src/ai_agents/
   classification/
     agent.py      업무 유형 분류, 근거 원문 검증, 입력 해시
     prompts.py    네 업무 정의·경계 규칙·프롬프트 버전
     provider.py   OpenAI Responses API 구조화 출력
     selection.py  분류용 근거 구간 목록, 출력 스키마, 결과·인용 복원
-  rubric/
+  criteria_agent/
     builder.py    업무 유형별 평가기준 생성·검증
     guidance.json 업무 유형별 기준 생성 안내
     policy.py     정책 원문 처리와 데이터 형식
@@ -290,21 +292,29 @@ src/work_classifier/
     workflow_models.py 기준·승인·평가의 공통 데이터 형식
     evidence_models.py 평가 근거·산출물·정책 검사·스냅샷 형식
     settings.py   실행 설정 읽기
-  evaluation/     평가·근거 검증·코칭·승인 자료 인계
-  cli.py          JSON 분류 실행
-  mcp_cli.py      MCP 조회·분류·기준 승인 실행
-  evaluate_cli.py 승인된 입력으로 평가 실행
-  evaluation_workflow_cli.py 전체 승인·평가 흐름 실행
-  e2e.py          분류 데이터 변환·일괄 실행
-  workflow_demo.py API 없는 고정 응답 데모
+  evaluation_agent/
+    final/        기존 최종 평가·근거 검증·코칭·승인 자료 인계
+    feedback/     최근 질문·AI 응답 5회 피드백용 패키지 자리 (구현 예정)
+  observability/  로컬 실행 추적·선택적 LangSmith 전송
+  validation/     고정 평가셋 실행·결과 기록·전후 비교
+  cli/
+    classification.py JSON 분류 실행
+    mcp.py        MCP 조회·분류·기준 승인 실행
+    evaluate.py   승인된 입력으로 평가 실행
+    workflow.py   전체 승인·평가 흐름 실행
+    e2e.py        분류 데이터 변환·일괄 실행
+    demo.py       API 없는 고정 응답 데모
+    validation.py 계약 스키마·평가셋 실행·전후 비교 명령
 samples/          정답 없는 가상 업무 기록 12개
 tests/            모델·근거·CLI·SDK 경계 테스트와 별도 기대값
 ```
 
 사용자님은 우선 `shared/models.py` → `classification/prompts.py` →
 `classification/agent.py` 순서로 읽으면 됩니다.
-Python에서 직접 가져올 때는 `work_classifier.classification.agent`처럼 새 경로를 사용합니다.
-터미널 실행 파일과 `work-classifier`, `python -m work_classifier` 명령은 기존 위치를 유지합니다.
+Python에서 직접 가져올 때는 `ai_agents.classification.agent`처럼 새 경로를 사용합니다.
+분류는 `ai-agents` 또는 `python -m ai_agents`를 사용합니다.
+MCP·평가·검증 명령은 `python -m ai_agents.cli.<모듈>` 형태이며,
+정확한 명령과 인자는 [폴더 구조 변경 안내](docs/agent_package_layout.md)에 정리했습니다.
 `ClassificationBackend` 인터페이스를 구현하면 다른 모델 제공자도 연결할 수 있습니다.
 
 SDK는 `responses.parse(..., text_format=response_model(catalog))`로 구조화된 출력을 받습니다.
@@ -337,16 +347,16 @@ MCP 연결은 `classification/provider.py`가 아니라 **입력 어댑터**로 
 ## 9. 명령 한 번의 코드 실행 순서
 
 ```bash
-python -m work_classifier classify samples/03_quotation.json \
+python -m ai_agents classify samples/03_quotation.json \
   --output outputs/quotation-run-02.json
 ```
 
-1. `__main__.py`가 `cli.main()`을 호출합니다. `work-classifier` 명령도
+1. `__main__.py`가 `cli.classification.main()`을 호출합니다. `ai-agents` 명령도
    `pyproject.toml`의 `[project.scripts]` 설정을 통해 같은 함수로 진입합니다.
-2. `cli.parser()`가 `classify`, 입력 파일, 출력 경로를 읽습니다.
-3. `cli.load_context()`가 파일을 읽어 `WorkContext.model_validate_json()`으로 검증합니다.
+2. `cli.classification.parser()`가 `classify`, 입력 파일, 출력 경로를 읽습니다.
+3. `cli.classification.load_context()`가 파일을 읽어 `WorkContext.model_validate_json()`으로 검증합니다.
    이때 아직 API를 호출하지 않습니다.
-4. `cli.run_classification()`이 `.env`에서 API 키·모델을 읽고 `AsyncOpenAI` 객체를 만듭니다.
+4. `cli.classification.run_classification()`이 `.env`에서 API 키·모델을 읽고 `AsyncOpenAI` 객체를 만듭니다.
    API 키는 프롬프트에 넣지 않고 SDK 인증에만 사용합니다.
 5. `classification.agent.classify_work()`가 업무 입력을 다시 검증하고 LLM용 JSON을 만듭니다.
    업무 ID와 파일명은 분류 단서에서 제외합니다.
@@ -378,7 +388,7 @@ python -m work_classifier classify samples/03_quotation.json \
 | `classification/prompts.py` | 네 업무 정의, 제안과 가격 질의의 구분, 복합 업무·자료 부족 처리 |
 | `classification/agent.py` | 입력 → 모델 호출 → 근거 검사 → 리포트 조립 |
 | `classification/provider.py` | 실제 API 요청·응답과 제공자 오류 처리 |
-| `cli.py` | 파일·환경변수·인자·출력 등 터미널 실행 처리 |
+| `cli/classification.py` | 파일·환경변수·인자·출력 등 분류 명령 실행 처리 |
 | `tests/` | API 없이 데이터 계약·검증·SDK 응답 처리를 검사 |
 
 `ClassificationBackend`는 모델 제공자가 구현할 함수 형태를 정의한 인터페이스입니다.
@@ -387,7 +397,7 @@ python -m work_classifier classify samples/03_quotation.json \
 
 ## 10. 제공된 raw 40건으로 분류 테스트
 
-`src/work_classifier/e2e.py`는 외부 raw 데이터를 변환하고 실제 모델로 일괄 테스트하는
+`src/ai_agents/cli/e2e.py`는 외부 raw 데이터를 변환하고 실제 모델로 일괄 테스트하는
 별도 실행 모듈입니다. 기존 단건 분류 함수·프롬프트는 변경하지 않았습니다.
 이름이 E2E인 데이터셋을 사용하지만, 현재 실행 범위는 **업무 유형 분류**입니다.
 평가 점수·MCP 권한·이의 처리·중복 이벤트·장애 주입은 실행하지 않습니다.
@@ -407,7 +417,7 @@ python -m work_classifier classify samples/03_quotation.json \
 API 호출 없이 변환·검증:
 
 ```bash
-python -m work_classifier.e2e prepare \
+python -m ai_agents.cli.e2e prepare \
   --source /Users/harim/Downloads/e2e_raw_40 \
   --output outputs/my-raw40-inputs
 ```
@@ -415,7 +425,7 @@ python -m work_classifier.e2e prepare \
 기존 프롬프트로 40건 분류(API 사용 비용 발생):
 
 ```bash
-python -m work_classifier.e2e run \
+python -m ai_agents.cli.e2e run \
   --prepared outputs/my-raw40-inputs \
   --output outputs/my-raw40-baseline
 ```
@@ -423,7 +433,7 @@ python -m work_classifier.e2e run \
 제공 PDF의 p.6(제17~21조) 및 p.9(별표4)에서 추출해 둔 텍스트를 함께 제공하는 비교:
 
 ```bash
-python -m work_classifier.e2e run \
+python -m ai_agents.cli.e2e run \
   --prepared outputs/my-raw40-inputs \
   --output outputs/my-raw40-policy \
   --policy-excerpt outputs/e2e_raw_40/policy/classification_excerpt.txt
@@ -437,7 +447,7 @@ python -m work_classifier.e2e run \
 한 케이스만 재검사할 수도 있습니다.
 
 ```bash
-python -m work_classifier.e2e run \
+python -m ai_agents.cli.e2e run \
   --prepared outputs/my-raw40-inputs \
   --output outputs/my-raw40-one \
   --case-id E2E-IQ-05
@@ -556,7 +566,7 @@ SDK의 일시 오류 재시도를 제외하면 모드별 케이스당 한 번 �
 4. 미등록 ID, 빈 작업 선택, 근거가 없는 주장, 원문 불일치에 대한 검증은 유지합니다.
    원문이 없는 데이터를 생성하거나 인용 검사를 끄는 방식으로 오류를 숨기지 않습니다.
 
-`python -m work_classifier schemas`는 이제 `llm_output`(모델 판정 계약),
+`python -m ai_agents schemas`는 이제 `llm_output`(모델 판정 계약),
 `classification`(공개 결과), `input`, `report`를 출력합니다.
 실제 API의 입력별 ID enum 스키마는 배치 결과의 `request_schemas/`에서 확인할 수 있습니다.
 근거 ID는 원문 위치와 연결되지만, 해당 근거가 분류를 의미상 입증하는지는 별도 검토가 필요합니다.
@@ -565,16 +575,16 @@ SDK의 일시 오류 재시도를 제외하면 모드별 케이스당 한 번 �
 재시험 명령(API 사용 비용 발생, 매번 새 출력 폴더 지정):
 
 ```bash
-python -m work_classifier.e2e run \
+python -m ai_agents.cli.e2e run \
   --prepared outputs/e2e_raw_40/prepared \
   --output outputs/my-v4-baseline
 
-python -m work_classifier.e2e run \
+python -m ai_agents.cli.e2e run \
   --prepared outputs/e2e_raw_40/prepared \
   --output outputs/my-v4-policy \
   --policy-excerpt outputs/e2e_raw_40/policy/classification_excerpt.txt
 
-python -m work_classifier.e2e run \
+python -m ai_agents.cli.e2e run \
   --prepared outputs/e2e_raw_40/regression_prepared \
   --output outputs/my-v4-regression
 ```
@@ -675,7 +685,7 @@ v6는 출력 스키마나 모델을 바꾸지 않고 v4의 `prompts.py`만 보�
 실행 명령:
 
 ```bash
-python -m work_classifier.e2e run \
+python -m ai_agents.cli.e2e run \
   --prepared outputs/e2e_raw_40/prepared \
   --output outputs/my-v6-classification
 ```

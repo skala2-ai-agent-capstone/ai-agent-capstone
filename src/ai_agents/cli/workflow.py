@@ -14,19 +14,19 @@ from langsmith import tracing_context
 from openai import AsyncOpenAI
 from pydantic import ValidationError
 
-from .classification.agent import ClassificationError
-from .classification.provider import OpenAIClassifier
-from .evaluation.agent import render_evaluation_report
-from .evaluation.errors import error_messages
-from .evaluation.handoff import HandoffEvaluator
-from .evaluation.models import AgentEvaluationOutput
-from .evaluation.workflow import build_evaluation_workflow
-from .integrations.mcp_client import MCPError, MCPGateway
-from .mcp_cli import connection_settings, human_decision
-from .observability import TraceSession
-from .observability.tracing import TracedLLMClient
-from .rubric.builder import OpenAIRubricBuilder
-from .shared.settings import setting
+from ..classification.agent import ClassificationError
+from ..classification.provider import OpenAIClassifier
+from ..criteria_agent.builder import OpenAIRubricBuilder
+from ..evaluation_agent.final.agent import render_evaluation_report
+from ..evaluation_agent.final.errors import error_messages
+from ..evaluation_agent.final.handoff import HandoffEvaluator
+from ..evaluation_agent.final.models import AgentEvaluationOutput
+from ..evaluation_agent.final.workflow import build_evaluation_workflow
+from ..integrations.mcp_client import MCPError, MCPGateway
+from ..observability import TraceSession
+from ..observability.tracing import TracedLLMClient
+from ..shared.settings import setting
+from .mcp import connection_settings, human_decision
 
 
 def parser():

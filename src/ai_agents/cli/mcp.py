@@ -1,4 +1,4 @@
-"""python -m work_classifier.mcp_cli fetch|run --evaluation-id ..."""
+"""python -m ai_agents.cli.mcp fetch|run --evaluation-id ..."""
 
 import argparse
 import asyncio
@@ -14,12 +14,12 @@ from mcp.shared._httpx_utils import create_mcp_http_client
 from openai import AsyncOpenAI
 from pydantic import ValidationError
 
-from .classification.agent import ClassificationError
-from .classification.provider import OpenAIClassifier
-from .integrations.mcp_client import MCPError, MCPGateway
-from .integrations.mcp_data import classification_context, fetch_business
-from .orchestration.graph import build_agent_graph
-from .rubric.builder import OpenAIRubricBuilder
+from ..classification.agent import ClassificationError
+from ..classification.provider import OpenAIClassifier
+from ..criteria_agent.builder import OpenAIRubricBuilder
+from ..integrations.mcp_client import MCPError, MCPGateway
+from ..integrations.mcp_data import classification_context, fetch_business
+from ..orchestration.graph import build_agent_graph
 
 
 def parser():

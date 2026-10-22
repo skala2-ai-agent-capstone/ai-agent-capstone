@@ -3,14 +3,14 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from work_classifier.classification.agent import validate_evidence
-from work_classifier.classification.selection import (
+from ai_agents.classification.agent import validate_evidence
+from ai_agents.classification.selection import (
     DecisionEnvelope,
     build_catalog,
     resolve_decision,
     response_model,
 )
-from work_classifier.shared.models import WorkContext
+from ai_agents.shared.models import WorkContext
 
 
 def proof(evidence_ids=None):

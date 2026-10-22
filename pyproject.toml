@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "work-classifier"
+name = "ai-agents"
 version = "0.1.0"
-description = "MCP 없이 JSON 업무 기록을 분류하는 Sprint 1 Agent 모듈"
+description = "업무 분류·평가 기준 생성·업무 평가 Agent와 MCP 연동"
 requires-python = ">=3.11"
 dependencies = [
   "langgraph>=1,<2",
@@ -27,10 +27,10 @@ dev = [
 ]
 
 [project.scripts]
-work-classifier = "work_classifier.cli:main"
+ai-agents = "ai_agents.cli.classification:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/work_classifier"]
+packages = ["src/ai_agents"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

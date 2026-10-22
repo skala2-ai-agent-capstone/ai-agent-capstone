@@ -7,7 +7,7 @@ from pydantic import ValidationError
 from test_evaluation_agent import ToolFixture, collect, selected_result, valid_result
 from test_mcp_adapter import CASES
 
-from work_classifier.evaluation.selection import (
+from ai_agents.evaluation_agent.final.selection import (
     build_choices,
     choice_requirements,
     pieces,
@@ -15,7 +15,7 @@ from work_classifier.evaluation.selection import (
     security_choice_ids,
     selection_model,
 )
-from work_classifier.evaluation.validation import evidence_catalog, validate_evaluation_result
+from ai_agents.evaluation_agent.final.validation import evidence_catalog, validate_evaluation_result
 
 
 def catalogs(fixture, evidence, materials):
@@ -269,7 +269,7 @@ async def test_score_must_be_allowed_by_the_approved_criterion():
 
 @pytest.mark.asyncio
 async def test_invalid_diagnostics_only_include_safe_selection_fields():
-    from work_classifier.evaluation.agent import validation_feedback
+    from ai_agents.evaluation_agent.final.agent import validation_feedback
 
     fixture = ToolFixture()
     evidence, materials = await collect(fixture)
@@ -328,7 +328,7 @@ async def test_security_without_policy_can_only_return_an_unscored_result():
     public.items[3].score = None
     public.items[3].work_evidence = []
     evidence.policy_check = None
-    from work_classifier.shared.workflow_models import content_hash
+    from ai_agents.shared.workflow_models import content_hash
 
     materials.evidence_sha256 = content_hash(evidence)
     choices, payload, _, _ = catalogs(fixture, evidence, materials)
