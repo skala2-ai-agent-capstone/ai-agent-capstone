@@ -293,6 +293,10 @@ async def test_real_sdk_structured_parse_and_approval_integration():
     def handler(request):
         payload = json.loads(request.content)
         calls.append(payload)
+        # 로컬 생성기는 업무 범위 밖이라 단계만 기록하고, 업무 ID는 헤더·프롬프트 어디에도 없다
+        assert request.headers["x-stage"] == "rubric"
+        assert "x-work-id" not in request.headers
+        assert fixture.work_record.work_id not in request.content.decode()
         assert payload["text"]["format"]["type"] == "json_schema"
         assert payload["text"]["format"]["strict"] is True
         assert payload["store"] is False

@@ -1,6 +1,7 @@
 from openai import APIConnectionError, APIStatusError, APITimeoutError, AsyncOpenAI
 from pydantic import ValidationError
 
+from ..shared.llm_trace import trace_headers
 from .agent import ClassificationError, ModelReply
 from .selection import (
     SELECTION_VERSION,
@@ -36,6 +37,7 @@ class OpenAIClassifier:
                 text_format=schema_model,
                 max_output_tokens=2000,
                 store=False,
+                extra_headers=trace_headers("classify"),
             )
         except APITimeoutError as exc:
             raise ClassificationError("LLM 요청 시간이 초과되었습니다.") from exc

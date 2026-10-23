@@ -7,6 +7,7 @@ from ...observability import trace_step
 from ...observability.tracing import trace_span
 from ...orchestration.approval import WorkflowError
 from ...orchestration.graph import MCPHandoff, build_agent_graph
+from ...shared.llm_trace import work_scope
 from ...shared.workflow_models import EvaluationInput, EvaluationOutput, Reference, content_hash
 from .models import EvaluationReceipt
 
@@ -76,7 +77,8 @@ class EvaluationWorkflow:
         handoff = MCPHandoff.model_validate(result["handoff"])
         key = content_hash(handoff)
         if key not in self.completed:
-            with trace_span("evaluate_approved_work", inputs=handoff) as span:
+            with (trace_span("evaluate_approved_work", inputs=handoff) as span,
+                  work_scope(handoff.business.work_case["work_id"])):
                 output = await self.evaluator.evaluate(handoff.model_copy(deep=True))
                 span.result(output)
             self.completed[key] = self.complete(handoff, output)

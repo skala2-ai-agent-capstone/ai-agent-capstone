@@ -16,6 +16,7 @@ from ...integrations.mcp_adapter import (
 )
 from ...observability.tracing import trace_span
 from ...shared.evidence_models import EvaluationEvidence, EvaluationRun
+from ...shared.llm_trace import trace_headers
 from ...shared.workflow_models import EvaluationInput
 from .contract import MISSING_WORK_MESSAGES
 from .materials import EvaluationMaterials, collect_evaluation_materials
@@ -254,7 +255,8 @@ class OpenAIEvaluator:
         raise AssertionError("unreachable")
 
     async def generate(self, messages, response_format):
-        headers = {"extra_headers": self.extra_headers} if self.extra_headers else {}
+        # 호출부가 헤더를 직접 넘기지 않으면 업무 범위(work_scope)에서 정한다
+        headers = {"extra_headers": self.extra_headers or trace_headers("evaluate")}
         if self.api_mode == "responses":
             return await self.client.responses.parse(
                 model=self.model, input=messages, text_format=response_format,

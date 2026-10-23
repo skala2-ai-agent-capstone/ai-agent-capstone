@@ -98,8 +98,11 @@ OPENAI_MODEL=gemma4
 
 중간 피드백 Agent(`src/ai_agents/evaluation_agent/feedback/agent.py`)는 MCP에서 검증한 문맥의
 업무·요청자 ID를 `X-Work-Id`, `X-User-Id`로 보내고, `X-Stage: live_evaluate`를 붙입니다.
-기준 생성·최종 평가 호출의 자동 헤더 연결은 아직 구현되지 않았습니다.
-가상 대화 품질 실험(`validation.feedback_targets:model_feedback`)은 `X-Stage`만 보냅니다.
+최종 평가 Agent의 분류·기준 생성·평가 호출은 `X-Stage`(`classify`·`rubric`·`evaluate`)를 항상 붙입니다
+(`src/ai_agents/shared/llm_trace.py`). `X-Work-Id`는 MCP에서 받은 업무를 처리할 때만 붙습니다.
+평가 그래프(`orchestration/graph.py`)와 승인 뒤 평가 연결부(`evaluation_agent/final/workflow.py`)가
+그동안 업무 범위를 열고, 최종 평가 Worker(`orchestration/final_evaluation.py`)는 헤더를 직접 넘깁니다.
+가상 대화 품질 실험(`validation.feedback_targets:model_feedback`)과 샘플 업무로 돌리는 CLI·로컬 생성기는 `X-Stage`만 보냅니다.
 가상 업무·사용자 ID를 실제 DB 외래 키에 넣지 않기 위해서이며, 이 실행은 해당 ID가 null로 기록됩니다.
 
 중간 피드백 실행에서는 일반 `OPENAI_*` 대신 다음 환경변수를 설정합니다.
