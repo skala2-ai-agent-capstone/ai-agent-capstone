@@ -1,0 +1,10 @@
+{
+  "type": "EVALUATE",
+  "message_id": "OUTBOX-FINAL-EXAMPLE",
+  "evaluation_id": "EVAL-EXAMPLE",
+  "company_id": "COMPANY-EXAMPLE",
+  "task_id": "WORK-EXAMPLE",
+  "deliverable_version": "v2",
+  "rubric_version": "v2",
+  "attempt": 0
+}

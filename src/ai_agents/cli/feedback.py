@@ -5,6 +5,7 @@ import asyncio
 import json
 import os
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
@@ -28,6 +29,9 @@ def parser():
     root = argparse.ArgumentParser(description="최근 질문·응답 5회 중간 피드백")
     sub = root.add_subparsers(dest="command", required=True)
     sub.add_parser("schemas")
+    sub.add_parser("check-config", help="연동 환경변수 형식만 검사. 연결·토큰 발급 없음")
+    event = sub.add_parser("check-event", help="큐 메시지 파일 형식만 검사. 실행·저장 없음")
+    event.add_argument("--event", type=Path, required=True)
     for name in ("once", "worker"):
         command = sub.add_parser(name)
         command.add_argument("--trace-dir", type=Path, default=Path("outputs/feedback-traces"))
@@ -43,6 +47,35 @@ def required(name):
     if not value:
         raise ValueError(f"{name} is required")
     return value
+
+
+def check_config():
+    load_dotenv(Path.cwd() / ".env", override=False)
+    names = (
+        "FEEDBACK_AMQP_URL", "FEEDBACK_MCP_URL", "FEEDBACK_MCP_TOKEN",
+        "FEEDBACK_LLM_BASE_URL", "FEEDBACK_LLM_MODEL", "FEEDBACK_LLM_API_KEY",
+    )
+    missing = [name for name in names if not os.getenv(name, "").strip()]
+    invalid = []
+    for name, schemes in (
+        ("FEEDBACK_AMQP_URL", {"amqp", "amqps"}),
+        ("FEEDBACK_MCP_URL", {"http", "https"}),
+        ("FEEDBACK_LLM_BASE_URL", {"http", "https"}),
+    ):
+        if name in missing:
+            continue
+        try:
+            url = urlsplit(os.environ[name])
+            _ = url.port
+            if (url.scheme not in schemes or not url.hostname
+                    or any(c in url.hostname for c in "<> ") or url.fragment):
+                raise ValueError("invalid URL")
+            if name != "FEEDBACK_AMQP_URL" and (url.username or url.password or url.query):
+                raise ValueError("credentials must be separate")
+        except ValueError:
+            invalid.append(name)
+    return {"status": "ready" if not missing and not invalid else "incomplete",
+            "missing": missing, "invalid": invalid, "network_calls": 0}
 
 
 async def run(args):
@@ -93,6 +126,14 @@ async def run(args):
 def main(argv=None):
     args = parser().parse_args(argv)
     try:
+        if args.command == "check-config":
+            result = check_config()
+            print(json.dumps(result, ensure_ascii=False))
+            return 0 if result["status"] == "ready" else 2
+        if args.command == "check-event":
+            LiveEvaluationEvent.model_validate_json(args.event.read_bytes())
+            print(json.dumps({"status": "valid", "type": "LIVE_EVALUATE", "network_calls": 0}))
+            return 0
         if args.command == "schemas":
             models = (
                 LiveEvaluationEvent,

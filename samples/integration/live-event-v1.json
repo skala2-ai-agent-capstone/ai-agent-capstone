@@ -1,0 +1,12 @@
+{
+  "message_id": "OUTBOX-LIVE-EXAMPLE",
+  "type": "LIVE_EVALUATE",
+  "live_eval_id": "LIVE-EXAMPLE",
+  "company_id": "COMPANY-EXAMPLE",
+  "work_id": "WORK-EXAMPLE",
+  "requested_by": "USER-EXAMPLE",
+  "from_seq": 1,
+  "to_seq": 10,
+  "rubric_version": "v2",
+  "attempt": 0
+}

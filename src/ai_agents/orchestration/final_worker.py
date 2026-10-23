@@ -1,5 +1,6 @@
 """저장 완료 알림까지 확인한 후 ack한다. 최종 확정/사용자 조회 권한은 백엔드 책임이다."""
 
+import json
 from pathlib import Path
 from uuid import uuid4
 
@@ -8,15 +9,29 @@ from pydantic import SecretStr, ValidationError
 
 from ..evaluation_agent.final.validation import EvaluationError
 from ..integrations.final_mcp import FinalMCPGateway
+from ..integrations.final_tokens import FinalTokenError
 from ..integrations.mcp_client import MCPError
 from ..observability import TraceSession
-from ..shared.final_job_contracts import FinalEvaluationEvent, FinalEvaluationSaved
+from ..shared.final_job_contracts import (
+    FINAL_QUEUE_CONTRACTS,
+    BackendEvaluationEvent,
+    BackendFinalEvaluationEvent,
+    FinalEvaluationEvent,
+    FinalEvaluationSaved,
+)
 from .final_evaluation import FinalEvaluationJob, FinalEvaluationWorkflow
 
 REQUEST_QUEUE = "final_evaluation.requests"
 RETRY_QUEUE = "final_evaluation.retry"
 DLQ = "final_evaluation.dlq"
 RESULT_QUEUE = "final_evaluation.results"
+
+
+class LifecycleEventRequiresBackend(ValueError):
+    """RESUME은 평가 오류가 아니다. ack/DLQ 없이 소비를 중단하고 서버 처리를 기다린다."""
+
+    def __init__(self):
+        super().__init__("RESUME_REQUIRES_BACKEND")
 
 
 def failure_code(exc):
@@ -26,6 +41,8 @@ def failure_code(exc):
         if all(retry for _, retry in codes):
             return "DEPENDENCY_UNAVAILABLE", True
         return "EXECUTION_FAILED", False
+    if isinstance(exc, FinalTokenError):
+        return exc.code, exc.retryable
     if isinstance(exc, MCPError):
         retry = exc.code in {"CONNECTION_FAILED", "TRANSPORT_ERROR"}
         return ("MCP_UNAVAILABLE", True) if retry else ("MCP_REJECTED", False)
@@ -94,29 +111,41 @@ class FinalJobExecutor:
                 gateway, self.client, model=self.model, checkpoint_dir=self.checkpoint_dir,
                 code_provenance=self.code_provenance,
             )
-            return await workflow.run(FinalEvaluationJob(
-                evaluation_id=event.evaluation_id, operation_id=event.operation_id,
-            ))
+            job = FinalEvaluationJob(evaluation_id=event.evaluation_id,
+                                     operation_id=event.operation_id)
+            if isinstance(event, BackendFinalEvaluationEvent):
+                return await workflow.run(job, expected=event.backend_scope)
+            return await workflow.run(job)
 
 
 class FinalEvaluationWorker:
     def __init__(
         self, execute, *, trace_dir: Path, model: str, code_provenance: dict,
-        langsmith=False, max_retries=3,
+        langsmith=False, max_retries=3, contract="agent-v1",
     ):
         if type(max_retries) is not int or not 0 <= max_retries <= 10:
             raise ValueError("max retries must be 0..10")
         self.execute, self.trace_dir, self.model = execute, trace_dir, model
         self.code_provenance, self.langsmith = code_provenance, langsmith
         self.max_retries = max_retries
+        self.queues = FINAL_QUEUE_CONTRACTS[contract]
 
     async def handle(self, body: bytes, *, publish, ack):
         try:
             if len(body) > 16384:
                 raise ValueError("oversized event")
-            event = FinalEvaluationEvent.model_validate_json(body)
+            wire = json.loads(body)
+            if self.queues.name == "backend-v1":
+                if isinstance(wire, dict) and wire.get("type") == "RESUME":
+                    raise LifecycleEventRequiresBackend()
+                source = BackendEvaluationEvent.model_validate(wire)
+                event = source.normalized()
+            else:
+                source = event = FinalEvaluationEvent.model_validate(wire)
+        except LifecycleEventRequiresBackend:
+            raise
         except (ValidationError, ValueError):
-            await publish(DLQ, {
+            await publish(self.queues.dlq, {
                 "message_id": str(uuid4()), "type": "INVALID_FINAL_EVALUATE",
             }, "INVALID_EVENT")
             await ack()
@@ -141,14 +170,17 @@ class FinalEvaluationWorker:
                 if failure:
                     code, retryable = failure
                     retry = retryable and event.attempt < self.max_retries
-                    payload = event.model_dump(mode="json")
+                    # 백엔드 retry/DLQ 소비자가 읽을 수 있게 원래 EVALUATE 계약을 유지한다.
+                    payload = source.model_dump(mode="json")
                     if retry:
                         payload["attempt"] += 1
-                    await publish(RETRY_QUEUE if retry else DLQ, payload, code)
+                    await publish(self.queues.retry if retry else self.queues.dlq, payload, code)
                     outcome = {"status": "retry" if retry else "dlq", "code": code}
                 else:
                     # 발행 실패는 업무 오류로 바꾸지 않는다. ack 없이 원본이 재전달된다.
-                    await publish(RESULT_QUEUE, notification.model_dump(mode="json"), "SAVED")
+                    await publish(
+                        self.queues.results, notification.model_dump(mode="json"), "SAVED",
+                    )
                     outcome = {"status": "draft_and_coaching_saved"}
                 outcome.update(evaluation_id=event.evaluation_id, trace_id=trace.trace_id)
                 span.result(outcome)
