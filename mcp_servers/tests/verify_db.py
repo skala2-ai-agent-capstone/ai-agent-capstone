@@ -92,7 +92,7 @@ def main():
     n_drafts = cnt("evaluation_drafts")
     check("PG evaluation_drafts에 초안 저장됨", n_drafts >= exp["evaluations"], str(n_drafts))
     check("PG evaluation_coaching 저장됨", cnt("evaluation_coaching") >= 1)
-    check("PG review_requests 저장·검토자 배정", one("SELECT count(*) AS n FROM review_requests WHERE reviewer_id='R-2001'")["n"] >= 1)
+    check("PG review_requests 저장·검토자 배정(담당 팀장)", one("SELECT count(*) AS n FROM review_requests WHERE reviewer_id='L-3001'")["n"] >= 1)
     check("PG progress_log 기록", cnt("progress_log") >= 1)
     dup = one("SELECT count(*) AS n FROM (SELECT tool, key FROM idempotency_keys GROUP BY 1,2 HAVING count(*)>1) x")["n"]
     check("PG idempotency_keys 중복 없음", dup == 0 and cnt("idempotency_keys") >= 1)

@@ -1,8 +1,21 @@
 -- AX 평가 Agent 업무 DB (PostgreSQL 16)
 -- business-mcp가 읽고 쓰는 원본 저장소. rag-mcp 검색 색인(ChromaDB)도 documents·document_chunks·rubric_items에서 만든다.
 -- 텍스트 원문(content)과 마스킹본(content_masked)을 같이 둔다: 정책 검사는 원문, MCP 응답은 마스킹본 (명세 7장 기본안 2).
+-- 업무 공간 대화는 기록 프록시가 llm_exchanges에 저장하고, messages는 그것을 펼쳐 보여주는 뷰다.
+-- 대화의 마스킹본은 저장하지 않고 뷰를 읽을 때 policy_rules의 마스킹 규칙으로 만든다(mask_text).
+-- 기준 문서: db-schema.json(2026-10-22). 백엔드 소유 테이블(outbox_events, evaluation_failures,
+-- aggregation_approvals)은 aworko-server Flyway가 만들므로 여기서 만들지 않는다.
 
 BEGIN;
+
+-- 이전 스키마(users.test_token 등)로 만든 DB에는 덮어 올리지 않는다. 볼륨을 지우고 새로 만든다.
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns
+             WHERE table_schema = current_schema() AND table_name = 'users' AND column_name = 'test_token') THEN
+    RAISE EXCEPTION '이전 스키마로 만든 DB입니다. docker compose down -v 로 볼륨을 지운 뒤 다시 올리세요';
+  END IF;
+END $$;
 
 -- ─────────────────────────── 조직·고객 ───────────────────────────
 CREATE TABLE IF NOT EXISTS companies (
@@ -17,13 +30,15 @@ CREATE TABLE IF NOT EXISTS teams (
   name        text NOT NULL
 );
 
+-- 로그인 계정 겸용. 백엔드가 사번 + 비밀번호로 로그인시키고 JWT를 발급한다(서버 세션 없음).
 CREATE TABLE IF NOT EXISTS users (
-  user_id     text PRIMARY KEY,
-  company_id  text NOT NULL REFERENCES companies,
-  team_id     text REFERENCES teams,
-  name        text NOT NULL,
-  role        text NOT NULL CHECK (role IN ('employee','team_lead','reviewer','ax_manager','admin')),
-  test_token  text
+  user_id      text PRIMARY KEY,                   -- 내부 식별자. 다른 테이블 FK가 참조
+  employee_no  int  NOT NULL UNIQUE,               -- 사번 = 로그인 ID
+  password     text NOT NULL,                      -- 평문(단순 프로젝트용). API 응답·로그에 내보내지 않는다
+  company_id   text NOT NULL REFERENCES companies,
+  team_id      text REFERENCES teams,
+  name         text NOT NULL,
+  role         text NOT NULL CHECK (role IN ('member','team_lead'))  -- team_lead는 검토자 겸임
 );
 
 CREATE TABLE IF NOT EXISTS customers (
@@ -168,8 +183,9 @@ CREATE TABLE IF NOT EXISTS work_cases (
   company_id           text NOT NULL REFERENCES companies,
   team_id              text REFERENCES teams,
   employee_id          text NOT NULL REFERENCES users,
-  work_type            text NOT NULL CHECK (work_type IN ('rfp_analysis','proposal','quote','inquiry_reply')),
+  work_type            text CHECK (work_type IN ('rfp_analysis','proposal','quote','inquiry_reply')),  -- NULL = 아직 분류 전
   customer_id          text NOT NULL REFERENCES customers,
+  title                text,                     -- 「새 업무 작성」의 업무명
   status               text NOT NULL,
   created_at           timestamptz NOT NULL,
   completed_at         timestamptz,
@@ -223,15 +239,26 @@ CREATE TABLE IF NOT EXISTS attached_references (   -- 업무에 지정한 사내
   PRIMARY KEY (work_id, doc_id, version)
 );
 
-CREATE TABLE IF NOT EXISTS messages (
-  message_id      text PRIMARY KEY,
-  work_id         text NOT NULL REFERENCES work_cases ON DELETE CASCADE,
-  seq             int  NOT NULL,
-  role            text NOT NULL CHECK (role IN ('user','assistant')),
-  content         text NOT NULL,
-  content_masked  text NOT NULL,
-  created_at      timestamptz NOT NULL,
-  UNIQUE (work_id, seq)
+-- LLM 호출 원본. 기록 프록시(llm_proxy)가 호출 1회마다 1행을 쓴다. 업무 공간 대화의 원본이므로 지우지 않는다.
+-- 명세: docs/llm_exchanges_data_spec.md
+CREATE TABLE IF NOT EXISTS llm_exchanges (
+  id             bigserial PRIMARY KEY,
+  created_at     timestamptz NOT NULL DEFAULT now(),  -- 응답이 끝나 기록한 시각 (= 답변 시각)
+  member         text,                           -- 호출한 쪽(프록시 키 이름)
+  endpoint       text,
+  stage          text CHECK (stage IN ('workspace_chat','classify','rubric','evaluate','live_evaluate')),  -- X-Stage
+  work_id        text REFERENCES work_cases ON DELETE CASCADE,  -- X-Work-Id
+  user_id        text REFERENCES users ON DELETE SET NULL,      -- X-User-Id
+  model          text,
+  stream         boolean DEFAULT false,
+  status_code    int,
+  error          text,                           -- upstream_error·upstream_unreachable·upstream_timeout·upstream_stream_broken·client_disconnected
+  latency_ms     int,                            -- created_at - latency_ms = 요청 시각 (= 사용자 메시지 시각)
+  input_tokens   int,
+  output_tokens  int,
+  request        jsonb,                          -- 대화 이력 포함
+  response       jsonb,
+  response_text  text                            -- 스트리밍 SSE 원문 또는 JSON이 아닌 응답
 );
 
 CREATE TABLE IF NOT EXISTS artifact_versions (
@@ -393,6 +420,25 @@ CREATE TABLE IF NOT EXISTS review_requests (
   run_id             text
 );
 
+-- 중간 점검·실시간 피드백. 백엔드가 요청 행(대기)을 만들어 큐에 발행하고, Agent가 MCP로 결과를 저장한다.
+-- 최종 평가·이의 제기·팀 집계와는 별개다.
+CREATE TABLE IF NOT EXISTS live_evaluations (
+  live_eval_id    text PRIMARY KEY,              -- 큐 메시지 중복 방지 키
+  work_id         text NOT NULL REFERENCES work_cases ON DELETE CASCADE,
+  requested_by    text NOT NULL REFERENCES users,
+  requested_at    timestamptz NOT NULL DEFAULT now(),  -- 사용자별 5분 1회 제한 판단에 사용
+  from_seq        int  NOT NULL,                 -- messages.seq 범위 시작(최근 5개)
+  to_seq          int  NOT NULL,                 -- messages.seq 범위 끝
+  rubric_doc_id   text,
+  rubric_version  text,
+  status          text NOT NULL DEFAULT '대기' CHECK (status IN ('대기','생성 중','완료','실패')),  -- 폴링용
+  items           jsonb,
+  coaching        jsonb,
+  model           text,
+  latency_ms      int,
+  error           text
+);
+
 CREATE TABLE IF NOT EXISTS progress_log (
   id             bigserial PRIMARY KEY,
   evaluation_id  text NOT NULL REFERENCES evaluations ON DELETE CASCADE,
@@ -422,8 +468,115 @@ CREATE TABLE IF NOT EXISTS audit_log (             -- 민감정보 원문 없이
   elapsed_ms     int
 );
 
+-- ─────────────────────────── 대화 뷰 ───────────────────────────
+-- policy_rules의 마스킹 규칙을 Masker(common/runtime.py)와 같은 순서로 적용한다: 이메일 → 연락처 → 담당자 → 나머지
+CREATE OR REPLACE FUNCTION mask_text(t text) RETURNS text LANGUAGE plpgsql STABLE AS $$
+DECLARE
+  r record;
+BEGIN
+  IF t IS NULL THEN
+    RETURN NULL;
+  END IF;
+  FOR r IN SELECT pattern, replace_with FROM policy_rules
+           WHERE kind = 'masking' AND pattern IS NOT NULL
+           ORDER BY CASE rule_id WHEN 'MASK-EMAIL' THEN 0 WHEN 'MASK-PHONE' THEN 1 WHEN 'MASK-PERSON' THEN 2 ELSE 9 END, seq
+  LOOP
+    t := regexp_replace(t, r.pattern, r.replace_with, 'g');
+  END LOOP;
+  RETURN t;
+END $$;
+
+-- 스트리밍 응답(SSE 원문)에서 답변 본문만 이어 붙인다. 잘린 마지막 줄 등 JSON이 아닌 줄은 건너뛴다.
+CREATE OR REPLACE FUNCTION sse_text(raw text) RETURNS text LANGUAGE plpgsql IMMUTABLE AS $$
+DECLARE
+  line text;
+  ev jsonb;
+  ch jsonb;
+  out text := '';
+BEGIN
+  IF raw IS NULL THEN
+    RETURN NULL;
+  END IF;
+  FOREACH line IN ARRAY regexp_split_to_array(raw, E'\n') LOOP
+    CONTINUE WHEN line NOT LIKE 'data: {%';
+    BEGIN
+      ev := substr(line, 7)::jsonb;
+    EXCEPTION WHEN others THEN
+      CONTINUE;
+    END;
+    CONTINUE WHEN jsonb_typeof(ev->'choices') IS DISTINCT FROM 'array';
+    FOR ch IN SELECT value FROM jsonb_array_elements(ev->'choices') LOOP
+      out := out || COALESCE(ch->'delta'->>'content', '');
+    END LOOP;
+  END LOOP;
+  RETURN out;
+END $$;
+
+-- 업무 공간 대화 = workspace_chat 호출마다 "이번에 새로 보낸 질문 + 답변 1개".
+--  · 새 질문: 요청 이력에서 마지막 assistant 뒤의 user 메시지 (백엔드가 이력을 잘라 보내도 동작)
+--  · 앞 호출이 실패(끊김·오류)했으면 그 질문은 이미 보였으므로 재전송분은 세지 않는다
+--  · 실패한 호출은 질문만 남고 답변은 없다
+--  · 사용자 메시지 시각은 요청 시각(created_at - latency_ms), 답변 시각은 created_at
+CREATE OR REPLACE VIEW messages AS
+WITH calls AS (
+  SELECT e.id, e.work_id,
+         e.created_at - make_interval(secs => COALESCE(e.latency_ms, 0) / 1000.0) AS requested_at,
+         e.created_at,
+         CASE WHEN jsonb_typeof(e.request->'messages') = 'array' THEN e.request->'messages' ELSE '[]'::jsonb END AS msgs,
+         CASE WHEN e.error IS NULL
+              THEN NULLIF(COALESCE(e.response->'choices'->0->'message'->>'content', sse_text(e.response_text)), '')
+         END AS reply
+  FROM llm_exchanges e
+  WHERE e.stage = 'workspace_chat' AND e.work_id IS NOT NULL
+),
+asked AS (
+  SELECT c.*,
+         COALESCE((SELECT jsonb_agg(m->>'content' ORDER BY i)
+                   FROM jsonb_array_elements(c.msgs) WITH ORDINALITY AS t(m, i)
+                   WHERE m->>'role' = 'user' AND jsonb_typeof(m->'content') = 'string'
+                     AND i > COALESCE((SELECT max(j) FROM jsonb_array_elements(c.msgs) WITH ORDINALITY AS a(x, j)
+                                       WHERE x->>'role' = 'assistant'), 0)), '[]'::jsonb) AS questions
+  FROM calls c
+),
+with_prev AS (
+  SELECT a.*, lag(a.questions) OVER w AS prev_questions, lag(a.reply IS NULL) OVER w AS prev_failed
+  FROM asked a
+  WINDOW w AS (PARTITION BY a.work_id ORDER BY a.id)
+),
+fresh AS (
+  SELECT p.*,
+         CASE WHEN p.prev_failed
+                   AND jsonb_array_length(p.prev_questions) <= jsonb_array_length(p.questions)
+                   AND (SELECT COALESCE(jsonb_agg(x ORDER BY k), '[]'::jsonb)
+                        FROM jsonb_array_elements(p.questions) WITH ORDINALITY AS q(x, k)
+                        WHERE k <= jsonb_array_length(p.prev_questions)) = p.prev_questions
+              THEN jsonb_array_length(p.prev_questions) ELSE 0 END AS already_shown
+  FROM with_prev p
+),
+rows AS (
+  SELECT f.work_id, f.id AS exchange_id, q.k AS pos, 'user' AS role, q.x #>> '{}' AS content, f.requested_at AS created_at
+  FROM fresh f, LATERAL jsonb_array_elements(f.questions) WITH ORDINALITY AS q(x, k)
+  WHERE q.k > f.already_shown
+  UNION ALL
+  SELECT f.work_id, f.id, 2147483647, 'assistant', f.reply, f.created_at
+  FROM fresh f
+  WHERE f.reply IS NOT NULL
+),
+ordered AS (
+  SELECT r.*, row_number() OVER (PARTITION BY r.work_id ORDER BY r.exchange_id, r.pos)::int AS seq
+  FROM rows r
+)
+SELECT work_id || '-M' || lpad(seq::text, greatest(2, length(seq::text)), '0') AS message_id,
+       work_id, seq, role, content, mask_text(content) AS content_masked, created_at, exchange_id
+FROM ordered;
+
 -- ─────────────────────────── 인덱스 ───────────────────────────
-CREATE INDEX IF NOT EXISTS ix_messages_work        ON messages (work_id, seq);
+CREATE INDEX IF NOT EXISTS ix_llm_exchanges_work   ON llm_exchanges (work_id, stage, id);
+CREATE INDEX IF NOT EXISTS ix_llm_exchanges_user   ON llm_exchanges (user_id);
+CREATE INDEX IF NOT EXISTS ix_llm_exchanges_time   ON llm_exchanges (created_at);
+CREATE INDEX IF NOT EXISTS ix_live_evals_work      ON live_evaluations (work_id, requested_at);
+CREATE INDEX IF NOT EXISTS ix_live_evals_user      ON live_evaluations (requested_by, requested_at);
+CREATE INDEX IF NOT EXISTS ix_users_team_role      ON users (team_id, role);
 CREATE INDEX IF NOT EXISTS ix_artifact_versions_w  ON artifact_versions (work_id, saved_at);
 CREATE INDEX IF NOT EXISTS ix_spans_artifact       ON artifact_spans (artifact_id, version, seq);
 CREATE INDEX IF NOT EXISTS ix_source_docs_work     ON source_documents (work_id, uploaded_at);

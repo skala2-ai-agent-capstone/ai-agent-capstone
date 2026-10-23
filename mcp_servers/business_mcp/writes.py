@@ -1,28 +1,23 @@
 """저장 도구 4개와 평가 건 상태 (명세 3.2). 저장소는 PostgreSQL.
 
 평가 초안·코칭·검토 요청·진행 상태만 쓴다. 확정·승인·본인 확인·집계 반영은 노출하지 않는다.
-모든 쓰기는 idempotency_key가 필수이고 같은 키는 기존 결과를 돌려준다 (7장 기본안 3: duplicate:true).
-중복 키 확인과 저장은 한 트랜잭션 안에서 하므로 같은 키가 동시에 와도 한 번만 저장된다.
+멱등 처리는 idempotency.py, 저장 내용 검증은 checks.py(중간 점검과 공용)에 있다.
 """
 from __future__ import annotations
 
 from psycopg.types.json import Jsonb
 
-from common.runtime import Result, eval_id_for, forbidden, new_id, not_found, validation, version_conflict
+from common.runtime import eval_id_for, forbidden, new_id, not_found, validation, version_conflict
 
-from .pg import Db, iso
+from .checks import check_coaching, check_items, check_text
+from .idempotency import need_key, remember, replay
+from .pg import Db, iso, iso_row
 from .store import Store
 
 PROGRESS = ["수집 중", "평가 중", "근거 확인 중", "코칭 생성 중"]
 SERVER_ONLY = ["확인 대기", "검토 대기", "확정", "처리 실패", "자료 보류"]
 WRITABLE = ["대기"] + PROGRESS
-ITEM_STATUS = {"채점", "미관측", "검토 필요"}
-COACH_KINDS = {"강점", "보완점", "기록 안내"}
 EVAL_COLS = "evaluation_id, work_id, company_id, artifact_id, artifact_version, rubric_version, status, source_key, created_at, updated_at"
-
-
-def _ev(row: dict) -> dict:
-    return {k: iso(v) for k, v in row.items()}
 
 
 class WriteStore:
@@ -57,14 +52,14 @@ class WriteStore:
         row = self.db.one(f"SELECT {EVAL_COLS} FROM evaluations WHERE evaluation_id=%s", (evaluation_id,))
         if not row:
             raise not_found(f"평가 건 {evaluation_id}")
-        return _ev(row)
+        return iso_row(row)
 
     def list_evaluations(self, work_id: str | None = None) -> list[dict]:
         if work_id:
             rows = self.db.q(f"SELECT {EVAL_COLS} FROM evaluations WHERE work_id=%s ORDER BY evaluation_id", (work_id,))
         else:
             rows = self.db.q(f"SELECT {EVAL_COLS} FROM evaluations ORDER BY evaluation_id")
-        return [_ev(r) for r in rows]
+        return [iso_row(r) for r in rows]
 
     def set_status(self, evaluation_id: str, status: str) -> dict:
         if status not in ["대기"] + PROGRESS + SERVER_ONLY:
@@ -100,38 +95,12 @@ class WriteStore:
             row = c.execute(f"SELECT {EVAL_COLS} FROM evaluations WHERE evaluation_id=%s FOR UPDATE", (evaluation_id,)).fetchone()
             if not row:
                 raise not_found(f"평가 건 {evaluation_id}")
-            ev = _ev(row)
+            ev = iso_row(row)
         else:
             ev = self.evaluation(evaluation_id)
         if ev["company_id"] != claims["company_id"]:
             raise forbidden()
         return ev
-
-    @staticmethod
-    def _need_key(key) -> None:
-        if not key or not isinstance(key, str):
-            raise validation("idempotency_key가 필요합니다")
-
-    @staticmethod
-    def _prev(c, tool: str, key: str):
-        r = c.execute("SELECT result FROM idempotency_keys WHERE tool=%s AND key=%s", (tool, key)).fetchone()
-        return r["result"] if r else None
-
-    @staticmethod
-    def _remember(c, tool: str, key: str, evaluation_id: str, result: dict) -> None:
-        c.execute("INSERT INTO idempotency_keys (tool, key, evaluation_id, result) VALUES (%s,%s,%s,%s)",
-                  (tool, key, evaluation_id, Jsonb(result)))
-
-    def _rubric(self, work_type: str, version: str) -> dict:
-        r = self.store.rubrics.get((work_type, version))
-        if not r:
-            raise not_found(f"루브릭 RUB-{work_type} {version}")
-        return r
-
-    def _check_text(self, text: str | None, where: str) -> None:
-        hits = self.store.masker.has_sensitive(text or "")
-        if hits:
-            raise validation(f"{where}에 민감정보 패턴({', '.join(hits)})이 있습니다. 원문 대신 위치나 대체 표기를 쓰세요")
 
     @staticmethod
     def _latest_items(c, table: str, evaluation_id: str):
@@ -140,131 +109,62 @@ class WriteStore:
 
     # ── save_evaluation_draft ──
     def save_evaluation_draft(self, claims: dict, evaluation_id: str, rubric_version: str, items: list, idempotency_key: str):
-        self._need_key(idempotency_key)
+        need_key(idempotency_key)
         pool = self.store.evidence_pool(claims)
         with self.db.tx() as c:
-            prev = self._prev(c, "save_evaluation_draft", idempotency_key)
-            if prev is not None:
-                return Result(prev, duplicate=True, code="DUPLICATE_REQUEST")
+            if (dup := replay(c, "save_evaluation_draft", idempotency_key)) is not None:
+                return dup
             ev = self._own_eval(claims, evaluation_id, c)
             if ev["status"] not in WRITABLE:
                 raise validation(f"평가 상태가 '{ev['status']}'라 초안을 저장할 수 없습니다")
             if rubric_version != ev["rubric_version"]:
                 raise version_conflict(f"평가 건의 루브릭 버전은 {ev['rubric_version']}입니다 (요청 {rubric_version})")
             wt = self.store.raw[ev["work_id"]]["work_case"]["work_type"]
-            rubric = self._rubric(wt, rubric_version)
-            by_id = {i["item_id"]: i for i in rubric["items"]}
-            if not isinstance(items, list) or len(items) != len(by_id):
-                raise validation(f"items는 루브릭 항목 {len(by_id)}개와 같은 수여야 합니다")
-            ids = [i.get("item_id") for i in items if isinstance(i, dict)]
-            if sorted(ids) != sorted(by_id):
-                raise validation(f"item_id가 루브릭 항목과 다릅니다. 필요: {sorted(by_id)}")
-            errors = []
-            for it in items:
-                rid = it["item_id"]
-                ritem = by_id[rid]
-                if it.get("item") not in (None, ritem["item"]):
-                    errors.append(f"{rid}: item 이름은 '{ritem['item']}'")
-                st, score = it.get("status"), it.get("score")
-                ev_ids = it.get("evidence_ids") or []
-                reason = it.get("reason")
-                if st not in ITEM_STATUS:
-                    errors.append(f"{rid}: status는 채점·미관측·검토 필요 중 하나")
-                    continue
-                if st == "채점":
-                    allowed = {0, 2} if ritem["item"] == "보안 준수" else {0, 1, 2}
-                    if not isinstance(score, int) or isinstance(score, bool) or score not in allowed:
-                        errors.append(f"{rid}: score는 {sorted(allowed)} 중 하나")
-                    if len(ev_ids) < 1:
-                        errors.append(f"{rid}: 채점 항목은 evidence_ids가 1개 이상 필요")
-                elif st == "미관측":
-                    if score is not None:
-                        errors.append(f"{rid}: 미관측 항목은 score=null")
-                else:
-                    if score is not None:
-                        errors.append(f"{rid}: 검토 필요 항목은 score=null")
-                    if not reason:
-                        errors.append(f"{rid}: 검토 필요 항목은 reason 필수")
-                unknown = [e for e in ev_ids if e not in pool]
-                if unknown:
-                    errors.append(f"{rid}: 스냅샷에 없는 근거 ID {unknown}")
-                if self.store.masker.has_sensitive(reason or ""):
-                    errors.append(f"{rid}: reason에 민감정보 패턴")
-            if errors:
-                raise validation("; ".join(errors))
-            clean = [
-                {"item_id": i["item_id"], "item": by_id[i["item_id"]]["item"], "status": i["status"], "score": i.get("score"),
-                 "reason": i.get("reason"), "evidence_ids": i.get("evidence_ids") or []}
-                for i in items
-            ]
+            rubric = self.store.rubric(wt, rubric_version)
+            clean = check_items(items, rubric["items"], pool, self.store.masker, outside="스냅샷에 없는 근거 ID")
             row = c.execute(
                 "INSERT INTO evaluation_drafts (evaluation_id, revision, items, run_id) "
                 "SELECT %s, COALESCE(MAX(revision),0)+1, %s, %s FROM evaluation_drafts WHERE evaluation_id=%s RETURNING revision, saved_at",
                 (evaluation_id, Jsonb(clean), claims["run_id"], evaluation_id)).fetchone()
             result = {"evaluation_id": evaluation_id, "draft_revision": row["revision"], "saved_at": iso(row["saved_at"]), "items_saved": len(clean)}
-            self._remember(c, "save_evaluation_draft", idempotency_key, evaluation_id, result)
+            remember(c, "save_evaluation_draft", idempotency_key, result, evaluation_id)
             return result
 
     # ── save_coaching ──
     def save_coaching(self, claims: dict, evaluation_id: str, coaching: list, idempotency_key: str):
-        self._need_key(idempotency_key)
+        need_key(idempotency_key)
         pool = self.store.evidence_pool(claims)
         with self.db.tx() as c:
-            prev = self._prev(c, "save_coaching", idempotency_key)
-            if prev is not None:
-                return Result(prev, duplicate=True, code="DUPLICATE_REQUEST")
+            if (dup := replay(c, "save_coaching", idempotency_key)) is not None:
+                return dup
             ev = self._own_eval(claims, evaluation_id, c)
             if ev["status"] not in WRITABLE:
                 raise validation(f"평가 상태가 '{ev['status']}'라 코칭을 저장할 수 없습니다")
             draft = self._latest_items(c, "evaluation_drafts", evaluation_id)
             if draft is None:
                 raise validation("저장된 평가 초안이 없습니다. save_evaluation_draft를 먼저 호출하세요")
-            saved = {i["item_id"] for i in draft}
-            if not isinstance(coaching, list):
-                raise validation("coaching은 목록이어야 합니다")
-            errors = []
-            for n, x in enumerate(coaching, 1):
-                if not isinstance(x, dict):
-                    errors.append(f"#{n}: 객체가 아님")
-                    continue
-                if x.get("item_id") not in saved:
-                    errors.append(f"#{n}: item_id {x.get('item_id')}는 저장된 평가 항목이 아님")
-                kind = x.get("kind")
-                if kind not in COACH_KINDS:
-                    errors.append(f"#{n}: kind는 강점·보완점·기록 안내 중 하나")
-                tgt = x.get("target_span_id")
-                if kind != "기록 안내" and not tgt:
-                    errors.append(f"#{n}: target_span_id 필요 (기록 안내만 생략 가능)")
-                if tgt and tgt not in pool:
-                    errors.append(f"#{n}: target_span_id {tgt}가 근거 풀·스냅샷에 없음")
-                if not x.get("text"):
-                    errors.append(f"#{n}: text 필요")
-                if self.store.masker.has_sensitive(x.get("text") or ""):
-                    errors.append(f"#{n}: text에 민감정보 패턴")
-            if errors:
-                raise validation("; ".join(errors))
-            clean = [{k: x.get(k) for k in ("item_id", "kind", "target_span_id", "text")} for x in coaching]
+            clean = check_coaching(coaching, {i["item_id"] for i in draft}, pool, self.store.masker,
+                                   not_saved="저장된 평가 항목이 아님", outside="근거 풀·스냅샷에 없음")
             row = c.execute(
                 "INSERT INTO evaluation_coaching (evaluation_id, revision, items, run_id) "
                 "SELECT %s, COALESCE(MAX(revision),0)+1, %s, %s FROM evaluation_coaching WHERE evaluation_id=%s RETURNING revision, saved_at",
                 (evaluation_id, Jsonb(clean), claims["run_id"], evaluation_id)).fetchone()
             result = {"evaluation_id": evaluation_id, "coaching_revision": row["revision"], "saved_at": iso(row["saved_at"]), "items_saved": len(clean)}
-            self._remember(c, "save_coaching", idempotency_key, evaluation_id, result)
+            remember(c, "save_coaching", idempotency_key, result, evaluation_id)
             return result
 
     # ── request_review ──
     def request_review(self, claims: dict, evaluation_id: str, target_items: list, reason: str, review_memo: dict, idempotency_key: str):
-        self._need_key(idempotency_key)
+        need_key(idempotency_key)
         pool = self.store.evidence_pool(claims)
         with self.db.tx() as c:
-            prev = self._prev(c, "request_review", idempotency_key)
-            if prev is not None:
-                return Result(prev, duplicate=True, code="DUPLICATE_REQUEST")
+            if (dup := replay(c, "request_review", idempotency_key)) is not None:
+                return dup
             ev = self._own_eval(claims, evaluation_id, c)
             if ev["status"] != "확인 대기":
                 raise validation(f"검토 요청은 평가 상태가 '확인 대기'일 때만 가능합니다 (현재 '{ev['status']}')")
             wt = self.store.raw[ev["work_id"]]["work_case"]["work_type"]
-            rubric = self._rubric(wt, ev["rubric_version"])
+            rubric = self.store.rubric(wt, ev["rubric_version"])
             name_of = {i["item_id"]: i["item"] for i in rubric["items"]}
             id_of = {v: k for k, v in name_of.items()}
             allowed: set[str] = set()
@@ -282,14 +182,17 @@ class WriteStore:
                 raise validation(f"{bad}는 이의 제기 항목이나 '검토 필요' 항목이 아닙니다 (허용: {sorted(allowed)})")
             if not reason:
                 raise validation("reason이 필요합니다")
-            self._check_text(reason, "reason")
+            check_text(self.store.masker, reason, "reason")
             memo = review_memo or {}
             unknown = [e for e in (memo.get("cited_evidence") or []) if e not in pool]
             if unknown:
                 raise validation(f"review_memo.cited_evidence에 스냅샷에 없는 근거 ID {unknown}")
-            self._check_text(memo.get("comparison"), "review_memo.comparison")
-            reviewer = next((u["user_id"] for u in self.store.org["users"]
-                             if u["role"] == "reviewer" and u["company_id"] == claims["company_id"]), None)
+            check_text(self.store.masker, memo.get("comparison"), "review_memo.comparison")
+            # 검토자는 업무 담당자 팀의 팀장(team_lead가 검토자 겸임). 팀장이 없으면 미배정
+            team = self.store.raw[ev["work_id"]]["work_case"]["team_id"]
+            reviewer = next((u["user_id"] for u in sorted(self.store.org["users"], key=lambda u: u["user_id"])
+                             if u["role"] == "team_lead" and u["company_id"] == claims["company_id"]
+                             and team is not None and u["team_id"] == team), None)
             rrid = new_id("RVQ")
             row = c.execute(
                 "INSERT INTO review_requests (review_request_id, evaluation_id, target_items, reason, review_memo, reviewer_id, run_id) "
@@ -298,7 +201,7 @@ class WriteStore:
             c.execute("UPDATE evaluations SET status='검토 대기', updated_at=now() WHERE evaluation_id=%s", (evaluation_id,))
             result = {"review_request_id": rrid, "evaluation_id": evaluation_id, "target_items": norm, "reviewer_id": reviewer,
                       "status": "검토 대기", "created_at": iso(row["created_at"])}
-            self._remember(c, "request_review", idempotency_key, evaluation_id, result)
+            remember(c, "request_review", idempotency_key, result, evaluation_id)
             return result
 
     # ── update_progress ──

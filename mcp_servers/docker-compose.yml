@@ -1,9 +1,11 @@
 name: ax-eval-mcp
 
 # 기동 순서: postgres(스키마 자동 적용)·chroma → db-init(데이터 적재, 1회 실행) → business-mcp·rag-mcp
+# GPU 서버(EC2)에서는 로컬 LLM까지 함께: docker compose --profile llm up -d --build
+#   vllm(모델 서빙) ← llm-proxy(:4000, 호출 기록을 업무 DB llm_exchanges에 저장)
 x-app: &app
   build: .
-  image: ax-eval/mcp-servers:1.1.0
+  image: ax-eval/mcp-servers:1.2.0
   env_file: .env
   environment: &app-env
     DATABASE_URL: postgresql://axeval:${POSTGRES_PASSWORD:?.env에 POSTGRES_PASSWORD 필요}@postgres:5432/axeval
@@ -23,7 +25,9 @@ services:
       - pg-data:/var/lib/postgresql/data
       - ./db/postgres:/docker-entrypoint-initdb.d:ro   # 첫 기동 때 001_schema.sql 실행
     ports:
-      - "5433:5432"   # 호스트 5432는 로컬 Postgres(Homebrew 등)와 겹치기 쉬워 5433으로 연다. 내부망은 그대로 postgres:5432
+      # 호스트 5432는 로컬 Postgres(Homebrew 등)와 겹치기 쉬워 5433으로 연다. 내부망은 그대로 postgres:5432.
+      # 서버 밖에서는 접속하지 않도록 127.0.0.1에만 연다. 5433도 쓰고 있으면 .env의 POSTGRES_HOST_PORT로 바꾼다
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5433}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U axeval -d axeval"]
       interval: 5s
@@ -39,7 +43,8 @@ services:
     volumes:
       - chroma-data:/chroma/chroma
     ports:
-      - "${CHROMA_HOST_PORT:-8000}:8000"
+      # 인증이 없으므로 서버 안에서만 연다. MCP 컨테이너는 내부망(chroma:8000)으로 붙는다
+      - "127.0.0.1:${CHROMA_HOST_PORT:-8000}:8000"
     restart: unless-stopped
 
   # 데이터 적재 (멱등). 업무 데이터는 업무 단위로 교체하고 평가 결과는 유지한다.
@@ -90,16 +95,19 @@ services:
       retries: 10
     restart: unless-stopped
 
-  # 명세 대조 검증 + DB 검증. 평가 건 상태와 초안을 바꾸므로 깨끗한 DB에서 돌린다:
-  #   docker compose down -v && docker compose up -d --build && docker compose --profile test run --rm verify
+  # 명세 대조 + DB + 중간 점검·기준 저장 + 종단(대화→프록시→DB→MCP) 검증. 평가 건 상태와 초안을 바꾸므로 깨끗한 DB에서 돌린다.
+  # LLM 쪽은 llm-proxy가 떠 있어야 한다 (EC2: --profile llm, GPU 없는 곳: --profile mockllm):
+  #   docker compose down -v && docker compose --profile llm up -d --build && docker compose --profile test run --rm verify
   verify:
     <<: *app
     profiles: ["test"]
-    command: ["sh", "-c", "python tests/verify_spec.py && python tests/verify_db.py"]
+    command: ["sh", "-c", "python tests/verify_spec.py && python tests/verify_db.py && python tests/verify_live_rubric.py && python tests/verify_e2e.py"]
     environment:
       <<: *app-env
       BUSINESS_MCP_URL: http://business-mcp:8001
       RAG_MCP_URL: http://rag-mcp:8002
+      PROXY_URL: http://llm-proxy:4000
+      E2E_LLM_WAIT_SEC: ${E2E_LLM_WAIT_SEC:-900}   # vLLM 첫 기동(모델 다운로드·로딩)을 기다린다
     depends_on:
       business-mcp:
         condition: service_healthy
@@ -107,6 +115,80 @@ services:
         condition: service_healthy
     restart: "no"
 
+  # GPU 없는 곳에서 llm-proxy까지 시험할 때 vLLM 대신 쓴다 (내부망 이름 vllm으로 붙는다). EC2에서는 쓰지 않는다:
+  #   docker compose --profile mockllm up -d --build
+  mock-llm:
+    <<: *app
+    profiles: ["mockllm"]
+    command: ["python", "tests/mock_llm.py"]
+    networks:
+      default:
+        aliases: [vllm]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # ── 로컬 LLM (GPU 서버에서만, --profile llm) ──
+  # 첫 기동 때 모델 다운로드·로딩으로 10분 이상 걸린다. 그동안 llm-proxy는 502(upstream_unreachable)를 돌려준다.
+  vllm:
+    profiles: ["llm"]
+    image: vllm/vllm-openai:${VLLM_TAG:-v0.31.0}
+    command:
+      - --model=${LLM_MODEL:-cyankiwi/gemma-4-26B-A4B-it-AWQ-4bit}
+      - --served-model-name=${SERVED_MODEL_NAME:-gemma4}
+      - --max-model-len=${MAX_MODEL_LEN:-32768}
+      - --api-key=${VLLM_API_KEY:-}
+      - --enable-auto-tool-choice
+      - --tool-call-parser=${TOOL_CALL_PARSER:-gemma4}
+    environment:
+      HF_TOKEN: ${HF_TOKEN:-}
+    volumes:
+      - hf-cache:/root/.cache/huggingface   # 재시작 때 모델을 다시 받지 않도록 유지
+    ipc: host
+    ports:
+      - "127.0.0.1:${VLLM_HOST_PORT:-8010}:8000"   # 서버 안에서 직접 확인할 때만. 팀원은 llm-proxy로 붙는다
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request;urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30m
+    restart: unless-stopped
+
+  llm-proxy:
+    profiles: ["llm", "mockllm"]
+    build: ../llm_proxy
+    image: ax-eval/llm-proxy:1.1.0
+    environment:
+      UPSTREAM_URL: http://vllm:8000
+      UPSTREAM_API_KEY: ${VLLM_API_KEY:-}
+      PROXY_KEYS: ${PROXY_KEYS:-}
+      DATABASE_URL: postgresql://axeval:${POSTGRES_PASSWORD:?.env에 POSTGRES_PASSWORD 필요}@postgres:5432/axeval
+      UPSTREAM_TIMEOUT: ${UPSTREAM_TIMEOUT:-600}
+    ports:
+      # 보안그룹에서 4000을 열지 않는다. Tailscale IP로 묶으면 사설망에서만 보인다
+      - "${PROXY_BIND:-0.0.0.0}:4000:4000"
+    depends_on:
+      db-init:   # 스키마·시드(work_cases·users)가 있어야 헤더 검증과 기록이 된다
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://localhost:4000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
 volumes:
   pg-data:
   chroma-data:
+  hf-cache:

@@ -79,6 +79,12 @@ class Store:
         self.rubrics = {(d["work_type"], d["version"]): d for d in self.documents if d.get("collection") == "rubrics"}
         self.fault_plans = r.fault_plans("business-mcp")
 
+    def rubric(self, work_type: str, version: str) -> dict:
+        r = self.rubrics.get((work_type, version))
+        if not r:
+            raise not_found(f"루브릭 RUB-{work_type} {version}")
+        return r
+
     def _cache(self) -> dict:
         if not hasattr(self._local, "cache"):
             self._local.cache = {}

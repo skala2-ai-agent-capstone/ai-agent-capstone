@@ -18,34 +18,64 @@
 
 | 구성 | 역할 |
 | --- | --- |
-| PostgreSQL (`db/postgres/001_schema.sql`, 42개 테이블) | 조직·고객·가격·정책 규칙, 사내 문서 원본, 업무 데이터(대화·산출물·구간·첨부·이벤트…), 평가 결과(초안·코칭·검토 요청·진행·중복 키), 감사 기록 |
+| PostgreSQL (`db/postgres/001_schema.sql`, 43개 테이블 + `messages` 뷰) | 조직·사용자(로그인 계정)·고객·가격·정책 규칙, 사내 문서 원본, 업무 데이터(LLM 호출 기록 `llm_exchanges`·산출물·구간·첨부·이벤트…), 평가 결과(초안·코칭·검토 요청·중간 점검·진행·중복 키), 감사 기록. 기준 문서: 팀 `db-schema.json`(2026-10-22) |
 | ChromaDB | rag-mcp 검색 색인. 컬렉션 `axeval_references`(34)·`axeval_policies`(77)·`axeval_rubrics`(20)·`axeval_coaching_examples`(10). 기밀 문서는 넣지 않음 |
-| business-mcp | 조회 13 + 저장 4. 업무 데이터는 도구 호출마다 Postgres에서 읽고, 저장 도구는 Postgres에 트랜잭션으로 씀 |
-| rag-mcp | 읽기 5. Chroma 벡터 질의 + BM25 키워드 점수 |
+| business-mcp | 조회 13 + 저장 8(최종 평가 4 · 중간 점검 3 · 평가 기준 1). 업무 데이터는 도구 호출마다 Postgres에서 읽고, 저장 도구는 Postgres에 트랜잭션으로 씀 |
+| rag-mcp | 읽기 6(현행 기준 조회 `get_current_rubric` 포함). Chroma 벡터 질의 + BM25 키워드 점수 |
 | db-init | 적재기 2개를 순서대로 실행 (멱등) |
 
 ## 1. 실행
 
 ```bash
-cp .env.example .env     # POSTGRES_PASSWORD, RUN_TOKEN_SECRET, INTERNAL_API_KEY 채우기
+cp .env.example .env     # POSTGRES_PASSWORD, RUN_TOKEN_SECRET, INTERNAL_API_KEY, SEED_USER_PASSWORD 채우기
 docker compose up -d --build
-docker compose logs db-init        # {"counts": {...,"evaluations": 43}} / {"collections": {...}}
+docker compose logs db-init        # {"counts": {...,"llm_exchanges": 237,"messages": 182,"evaluations": 43}} / {"collections": {...}}
 curl localhost:8001/health         # {"ok":true,"store":"postgresql","cases":40,"evaluations":43}
 curl localhost:8002/health         # {"ok":true,"store":"chromadb","references":34,"policies":77,...}
 ```
 
 > 이미지는 `python:3.12-slim` 기반입니다. 3.13 이상은 쓸 수 없습니다. `chromadb-client==0.6.3`이 `numpy<2`를 요구하는데 numpy 1.26.x에는 3.13용 휠이 없어서, slim 이미지(컴파일러 없음)에서는 소스 빌드가 실패합니다.
 >
-> 컨테이너 Postgres는 호스트에 **5433**으로 엽니다(`localhost:5433`). 호스트에 설치된 PostgreSQL(Homebrew 등)이 보통 5432를 쓰고 있어 겹치기 때문입니다. MCP 서버는 compose 내부망(`postgres:5432`)으로 붙으므로 이 포트와 관계없습니다. 직접 들여다볼 때는 `docker compose exec postgres psql -U axeval axeval`로 들어가는 것이 가장 간단합니다.
+> 컨테이너 Postgres는 호스트에 **5433**으로 엽니다(`localhost:5433`). 호스트에 설치된 PostgreSQL(Homebrew 등)이 보통 5432를 쓰고 있어 겹치기 때문입니다. 5433도 쓰고 있으면 `.env`의 `POSTGRES_HOST_PORT`로 바꿉니다. MCP 서버는 compose 내부망(`postgres:5432`)으로 붙으므로 이 포트와 관계없습니다. 직접 들여다볼 때는 `docker compose exec postgres psql -U axeval axeval`로 들어가는 것이 가장 간단합니다.
 
-검증은 깨끗한 DB에서 돌립니다. 이 검증은 평가 건 상태와 초안을 바꿉니다.
+> 이전 스키마로 만든 볼륨이 남아 있으면 `db-init`이 "이전 스키마로 만든 DB입니다"로 멈춥니다. `docker compose down -v`로 볼륨을 지우고 다시 올리세요.
+
+### GPU 서버(EC2)에서 로컬 LLM까지 함께
+
+`llm` 프로필을 붙이면 vLLM과 기록 프록시(`../llm_proxy`)가 같은 업무 DB를 쓰며 함께 뜹니다.
+`.env`에 `VLLM_API_KEY`, `PROXY_KEYS`(및 필요하면 `LLM_MODEL`·`MAX_MODEL_LEN`)를 더 채웁니다.
 
 ```bash
-docker compose down -v && docker compose up -d --build
+docker compose --profile llm up -d --build
+docker compose logs -f vllm        # "Application startup complete"까지 10분 이상 걸릴 수 있음
+curl localhost:4000/health         # 기록 프록시
+```
+
+| 서비스 | 포트 | 열리는 범위 |
+| --- | --- | --- |
+| business-mcp · rag-mcp | 8001 · 8002 | 모든 인터페이스(보안그룹은 닫고 Tailscale로 접속) |
+| llm-proxy | 4000 | `PROXY_BIND`(기본 모든 인터페이스, Tailscale IP 권장) |
+| vllm | 8010 → 컨테이너 8000 | 서버 안(127.0.0.1)만 |
+| postgres | `POSTGRES_HOST_PORT`(5433) → 컨테이너 5432 | 서버 안(127.0.0.1)만 |
+| chroma | `CHROMA_HOST_PORT`(8000) | 서버 안(127.0.0.1)만 (인증 없음) |
+
+프록시 사용법·헤더 규칙은 [llm_proxy/README.md](../llm_proxy/README.md)에 있습니다.
+
+검증은 깨끗한 DB에서 돌립니다. 이 검증은 평가 건 상태와 초안을 바꿉니다. 종단 검증(`verify_e2e`)은 llm-proxy가 떠 있어야 하므로 LLM 프로필과 함께 올립니다.
+
+```bash
+python tests/check_deploy.py --online   # 올리기 전 설정 점검(컨테이너 안 띄움): .env.example·포트·GPU·키, vLLM 태그·모델 존재
+
+docker compose down -v
+docker compose --profile llm up -d --build       # EC2(GPU). GPU 없는 곳에서는 --profile mockllm (vLLM 대역)
 docker compose --profile test run --rm verify
 # 검사 861건: 통과 861, 실패 0   (명세 대조, tests/verify_spec.py)
 # 검사 42건: 통과 42, 실패 0     (DB 적재·저장, tests/verify_db.py)
+# 검사 41건: 통과 41, 실패 0     (중간 점검·평가 기준 저장, tests/verify_live_rubric.py)
+# 검사 60건: 통과 60, 실패 0     (대화→llm-proxy→DB→MCP 종단, tests/verify_e2e.py)
 ```
+
+`verify_e2e`는 시드에 없는 새 업무를 백엔드처럼 만들고, 대화 6턴(일반·스트리밍, 실패 후 재전송 포함)을 실제 llm-proxy로 보낸 뒤, 그 기록만으로 중간 점검과 최종 평가 도구를 끝까지 돌립니다. 만든 업무는 끝나면 지웁니다. vLLM이 아직 모델을 올리는 중이면 `E2E_LLM_WAIT_SEC`(기본 900초)까지 기다립니다.
 
 ## 2. 데이터 적재
 
@@ -60,14 +90,32 @@ docker compose --profile test run --rm verify
 
 > `quote_data.exceptions`가 없는 이전 버전 데이터를 적재하면 경고가 나옵니다. 이 경우 SLA 상향·결제 조건 변경 같은 예외 승인 대상을 계산하지 못해 QT-04·QT-08의 기준값이 명세와 달라집니다. `data/`에는 `exceptions`가 들어간 최신 버전이 들어 있습니다.
 
+### 대화와 사용자 적재 규칙
+
+- **대화**: `messages`는 테이블이 아니라 `llm_exchanges`(기록 프록시가 쓰는 LLM 호출 기록)를 펼친 뷰입니다.
+  - 적재기는 `data/llm_exchanges.jsonl`(모의 데이터, 237행)을 그대로 넣습니다. 파일이 없으면 케이스 대화를 [`db/loader/chat_log.py`](db/loader/chat_log.py) 규칙으로 바꿔 넣습니다.
+  - 적재가 끝나면 뷰가 원천 대화와 똑같은지 업무마다 확인합니다. 다르면 경고를 냅니다.
+  - 대화의 마스킹본은 저장하지 않습니다. 뷰를 읽을 때 `policy_rules`의 마스킹 규칙(`mask_text`)으로 만들며, 결과는 Python `Masker`와 같습니다.
+- **사용자**: `users`는 로그인 계정을 겸합니다. 로그인 ID는 사번(`employee_no`), 비밀번호는 `password`이고, 백엔드가 JWT를 발급합니다.
+  - 시드 사용자의 사번은 ID의 숫자입니다(`E-1021` → `1021`, `L-3001` → `3001`).
+  - 비밀번호는 모두 `.env`의 `SEED_USER_PASSWORD`입니다. 평문으로 저장되므로 실제 쓰는 비밀번호를 넣지 않습니다. 이미 있는 사용자의 비밀번호는 다시 적재해도 바뀌지 않습니다.
+  - 역할은 `member` 또는 `team_lead`입니다. 시드의 `team_lead`·`reviewer`는 `team_lead`가 되고, 나머지는 `member`가 됩니다.
+  - 검토 요청(`request_review`)의 검토자는 업무 담당자 팀의 `team_lead`입니다. 영업1팀은 `L-3001`이고, 팀장이 없는 팀은 비워 둡니다.
+- **앱이 저장하는 업무**: 시드에 없는 업무도 같은 테이블로 평가됩니다(`tests/verify_e2e.py`가 확인). 백엔드가 지킬 것은 셋입니다.
+  - 대화는 llm-proxy를 거치면 `llm_exchanges`에 쌓이고 `messages` 뷰로 바로 보입니다. 따로 저장하지 않습니다.
+  - `*_masked` 칸(등록 내용·산출물 본문 등)은 `mask_text(원문)`으로 채웁니다. 예: `INSERT … VALUES (…, content, mask_text(content))`.
+  - 산출물은 `artifact_versions`에 본문만 넣으면 됩니다. `artifact_spans` 행이 없으면 business-mcp가 시드와 같은 규칙(빈 줄·표 구분선 제외, 표 키 `REQ-01`·`HEADER`, 나머지 `Lnn`)으로 본문을 나눠 근거 ID를 만듭니다([`business_mcp/spans.py`](business_mcp/spans.py)).
+  - 견적서 업무의 `compute_reference_quote`는 `quote_data`(상품·수량·할인 구조화 값)가 있어야 합니다. 없으면 `NOT_FOUND`입니다.
+- **백엔드 테이블**: `outbox_events`·`evaluation_failures`·`aggregation_approvals`는 백엔드(aworko-server)의 Flyway가 같은 DB에 만듭니다. 이 스키마에는 넣지 않았습니다.
+
 ### PostgreSQL에서 볼 만한 테이블
 
 | 묶음 | 테이블 |
 | --- | --- |
 | 기준 | `companies` `teams` `users` `customers` `products` `price_tables` `price_table_items` `discount_components` `approval_tiers` `exception_rules` `policy_rules` |
 | 문서 | `documents`(indexed=false = 기밀) `document_chunks` `rubric_items` |
-| 업무 | `work_cases` `source_messages` `source_documents` `attached_references` `messages` `artifact_versions` `artifact_spans` `reference_access_logs` `evidence_links` `work_events` `human_actions` `quote_data` `approval_requests` `fault_injections` `access_attempts` `historical_works` |
-| 평가 | `evaluations` `evaluation_drafts` `evaluation_coaching` `review_requests` `progress_log` `idempotency_keys` `audit_log` |
+| 업무 | `work_cases` `source_messages` `source_documents` `attached_references` `llm_exchanges`(→ `messages` 뷰) `artifact_versions` `artifact_spans` `reference_access_logs` `evidence_links` `work_events` `human_actions` `quote_data` `approval_requests` `fault_injections` `access_attempts` `historical_works` |
+| 평가 | `evaluations` `evaluation_drafts` `evaluation_coaching` `review_requests` `live_evaluations` `progress_log` `idempotency_keys` `audit_log` |
 
 텍스트 컬럼은 원문(`content`)과 마스킹본(`content_masked`)이 함께 있습니다 (명세 7장 기본안 2). 정책 검사는 원문으로 하고, MCP 응답과 Chroma 색인에는 마스킹본만 나갑니다.
 
@@ -116,16 +164,60 @@ def mcp_client(run_token: str) -> MultiServerMCPClient:
 
 도구 결과의 `content[0].text`는 JSON 봉투입니다: `{"ok":true,"data":…,"meta":{"run_id","snapshot"}}` 또는 `{"ok":false,"error":{"code","message","retryable"}}`. 공식 MCP SDK로 붙는 예시는 `tests/harness.py`에 있습니다.
 
+도구별 입력·응답 필드와 실제 응답 예시는 `../docs/mcp_swagger.html`(브라우저로 열기)과 `../docs/mcp_openapi.yaml`(OpenAPI 3.1)에 있습니다.
+
 ### ③ 내부 API (`X-Internal-Key` 필요)
 
 | 경로 | 용도 |
 | --- | --- |
-| `POST :8001/internal/runs` | 실행 토큰 발급 |
+| `POST :8001/internal/runs` | 최종 평가 실행 토큰 발급(kind=evaluation) |
+| `POST :8001/internal/live-evaluations` | 중간 점검 요청 행 생성(대기). 범위는 최근 메시지 5개, 업무 담당자만, 사용자별 5분 1회(`429 RATE_LIMITED`) |
+| `GET :8001/internal/live-evaluations/{id}` | 중간 점검 상태·결과(화면 폴링) |
+| `POST :8001/internal/live-runs` | 중간 점검 실행 토큰 발급(kind=live) |
+| `POST :8001/internal/rubric-runs` | 평가 기준 작성 실행 토큰 발급(kind=rubric, `company_id`) |
 | `GET/POST :8001/internal/evaluations` | 평가 건 목록 / `work.completed` 이벤트로 평가 건 생성 (같은 키는 `created:false`) |
 | `GET :8001/internal/evaluations/{id}` | 저장된 초안·코칭·검토 요청·진행 이력 |
 | `POST :8001/internal/evaluations/{id}/status` | 서버 전용 상태 전환 (`확인 대기`·`확정`·`처리 실패`·`자료 보류`) |
 | `POST :8001/internal/reload`, `:8002/internal/reload` | 기준 데이터·색인 사본·장애 주입 계획 다시 읽기 |
 | `POST :800{1,2}/internal/faults/reset` | 장애 주입 호출 횟수 초기화 |
+
+응답은 도구와 같은 봉투입니다(`{ok, data}` / `{ok:false, error}`). 오류의 HTTP 상태는 `NOT_FOUND` 404, `FORBIDDEN` 403(키 없음 포함), `RATE_LIMITED` 429, 나머지는 400입니다.
+
+### ④ 중간 점검·평가 기준 저장 (Agent → MCP → DB)
+
+실행 토큰에 종류(`kind`)가 있고, 종류마다 부를 수 있는 도구가 정해져 있습니다(다른 도구는 `FORBIDDEN`).
+
+| 토큰 | 발급 | 쓸 수 있는 도구 |
+| --- | --- | --- |
+| `evaluation` | `/internal/runs` | 기존 조회 13개 · 저장 4개, rag 6개 |
+| `live` | `/internal/live-runs` | `get_conversation`(최근 메시지 5개 범위만), `start_live_evaluation`, `save_live_evaluation`, `fail_live_evaluation`, rag `get_current_rubric`·`search_rubric`·`search_policy`·`search_examples` |
+| `rubric` | `/internal/rubric-runs` | `save_rubric`, rag `get_current_rubric`·`search_rubric`·`search_policy`·`search_examples` |
+
+**중간 점검(실시간 피드백) 흐름**
+1. 백엔드가 `live_evaluations`에 요청 행(`대기`)을 만들고 큐에 발행합니다. 테스트에서는 `/internal/live-evaluations`가 이 역할을 합니다.
+2. Agent가 live 토큰을 받아 `start_live_evaluation`(→ `생성 중`), `get_conversation`, rag `get_current_rubric` 순서로 부릅니다.
+3. Agent가 `save_live_evaluation`(→ `완료`)으로 결과를 저장하고, 실패하면 `fail_live_evaluation`(→ `실패`)을 부릅니다.
+
+| 검증 | 규칙 |
+| --- | --- |
+| 항목 | 루브릭 5개 전부. 형식은 최종 평가 초안과 같음(`{item_id, item, status, score, reason, evidence_ids[]}`) |
+| 근거 | 점검 범위(최근 메시지 5개) 안의 메시지 ID만 |
+| 결과물 품질 | 산출물이 없으므로 `미관측`만 |
+| 코칭 | `{item_id, kind, target_span_id(범위 안 메시지), text}`. 민감정보 패턴 거부 |
+| 상태 | `대기 → 생성 중 → 완료 \| 실패`. 완료·실패 뒤에는 바꿀 수 없고 토큰도 다시 발급되지 않음 |
+
+**평가 기준(규칙) 저장 흐름**: `save_rubric`이 새 버전을 만들어 바로 `현행`으로 바꾸고, 이전 `현행`은 `폐기`로 바꿉니다(관리자 승인 없음).
+
+| 검증 | 규칙 |
+| --- | --- |
+| 항목 | 5개, 순서 고정(문제 정의·지시 품질·결과 검증·보안 준수·결과물 품질). `item_id`는 서버가 `{work_type}.{순번}`으로 붙임 |
+| 필수 칸 | `criterion`, `score_2`, `score_1`, `score_0`, `evidence_sources[]`, `related_clauses[]`. 보안 준수의 `score_1`은 `해당 없음` |
+| 조항 | `related_clauses`는 현행 내규(`policies`)에 있는 조항만 |
+| 동시 수정 | `based_on_version`이 이미 현행이 아니면 `VERSION_CONFLICT` |
+| 저장 위치 | Postgres `documents`·`rubric_items`와 Chroma `rubrics`(rag-mcp가 읽음)를 함께 바꿈. Chroma 반영이 실패하면 Postgres도 되돌리고 `TEMPORARY_FAILURE` |
+| 기존 평가 | 평가 건은 자기 `rubric_version`을 그대로 쓰므로 영향 없음 |
+
+모든 저장 도구는 `idempotency_key`가 필수이고, 같은 키는 기존 결과를 돌려줍니다(`meta.duplicate`). 호출은 감사 기록(`audit_log`)에 남습니다.
 
 ## 4. 명세를 구현하면서 정한 것
 
@@ -139,7 +231,7 @@ def mcp_client(run_token: str) -> MultiServerMCPClient:
 | 근거 ID 추가 | `{work_id}:source_message[:Lnn]`, `{work_id}:ACC-nn`, `{work_id}:reference_quote`, `{work_id}:policy_check`, `{doc_id}@{version}` (명세 근거 ID 표에도 반영) |
 | 코칭 항목 | `{item_id, kind(강점·보완점·기록 안내), target_span_id, text}` |
 | 중복 저장 | 같은 키는 `ok:true` + `meta.duplicate:true`로 기존 결과를 돌려줌. 키 확인과 저장을 한 트랜잭션에서 처리 |
-| 검토 요청 후 상태 | 서버가 `검토 대기`로 바꾸고 `reviewer` 역할 사용자를 배정 |
+| 검토 요청 후 상태 | 서버가 `검토 대기`로 바꾸고 업무 담당자 팀의 `team_lead`를 검토자로 배정 |
 | 장애 주입 | `FAULT_MODE=case`면 `fault_injections` 테이블의 계획을 실행·도구별 호출 횟수로 적용 |
 
 ## 5. 검증 결과
@@ -151,6 +243,8 @@ def mcp_client(run_token: str) -> MultiServerMCPClient:
 - **재시작 시 보존:** 서버를 재시작해도 초안과 중복 키가 남아 있고, 재시작 전 키로 다시 저장하면 `duplicate`가 나옵니다.
 - **적재기 재실행:** 평가 결과가 유지됩니다.
 - **DB 직접 수정:** Postgres를 직접 고친 내용이 재시작 없이 다음 호출에 반영됩니다.
+- **EC2와 같은 조건 (2026-10-22):** 저장소를 새로 복사하고 `.env.example`로 `.env`를 만든 뒤, EC2와 같은 x86_64(`linux/amd64`) 이미지로 전체 스택을 올렸습니다(`--profile mockllm`, vLLM 자리에 `tests/mock_llm.py`). `verify` 4종 1,004건이 모두 통과했습니다. GPU에서 실제 vLLM·Gemma를 띄우는 부분은 이 환경에서 확인하지 못했고, 설정은 `check_deploy.py`로만 확인했습니다.
+- **앱 경로만으로 평가 (verify_e2e 60건):** 프록시 기록 → `messages` 뷰(실패 뒤 재전송 질문 중복 없음, 마스킹) → 중간 점검(최근 5개 범위·담당자 확인·5분 제한) → 산출물 본문만 저장 → 평가 건 생성 → 조회·정책 검사·diff·초안 저장까지 통과합니다. 산출물 구간을 본문에서 나누는 처리가 없으면 이 중 6건이 실패합니다(정책 위반 위치를 근거로 인용할 수 없어 초안 저장이 거부됨).
 
 ## 6. Docker 없이 실행 (로컬 개발)
 
@@ -158,7 +252,7 @@ Python 3.10~3.12가 필요합니다(`mcp` 2.3.0은 3.10 이상, numpy 1.26.x는 
 
 ```bash
 pip install -r requirements.txt
-export DATABASE_URL=postgresql://user:pw@localhost:5432/axeval RUN_TOKEN_SECRET=... INTERNAL_API_KEY=...
+export DATABASE_URL=postgresql://user:pw@localhost:5432/axeval RUN_TOKEN_SECRET=... INTERNAL_API_KEY=... SEED_USER_PASSWORD=...
 export CHROMA_HOST=localhost CHROMA_PORT=8000          # 또는 Chroma 없이: export CHROMA_FAKE_PATH=./chroma.json
 python -m db.loader.load_postgres --data data --schema db/postgres/001_schema.sql --reset
 python -m db.loader.load_chroma
@@ -171,16 +265,19 @@ python tests/verify_spec.py && python tests/verify_db.py
 
 ```
 common/          실행 토큰, 응답 봉투·오류, 마스킹, 장애 주입, 감사, 임베딩, Chroma 연결
-business_mcp/    pg.py(DB 접근) store.py(조회·근거 ID 풀·diff) policy.py(정책 검사) quote.py(기준 견적) writes.py(저장 도구) server.py
+business_mcp/    pg.py(DB 접근) store.py(조회·근거 ID 풀·diff) spans.py(산출물 구간 나누기) policy.py(정책 검사) quote.py(기준 견적)
+                 writes.py(최종 평가 저장) live.py(중간 점검) rubrics.py(평가 기준 저장)
+                 checks.py(평가 항목·코칭 검증, 공용) idempotency.py(중복 키, 공용) server.py(도구·내부 API)
 rag_mcp/         index.py(BM25) server.py(Chroma 하이브리드 검색)
 db/postgres/     001_schema.sql
 db/loader/       load_postgres.py, load_chroma.py
 data/            seed/ + all_cases.jsonl
-tests/           harness.py, verify_spec.py, verify_db.py, fake_chroma.py
+tests/           harness.py, verify_spec.py, verify_db.py, verify_live_rubric.py, verify_e2e.py(대화→프록시→DB→MCP),
+                 check_deploy.py(배포 설정 점검), mock_llm.py(vLLM 대역), fake_chroma.py
 ```
 
 ## 8. 제한
 
 - business-mcp는 연결 하나를 잠금으로 공유합니다. 평가를 동시에 많이 돌릴 때는 `psycopg_pool`로 바꾸는 것을 권합니다.
 - rag-mcp의 감사 기록은 표준 출력(JSON 한 줄)에만 남습니다. business-mcp의 감사 기록은 `audit_log` 테이블에 저장됩니다.
-- `ALLOWED_HOSTS`를 비우면 DNS 리바인딩 보호가 꺼집니다. 내부망 전용으로 쓰는 것을 전제로 한 설정이며, 외부에 노출할 때는 반드시 채웁니다. Postgres(5433)·Chroma(8000) 포트도 개발 편의로 열어 둔 것이니 운영에서는 닫아 주세요.
+- `ALLOWED_HOSTS`를 비우면 DNS 리바인딩 보호가 꺼집니다. 내부망 전용으로 쓰는 것을 전제로 한 설정이며, 외부에 노출할 때는 반드시 채웁니다. Postgres(5433)·Chroma(8000)·vLLM(8010) 포트는 서버 안(127.0.0.1)에만 열립니다.

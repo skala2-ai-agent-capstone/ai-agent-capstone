@@ -1,0 +1,295 @@
+%% 업무 DB(axeval) ERD. 팀 기준 문서 db-schema.json(2026-10-22)에서 만든다.
+%% owner=mcp: mcp_servers/db/postgres/001_schema.sql, owner=backend: aworko-server Flyway
+%% 점선 = 외래 키가 아닌 관계(뷰 또는 값으로 연결). *_masked 칸은 그리지 않음
+erDiagram
+  companies ||--o{ teams : "회사"
+  companies ||--o{ users : "회사"
+  teams |o--o{ users : "팀"
+  companies ||--o{ customers : "회사"
+  companies ||--o{ work_cases : "회사"
+  teams |o--o{ work_cases : "팀"
+  users ||--o{ work_cases : "작성"
+  customers ||--o{ work_cases : "고객"
+  work_cases ||--o| source_messages : "업무"
+  work_cases ||--o{ source_documents : "업무"
+  users |o--o{ source_documents : "업로드"
+  work_cases ||--o{ attached_references : "업무"
+  work_cases |o--o{ llm_exchanges : "업무"
+  users |o--o{ llm_exchanges : "사용자"
+  work_cases ||--o{ artifact_versions : "업무"
+  artifact_versions ||--o{ artifact_spans : "인용 단위"
+  work_cases ||--o{ reference_access_logs : "업무"
+  users ||--o{ reference_access_logs : "사용자"
+  work_cases ||--o{ work_events : "업무"
+  work_cases ||--o{ live_evaluations : "업무"
+  users ||--o{ live_evaluations : "요청"
+  work_cases ||--o{ evaluations : "업무"
+  companies ||--o{ evaluations : "회사"
+  evaluations ||--o{ evaluation_drafts : "평가 건"
+  evaluations ||--o{ evaluation_coaching : "평가 건"
+  evaluations ||--o{ review_requests : "평가 건"
+  users |o--o{ review_requests : "검토자(팀장)"
+  work_cases ||--o{ human_actions : "업무"
+  users ||--o{ human_actions : "사용자"
+  companies ||--o{ documents : "회사"
+  documents ||--o{ rubric_items : "기준 항목"
+  evaluations ||--o{ evaluation_failures : "평가 건"
+  users |o--o{ evaluation_failures : "재처리"
+  companies ||--o{ aggregation_approvals : "회사"
+  teams ||--o{ aggregation_approvals : "팀"
+  users ||--o{ aggregation_approvals : "집계 승인"
+  llm_exchanges ||..|{ messages : "뷰로 펼침"
+  documents ||..o{ attached_references : "doc_id·version 값"
+  evaluations }o..|| documents : "rubric_version 값"
+  live_evaluations }o..|| documents : "rubric_version 값"
+  companies {
+    text company_id PK
+    text name
+    int min_aggregation_size "팀 집계 최소 인원"
+  }
+  teams {
+    text team_id PK
+    text company_id FK
+    text name
+  }
+  users {
+    text user_id PK "내부 식별자, 다른 테이블 FK가 참조"
+    int employee_no UK "사번, 로그인 ID"
+    text password "평문(단순 프로젝트용). API 응답·로그에 내보내지 않음"
+    text company_id FK
+    text team_id FK
+    text name
+    text role "team_lead는 검토자 겸임, member | team_lead"
+  }
+  customers {
+    text customer_id PK
+    text company_id FK
+    text name
+    boolean approved_reference
+  }
+  work_cases {
+    text work_id PK
+    text case_id UK "테스트 시나리오 ID"
+    text company_id FK
+    text team_id FK
+    text employee_id FK
+    text customer_id FK
+    text title "신규"
+    text work_type "평가 때 채움, rfp_analysis | proposal | quote | inquiry_reply"
+    text status
+    timestamptz created_at
+    timestamptz completed_at
+    text rfp_status
+    jsonb registration "업무 정보. NULL = 등록 기록 없음"
+    text scenario_summary
+  }
+  source_messages {
+    text work_id PK,FK
+    text channel
+    timestamptz received_at
+    text content
+  }
+  source_documents {
+    text attachment_id PK
+    text work_id FK
+    text doc_id
+    text doc_type "rfp | rfp_correction | meeting_note | call_note"
+    text version
+    text grade
+    text uploaded_by FK
+    timestamptz uploaded_at
+    text content
+  }
+  attached_references {
+    text work_id PK,FK
+    text doc_id PK "documents.doc_id 값(FK 아님)"
+    text version PK "documents.version 값(FK 아님)"
+    int seq
+  }
+  llm_exchanges {
+    bigint id PK
+    timestamptz created_at
+    text member "프록시 키 이름"
+    text endpoint
+    text stage "workspace_chat | classify | rubric | evaluate | live_evaluate"
+    text work_id FK "X-Work-Id"
+    text user_id FK "X-User-Id"
+    text model
+    boolean stream
+    int status_code
+    text error
+    int latency_ms
+    int input_tokens
+    int output_tokens
+    jsonb request "대화 이력 포함"
+    jsonb response
+    text response_text "스트리밍 원문"
+  }
+  artifact_versions {
+    text artifact_id PK
+    text version PK
+    text work_id FK
+    text author "ai_draft | employee"
+    timestamptz saved_at
+    text content
+  }
+  artifact_spans {
+    text span_id PK "{artifact_id}:{version}:{key}"
+    text artifact_id FK
+    text version FK
+    int seq
+    text span_key
+    text text
+  }
+  reference_access_logs {
+    text work_id PK,FK
+    int seq PK
+    text user_id FK
+    text doc_id
+    text version
+    timestamptz accessed_at
+  }
+  work_events {
+    text event_id PK
+    text work_id FK
+    text event_type
+    text artifact_version
+    text rubric_version
+    text idempotency_key
+    timestamptz occurred_at
+    jsonb payload
+  }
+  live_evaluations {
+    text live_eval_id PK "신규 테이블. 큐 메시지 중복 방지 키"
+    text work_id FK
+    text requested_by FK
+    timestamptz requested_at "사용자별 5분 1회 제한 판단에 사용"
+    int from_seq "messages.seq 범위 시작(최근 5개)"
+    int to_seq "messages.seq 범위 끝"
+    text rubric_doc_id
+    text rubric_version
+    text status "대기·생성 중 추가(폴링용), 대기 | 생성 중 | 완료 | 실패"
+    jsonb items
+    jsonb coaching
+    text model
+    int latency_ms
+    text error
+  }
+  evaluations {
+    text evaluation_id PK "EVAL-{work_id에서 W- 제외}-{artifact_version}"
+    text work_id FK
+    text company_id FK
+    text artifact_id
+    text artifact_version
+    text rubric_version "documents.version 값"
+    text status "대기 | 수집 중 | 평가 중 | 근거 확인 중 | 코칭 생성 중 | 확인 대기 | 검토 대기 | 확정 | 처리 실패 | 자료 보류"
+    text source_key UK "완료 이벤트 중복 방지 키"
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  evaluation_drafts {
+    text evaluation_id PK,FK
+    int revision PK
+    jsonb items "[{item_id, item, status(채점|미관측|검토 필요), score, reason, evidence_ids[]}]"
+    timestamptz saved_at
+    text run_id
+  }
+  evaluation_coaching {
+    text evaluation_id PK,FK
+    int revision PK
+    jsonb items "[{item_id, kind(강점|보완점|기록 안내), target_span_id, text}]"
+    timestamptz saved_at
+    text run_id
+  }
+  review_requests {
+    text review_request_id PK
+    text evaluation_id FK
+    jsonb target_items
+    text reason
+    jsonb review_memo
+    text reviewer_id FK "업무 담당자 팀의 team_lead"
+    timestamptz created_at
+    text run_id
+  }
+  human_actions {
+    text action_id PK
+    text work_id FK
+    text user_id FK
+    text action "confirm, appeal, review_decision, approve_aggregation, retry_failed_evaluation"
+    timestamptz at
+    text artifact_version
+    jsonb payload "evaluation_id, target_items, cited_evidence, comment, decision, reason"
+  }
+  documents {
+    text doc_id PK
+    text version PK
+    text company_id FK
+    text title
+    text grade "사내·대외비·기밀"
+    text collection "references | policies | rubrics | coaching_examples"
+    boolean indexed "false = 기밀, 색인 금지"
+    text status "현행 | 폐기 | 초안"
+    date effective_from
+    text content
+    text work_type
+    text item
+    int score_level
+    text source_file
+    text note
+  }
+  rubric_items {
+    text doc_id PK,FK
+    text version PK,FK
+    text item_id PK
+    int seq
+    text item
+    text criterion
+    text score_2
+    text score_1
+    text score_0
+    text unobserved
+    text needs_review
+    text_list evidence_sources
+    text_list related_clauses
+  }
+  outbox_events {
+    bigint id PK
+    text aggregate_id "evaluation_id 또는 live_eval_id"
+    text type "실시간 피드백 구현 시 LIVE_EVALUATE 추가 예정, EVALUATE | RESUME"
+    text routing_key
+    jsonb payload "식별자·버전만, 원문 금지"
+    text status "PENDING | SENT"
+    int attempts
+    text last_error
+    timestamptz created_at
+    timestamptz sent_at
+  }
+  evaluation_failures {
+    bigint id PK
+    text evaluation_id FK
+    jsonb message
+    text reason
+    timestamptz failed_at
+    timestamptz reprocessed_at
+    text reprocessed_by FK
+  }
+  aggregation_approvals {
+    bigint id PK
+    text company_id FK
+    text team_id FK
+    text work_type "rfp_analysis | proposal | quote | inquiry_reply"
+    date period_from
+    date period_to
+    text approved_by FK
+    timestamptz approved_at
+    jsonb snapshot "승인 시점 집계 결과"
+  }
+  messages {
+    text message_id "work_id-M순번"
+    text work_id
+    int seq
+    text role "user | assistant"
+    text content
+    timestamptz created_at
+    bigint exchange_id "원본 llm_exchanges.id"
+  }

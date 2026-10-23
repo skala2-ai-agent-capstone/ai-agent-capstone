@@ -1,0 +1,7 @@
+# 기록 프록시 실행 의존성. 검증에 쓴 버전으로 고정
+fastapi==0.159.1
+uvicorn==0.54.0
+httpx==0.28.1
+# mcp_servers와 같은 PostgreSQL 드라이버 버전
+psycopg[binary]==3.2.3
+psycopg-pool==3.3.3

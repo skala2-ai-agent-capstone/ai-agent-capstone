@@ -6,14 +6,32 @@ Collection.upsert / get / query / count. 임베딩은 클라이언트에서 계�
 """
 from __future__ import annotations
 
+import json
 import os
 import time
 
 COLLECTIONS = ("references", "policies", "rubrics", "coaching_examples")
+# rubrics 컬렉션: 기준 항목 하나가 문서 하나이고 이 칸들을 metadata로 둔다 (적재기와 business-mcp save_rubric 공용)
+RUBRIC_ITEM_FIELDS = ("item_id", "item", "seq", "criterion", "score_2", "score_1", "score_0", "unobserved", "needs_review",
+                      "evidence_sources", "related_clauses")
 
 
 def collection_name(kind: str) -> str:
     return os.environ.get("CHROMA_COLLECTION_PREFIX", "axeval_") + kind
+
+
+def clean_metadata(m: dict) -> dict:
+    """Chroma metadata는 str·int·float·bool만 된다. None은 빼고 목록·객체는 JSON 문자열로 바꾼다."""
+    out = {}
+    for k, v in m.items():
+        if v is None:
+            continue
+        if isinstance(v, (list, dict)):
+            v = json.dumps(v, ensure_ascii=False)
+        elif not isinstance(v, (str, int, float, bool)):
+            v = str(v)
+        out[k] = v
+    return out
 
 
 def connect(wait_sec: int = 60):

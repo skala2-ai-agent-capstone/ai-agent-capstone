@@ -446,7 +446,7 @@ async def spec_checks():
         return bad, ok
     bad, ok = await with_run("EVAL-E2E-PR-01-v2", f)
     check("3.2 request_review 이의·검토 필요 외 항목 → VALIDATION_ERROR", code(bad) == "VALIDATION_ERROR")
-    check("3.2 request_review 정상(검토자 서버 배정)", ok["ok"] and ok["data"]["reviewer_id"] == "R-2001" and ok["data"]["status"] == "검토 대기", str(ok))
+    check("3.2 request_review 정상(검토자 = 담당 팀장 서버 배정)", ok["ok"] and ok["data"]["reviewer_id"] == "L-3001" and ok["data"]["status"] == "검토 대기", str(ok))
     det = internal("GET", "/internal/evaluations/EVAL-E2E-PR-01-v2")["data"]
     check("3.2 검토 요청 후 평가 상태 '검토 대기'", det["status"] == "검토 대기")
 

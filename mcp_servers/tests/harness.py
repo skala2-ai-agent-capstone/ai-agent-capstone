@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import os
 import urllib.request
+import uuid
 from contextlib import AsyncExitStack
 
 from mcp.client import Client
@@ -65,3 +66,39 @@ class Session:
     async def list_tools(self, server: str) -> list[str]:
         r = await self.clients[server].list_tools()
         return [t.name for t in r.tools]
+
+
+# ── 검증 스크립트 공용 (verify_live_rubric·verify_e2e) ──
+results: list[tuple[str, bool, str]] = []
+
+
+def check(name: str, cond, detail: str = "") -> bool:
+    results.append((name, bool(cond), detail))
+    return bool(cond)
+
+
+def report() -> int:
+    """PASS/FAIL 목록과 합계를 찍고 종료 코드(실패 있으면 1)를 돌려준다."""
+    failed = [r for r in results if not r[1]]
+    for name, ok, detail in results:
+        print(("PASS  " if ok else "FAIL  ") + name + ("" if ok else f"  ← {detail}"))
+    print(f"\n검사 {len(results)}건: 통과 {len(results) - len(failed)}, 실패 {len(failed)}")
+    return 1 if failed else 0
+
+
+def new_key(prefix: str = "k") -> str:
+    """저장 도구의 idempotency_key."""
+    return f"{prefix}-{uuid.uuid4().hex[:10]}"
+
+
+def error_code(r: dict) -> str | None:
+    return None if r.get("ok") else r.get("error", {}).get("code")
+
+
+async def call_retry(s: Session, server: str, tool: str, args: dict, tries: int = 4) -> dict:
+    """명세 2장: TEMPORARY_FAILURE는 다시 시도한다(케이스의 장애 주입 계획이 이어진 실행에도 적용됨)."""
+    for _ in range(tries):
+        r = await s.call(server, tool, args)
+        if r["ok"] or r["error"]["code"] != "TEMPORARY_FAILURE":
+            return r
+    return r
