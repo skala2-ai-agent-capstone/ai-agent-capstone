@@ -25,7 +25,10 @@ MCP 조회·저장된 유형 확인·RAG 내규 조회·기준 생성·담당자
 승인 후 평가기를 주입할 수 있으며, `ai_agents.cli.mcp run`은 평가 모듈에 전달할 입력까지 출력합니다.
 평가 모듈의 GPT 평가·근거 검증·코칭 기능과 별도 실행 명령은
 [평가 Agent 안내](docs/evaluation_agent.md)를 참고하세요.
-기존 최종 평가 실행 명령은 결과를 화면 또는 호출자에게 반환하며 DB에 저장하지 않습니다.
+기존 승인형 평가 실행 명령은 결과를 반환하며 DB에 저장하지 않습니다.
+저장된 기준을 사용하는 `python -m ai_agents.cli.final_evaluation`은 MCP로 초안·코칭을 저장합니다.
+[개인 최종 평가 페이지용 결과](docs/final_evaluation_page.md)는 체크포인트에 구성하며,
+[리포트 전체 저장·조회 도구 요청](docs/mcp_final_report_request.md)은 별도로 정리했습니다.
 평가·검증·코칭 구현은 `src/ai_agents/evaluation_agent/final/`에 모았으며,
 전체 평가 실행 명령은 `python -m ai_agents.cli.workflow`입니다.
 

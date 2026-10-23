@@ -1,0 +1,255 @@
+{
+  "schema_version": "1",
+  "evaluation_id": "EVAL-TEST",
+  "operation_id": "final-v1",
+  "source_run_id": "RUN-TEST",
+  "snapshot_sha256": "4237147421143b6568c928e8592475d10bf1811b471b0dc13c248324631f6455",
+  "work": {
+    "work_id": "W-E2E-QT-01",
+    "title": "W-E2E-QT-01",
+    "work_type": "quote",
+    "work_type_label": "견적서 작성",
+    "artifact_id": "ART-E2E-QT-01",
+    "artifact_version": "v3"
+  },
+  "rubric": {
+    "doc_id": "RUB-quote",
+    "version": "v2",
+    "criteria_sha256": "a5729d3782928014d6daf907268e5f5d2a635a7e45c36d7ca9982aeaeee5fc73"
+  },
+  "score": {
+    "earned": 0,
+    "possible": 10,
+    "scored_count": 5,
+    "excluded_count": 0,
+    "total_count": 5,
+    "coverage": "complete",
+    "display": "0/10"
+  },
+  "summary": "5개 항목 중 5개 채점, 0개 점수 없음. 관측 항목 합계 0/10점. 검토 필요 0개.",
+  "review_required": false,
+  "items": [
+    {
+      "item_id": "quote.1",
+      "title": "문제 정의",
+      "criterion": "업무 등록에 견적 대상 상품, 수량(사용자·라이선스 수), 계약 기간, 고객 요청 조건(결제 조건·SLA 등), 예산·가격 조건 5개 요소를 기재했는가?",
+      "score_levels": [
+        {
+          "score": 0,
+          "condition": "상품·수량·계약 기간 중 하나라도 누락되었거나, 3개 이상 누락됨."
+        },
+        {
+          "score": 1,
+          "condition": "고객 요청 조건이나 예산·가격 조건 중 1~2개가 누락됨."
+        },
+        {
+          "score": 2,
+          "condition": "5개 요소가 모두 기재되었거나, 고객이 제시하지 않은 요소가 '고객 미제시'로 표시됨."
+        }
+      ],
+      "unobserved_condition": "해당 업무 건의 업무 등록 기록이 수집되지 않음(등록은 되었으나 비어 있으면 0점).",
+      "review_condition": "등록된 수량이나 계약 기간이 고객 요청 원문과 다름.",
+      "observation": "observed",
+      "status_label": "채점",
+      "score": 0,
+      "max_score": 2,
+      "included_in_total": true,
+      "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+      "review_required": false,
+      "work_evidence": [
+        {
+          "source_id": "W-E2E-QT-01-M01",
+          "source_kind": "message:user",
+          "quote": "누리유통 견적서 작성해줘."
+        }
+      ],
+      "rule_evidence": [
+        {
+          "document_id": "RUB-quote",
+          "version": "v2",
+          "section_id": "quote.1",
+          "quote": "{\"criterion\": \"업무 등록에 견적 대상 상품, 수량(사용자·라이선스 수), 계약 기간, 고객 요청 조건(결제 조건·SLA 등), 예산·가격 조건 5개 요소를 기재했는가?\", \"evidence_sources\": [\"업무 등록 내용\", \"고객 요청 원문\"], \"item\": \"문제 정의\", \"item_id\": \"quote.1\", \"needs_review\": \"등록된 수량이나 계약 기간이 고객 요청 원문과 다름.\", \"related_clauses\": [\"ART-11\", \"ART-19\"], \"score_0\": \"상품·수량·계약 기간 중 하나라도 누락되었거나, 3개 이상 누락됨.\", \"score_1\": \"고객 요청 조건이나 예산·가격 조건 중 1~2개가 누락됨.\", \"score_2\": \"5개 요소가 모두 기재되었거나, 고객이 제시하지 않은 요소가 '고객 미제시'로 표시됨.\", \"unobserved\": \"해당 업무 건의 업무 등록 기록이 수집되지 않음(등록은 되었으나 비어 있으면 0점"
+        }
+      ],
+      "coaching": "검증 과정을 기록하세요."
+    },
+    {
+      "item_id": "quote.2",
+      "title": "지시 품질",
+      "criterion": "AI에 표준 가격표 버전, 할인 정책, 견적 조건(상품·수량·기간·요청 조건), 견적서 기재 항목(단가·수량·기간·할인율·소계·합계·부가세·유효 기간) 4개 요소를 전달했는가?",
+      "score_levels": [
+        {
+          "score": 0,
+          "condition": "3개 이상 빠졌거나, 가격표를 지정하지 않고 금액 산출을 요청함."
+        },
+        {
+          "score": 1,
+          "condition": "1~2개 요소가 빠져 AI가 가격 기준이나 기재 형식을 추정함."
+        },
+        {
+          "score": 2,
+          "condition": "4개 요소가 같은 업무 건의 대화 전체에서 모두 전달됨."
+        }
+      ],
+      "unobserved_condition": "해당 업무 공간에 AI 대화 기록이 없음(업무 공간 밖에서 작업한 경우).",
+      "review_condition": "대화에서 지정한 가격표 버전이 업무 등록이나 승인 요청에 적힌 버전과 다름.",
+      "observation": "observed",
+      "status_label": "채점",
+      "score": 0,
+      "max_score": 2,
+      "included_in_total": true,
+      "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+      "review_required": false,
+      "work_evidence": [
+        {
+          "source_id": "W-E2E-QT-01-M01",
+          "source_kind": "message:user",
+          "quote": "누리유통 견적서 작성해줘."
+        }
+      ],
+      "rule_evidence": [
+        {
+          "document_id": "RUB-quote",
+          "version": "v2",
+          "section_id": "quote.2",
+          "quote": "{\"criterion\": \"AI에 표준 가격표 버전, 할인 정책, 견적 조건(상품·수량·기간·요청 조건), 견적서 기재 항목(단가·수량·기간·할인율·소계·합계·부가세·유효 기간) 4개 요소를 전달했는가?\", \"evidence_sources\": [\"AI 대화\", \"첨부 자료\"], \"item\": \"지시 품질\", \"item_id\": \"quote.2\", \"needs_review\": \"대화에서 지정한 가격표 버전이 업무 등록이나 승인 요청에 적힌 버전과 다름.\", \"related_clauses\": [\"ART-12\", \"ART-19\"], \"score_0\": \"3개 이상 빠졌거나, 가격표를 지정하지 않고 금액 산출을 요청함.\", \"score_1\": \"1~2개 요소가 빠져 AI가 가격 기준이나 기재 형식을 추정함.\", \"score_2\": \"4개 요소가 같은 업무 건의 대화 전체에서 모두 전달됨.\", \"unobserved\": \"해당 업무 공간에 AI 대화 기록이 없음(업무 공간 밖에서 작업한 경우)"
+        }
+      ],
+      "coaching": "검증 과정을 기록하세요."
+    },
+    {
+      "item_id": "quote.3",
+      "title": "결과 검증",
+      "criterion": "AI가 산출한 금액을 표준 가격표·할인 정책으로 다시 계산해 단가·수량·기간·할인율 오류를 바로잡고, 합산 할인율과 예외 조건이 별표 2의 승인 대상인지 확인한 기록이 있는가?",
+      "score_levels": [
+        {
+          "score": 0,
+          "condition": "AI 초안의 계산 오류가 최종 견적서에 남았고, 재계산·수정 기록이 없음."
+        },
+        {
+          "score": 1,
+          "condition": "계산 오류는 모두 수정했으나 승인 대상 확인 기록이 없거나, 계산 오류 일부가 최종 견적서에 남음."
+        },
+        {
+          "score": 2,
+          "condition": "드러난 계산 오류를 모두 수정했고, 승인 대상 여부를 확인한 기록(대화 또는 승인 요청 표시)이 있음."
+        }
+      ],
+      "unobserved_condition": "AI 초안에 계산 오류가 없었고 승인 대상 할인·예외 조건도 없으며, 대조 기록도 없음.",
+      "review_condition": "적용할 가격표나 할인 정책이 여러 버전이라 기준 계산값을 확정할 수 없음.",
+      "observation": "observed",
+      "status_label": "채점",
+      "score": 0,
+      "max_score": 2,
+      "included_in_total": true,
+      "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+      "review_required": false,
+      "work_evidence": [
+        {
+          "source_id": "W-E2E-QT-01-M01",
+          "source_kind": "message:user",
+          "quote": "누리유통 견적서 작성해줘."
+        }
+      ],
+      "rule_evidence": [
+        {
+          "document_id": "RUB-quote",
+          "version": "v2",
+          "section_id": "quote.3",
+          "quote": "{\"criterion\": \"AI가 산출한 금액을 표준 가격표·할인 정책으로 다시 계산해 단가·수량·기간·할인율 오류를 바로잡고, 합산 할인율과 예외 조건이 별표 2의 승인 대상인지 확인한 기록이 있는가?\", \"evidence_sources\": [\"AI 대화\", \"견적서 수정 이력\", \"기준 견적 계산값\", \"승인 요청\"], \"item\": \"결과 검증\", \"item_id\": \"quote.3\", \"needs_review\": \"적용할 가격표나 할인 정책이 여러 버전이라 기준 계산값을 확정할 수 없음.\", \"related_clauses\": [\"ART-13\", \"ART-19\", \"ART-20\", \"APX-2\"], \"score_0\": \"AI 초안의 계산 오류가 최종 견적서에 남았고, 재계산·수정 기록이 없음.\", \"score_1\": \"계산 오류는 모두 수정했으나 승인 대상 확인 기록이 없거나, 계산 오류 일부가 최종 견적서에 남음.\", \"score_2\": \"드러난 계산 오류를 모두 수정했고,"
+        }
+      ],
+      "coaching": "검증 과정을 기록하세요."
+    },
+    {
+      "item_id": "quote.4",
+      "title": "보안 준수",
+      "criterion": "원가·마진, 타 고객 할인율·계약 조건을 AI에 입력하지 않고, 할인 승인 한도·승인 단계 등 내부 가격 기준을 고객용 견적서에 기재하지 않았는가?",
+      "score_levels": [
+        {
+          "score": 0,
+          "condition": "입력 금지 정보 입력 또는 견적서의 내부 가격 기준 노출이 1건 이상 확인됨."
+        },
+        {
+          "score": 2,
+          "condition": "관측 범위에서 입력 금지 정보 입력과 견적서의 내부 가격 기준 노출이 한 건도 없음."
+        }
+      ],
+      "unobserved_condition": "해당 업무 건의 정책 검사 결과가 없거나, 최종 견적서가 업무 공간에 저장되지 않아 검사 범위 밖임.",
+      "review_condition": "견적서의 할인 관련 문구(예: '최대 ○%까지 가능')가 내부 기준 노출인지 판단이 필요함.",
+      "observation": "observed",
+      "status_label": "채점",
+      "score": 0,
+      "max_score": 2,
+      "included_in_total": true,
+      "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+      "review_required": false,
+      "work_evidence": [
+        {
+          "source_id": "W-E2E-QT-01:policy_check",
+          "source_kind": "policy_check",
+          "quote": "{\"checked_at\": \"2026-10-09T10:20:00+09:00\", \"evidence_id\": \"W-E2E-QT-01:policy_check\", \"masking\": [], \"scope\": {\"artifact_ref\": {\"artifact_id\": \"ART-E2E-QT-01\", \"author\": \"employee\", \"version\": \"v3\"}, \"note\": \"테스트용 서버 검사 결과\", \"user_message_ids\": [\"W-E2E-QT-01-M01\", \"W-E2E-QT-01-M03\", \"W-E2E-QT-01-M05\", \"W-E2E-QT-01-M06\", \"W-E2E-QT-01-M08\"]}, \"version\": \"v3\", \"violations\": [], \"work_id\": \"W-E2E-QT-01\"}"
+        }
+      ],
+      "rule_evidence": [
+        {
+          "document_id": "RUB-quote",
+          "version": "v2",
+          "section_id": "quote.4",
+          "quote": "{\"criterion\": \"원가·마진, 타 고객 할인율·계약 조건을 AI에 입력하지 않고, 할인 승인 한도·승인 단계 등 내부 가격 기준을 고객용 견적서에 기재하지 않았는가?\", \"evidence_sources\": [\"마스킹 전 정책 검사 결과\", \"AI 대화\", \"최종 견적서\"], \"item\": \"보안 준수\", \"item_id\": \"quote.4\", \"needs_review\": \"견적서의 할인 관련 문구(예: '최대 ○%까지 가능')가 내부 기준 노출인지 판단이 필요함.\", \"related_clauses\": [\"ART-06\", \"ART-09\", \"ART-20\", \"APX-1\"], \"score_0\": \"입력 금지 정보 입력 또는 견적서의 내부 가격 기준 노출이 1건 이상 확인됨.\", \"score_1\": \"해당 없음\", \"score_2\": \"관측 범위에서 입력 금지 정보 입력과 견적서의 내부 가격 기준 노출이 한 건도 없음.\", \"unobserved\": \"해당 업무 건의 정책 검사 결"
+        }
+      ],
+      "coaching": "검증 과정을 기록하세요."
+    },
+    {
+      "item_id": "quote.5",
+      "title": "결과물 품질",
+      "criterion": "최종 견적서의 금액이 기준 계산값과 일치하고, 가격표 버전·상품별 단가·수량·기간·할인율·소계·합계(부가세 별도)·유효 기간 30일·계약 조건이 기재되었으며, 승인 대상 할인·예외 조건이 승인 요청에 표시되었는가? (승인 완료 여부는 평가하지 않음)",
+      "score_levels": [
+        {
+          "score": 0,
+          "condition": "금액이 기준 계산값과 다르거나, 기재 항목 3개 이상 누락, 또는 승인 대상 항목이 승인 요청에 표시되지 않음."
+        },
+        {
+          "score": 1,
+          "condition": "금액은 일치하고 승인 대상 항목도 표시되었으나, 기재 항목 1~2개가 누락됨."
+        },
+        {
+          "score": 2,
+          "condition": "금액이 기준 계산값과 일치하고, 기재 항목 누락이 없으며, 승인 대상 항목이 모두 승인 요청에 표시됨."
+        }
+      ],
+      "unobserved_condition": "최종 견적서가 업무 공간에 저장되지 않음.",
+      "review_condition": "고객 요청 조건이 별표 2에 없는 예외라 승인 대상인지 판단할 수 없음.",
+      "observation": "observed",
+      "status_label": "채점",
+      "score": 0,
+      "max_score": 2,
+      "included_in_total": true,
+      "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+      "review_required": false,
+      "work_evidence": [
+        {
+          "source_id": "ART-E2E-QT-01:v3:L01",
+          "source_kind": "target_artifact",
+          "quote": "[견적서] Q-2026-0523 / 고객사: 누리유통(가상)"
+        }
+      ],
+      "rule_evidence": [
+        {
+          "document_id": "RUB-quote",
+          "version": "v2",
+          "section_id": "quote.5",
+          "quote": "{\"criterion\": \"최종 견적서의 금액이 기준 계산값과 일치하고, 가격표 버전·상품별 단가·수량·기간·할인율·소계·합계(부가세 별도)·유효 기간 30일·계약 조건이 기재되었으며, 승인 대상 할인·예외 조건이 승인 요청에 표시되었는가? (승인 완료 여부는 평가하지 않음)\", \"evidence_sources\": [\"최종 견적서\", \"기준 견적 계산값\", \"승인 요청\", \"표준 가격표\"], \"item\": \"결과물 품질\", \"item_id\": \"quote.5\", \"needs_review\": \"고객 요청 조건이 별표 2에 없는 예외라 승인 대상인지 판단할 수 없음.\", \"related_clauses\": [\"ART-19\", \"ART-20\", \"APX-2\", \"APX-4\"], \"score_0\": \"금액이 기준 계산값과 다르거나, 기재 항목 3개 이상 누락, 또는 승인 대상 항목이 승인 요청에 표시되지 않음.\", \"score_1\": \"금액은 일치하고 승인 대상 항목도 표시되었으나, 기재 항"
+        },
+        {
+          "document_id": "PRICE-2026.2",
+          "version": "2026.2",
+          "section_id": "S1",
+          "quote": "공식 자료의 테스트 원문"
+        }
+      ],
+      "coaching": "검증 과정을 기록하세요."
+    }
+  ]
+}
