@@ -1,4 +1,4 @@
-"""기존 분류 CLI를 변경하지 않고 전체 승인·평가 흐름을 실행한다."""
+"""사용자가 선택한 업무 유형으로 전체 승인·평가 흐름을 실행한다."""
 
 import argparse
 import asyncio
@@ -15,7 +15,6 @@ from openai import AsyncOpenAI
 from pydantic import ValidationError
 
 from ..classification.agent import ClassificationError
-from ..classification.provider import OpenAIClassifier
 from ..criteria_agent.builder import OpenAIRubricBuilder
 from ..evaluation_agent.final.agent import render_evaluation_report
 from ..evaluation_agent.final.errors import error_messages
@@ -30,7 +29,7 @@ from .mcp import connection_settings, human_decision
 
 
 def parser():
-    root = argparse.ArgumentParser(description="업무 분류·기준 승인·평가·코칭 실행")
+    root = argparse.ArgumentParser(description="사용자 선택 업무 유형·기준 승인·평가·코칭 실행")
     root.add_argument("--evaluation-id", help="개발용 내부 API로 실행 토큰 발급")
     root.add_argument("--work-id", help="발급받은 MCP_RUN_TOKEN 사용 시 필수")
     root.add_argument("--output", type=Path, help="전체 결과 JSON 파일(덮어쓰기 금지)")
@@ -76,7 +75,7 @@ async def _run(args):
             traced_llm = TracedLLMClient(llm)
             workflow = build_evaluation_workflow(
                 gateway,
-                OpenAIClassifier(traced_llm, model),
+                None,
                 OpenAIRubricBuilder(traced_llm, model),
                 evaluator=HandoffEvaluator(traced_llm, gateway, model=model),
             )

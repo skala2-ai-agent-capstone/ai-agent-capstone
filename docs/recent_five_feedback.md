@@ -1,5 +1,10 @@
 # 최근 질문·응답 5회 중간 피드백
 
+2026-10-23 변경: 새 업무의 유형은 시작 시 사용자가 선택한다. 중간 피드백은 원래 분류
+LLM을 호출하지 않으며, MCP가 저장된 유형을 문맥에 반환한다.
+아래 null 유형 예시/가상 데이터는 이전 요청 호환용이다. 새 업무는 필수 선택이다.
+[유형 선택 계약과 담당자별 변경](user_selected_work_type.md)을 참고한다.
+
 2026-10-22. 입력 자료: 사용자가 제공한 `realtime-feedback-flow (1).md`와
 `axeval` PostgreSQL 16 DB 명세(동일 날짜). 이 문서는 해당 자료를 검토해 구현한
 **Agent 측 계약 v1 및 서버 담당자에게 제안하는 연동 계약**이다.
@@ -109,7 +114,8 @@ MCP가 Spring 내부 API를 사용할지 DB에 접근할지는 서버 담당 영
 ```
 
 이 축약 계약은 코칭용이다. 최종 평가 점수·등급의 계약을 대체하지 않는다.
-`work_type`은 `rfp_analysis`, `proposal`, `quotation`, `customer_response` 또는 null이다.
+`work_type`은 `rfp_analysis`, `proposal`, `quote`, `inquiry_reply` 또는 이전 요청의 null이다.
+기준/최종 평가 내부 별칭 `quotation`, `customer_response`와 혼용하지 않는다.
 
 ### 2. get_messages
 

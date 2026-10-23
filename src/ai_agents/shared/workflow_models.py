@@ -8,6 +8,7 @@ from typing import Literal, Self
 from pydantic import Field, model_validator
 
 from .models import ClassificationResult, Evidence, NonEmpty, StrictModel, WorkContext, WorkType
+from .work_selection import UserSelectedWorkType
 
 
 def content_hash(value: StrictModel) -> str:
@@ -102,18 +103,18 @@ class Approval(StrictModel):
 class EvaluationInput(StrictModel):
     run_id: NonEmpty
     work_record: WorkContext
-    classification: ClassificationResult
+    classification: ClassificationResult | UserSelectedWorkType
     approved_criteria: CriteriaDraft
     approval: Approval
 
     @model_validator(mode="after")
     def check_approval(self) -> Self:
-        if self.classification.status != "classified":
+        if self.classification.status not in {"classified", "selected"}:
             raise ValueError(
                 "평가 전 단일 업무 확정이 필요합니다. 복합 업무는 범위 분리 후 요청하세요."
             )
         if self.classification.work_type != self.approved_criteria.work_type:
-            raise ValueError("분류와 평가기준의 업무 유형이 다릅니다.")
+            raise ValueError("확정한 업무 유형과 평가기준의 업무 유형이 다릅니다.")
         if self.run_id != self.approval.run_id:
             raise ValueError("다른 실행의 승인입니다.")
         if content_hash(self.work_record) != self.approval.work_sha256:

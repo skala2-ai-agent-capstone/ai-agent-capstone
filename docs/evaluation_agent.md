@@ -12,7 +12,7 @@ python -m ai_agents.cli.workflow \
   --output outputs/mcp/rfp-evaluation.json
 ```
 
-업무 조회 → 분류 → RAG 내규 조회 → 기준 생성 → 터미널에서 담당자 승인/수정/취소
+업무 조회 → 사용자 선택 유형 확인 → RAG 내규 조회 → 기준 생성 → 터미널에서 담당자 승인/수정/취소
 → 평가·근거 검증 → 리포트 순서입니다. `python -m ai_agents.cli.mcp run`은 승인 후 인계 자료까지만
 만들고, `python -m ai_agents.cli.mcp fetch`는 LLM 없이 MCP 조회만 실행합니다. 위 전체 평가 명령은 업무 자료를
 외부 OpenAI API로 전송하므로 전송이 허용된 자료로만 실행하세요.
