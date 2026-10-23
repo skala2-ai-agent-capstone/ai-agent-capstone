@@ -442,6 +442,7 @@ CREATE TABLE IF NOT EXISTS live_evaluations (
   to_seq          int  NOT NULL,                 -- 마지막 답변 seq
   rubric_doc_id   text,                          -- 요청 때 고정한 현행 기준. 유형이 없거나 기준이 없으면 NULL
   rubric_version  text,
+  conversation_snapshot jsonb,                  -- 요청 때 선택한 마스킹 대화·exchange ID·마스킹 버전. 외부 응답에는 노출하지 않음
   status          text NOT NULL DEFAULT '대기' CHECK (status IN ('대기','생성 중','완료','실패')),  -- 폴링용
   items           jsonb,                         -- 진단 최대 3개 [{item_id, criterion_id, kind, diagnosis, evidence[]}]
   coaching        jsonb,                         -- {schema_version, provenance, suggestions[{item_id, target_message_id, next_action, suggested_prompt}]}
@@ -450,6 +451,9 @@ CREATE TABLE IF NOT EXISTS live_evaluations (
   error           text,                          -- 실패 코드(안전한 코드만)
   CHECK ((rubric_doc_id IS NULL) = (rubric_version IS NULL))
 );
+
+-- 기존 계약 v1 DB에도 데이터를 지우지 않고 추가한다. 이전 요청은 NULL로 남긴다.
+ALTER TABLE live_evaluations ADD COLUMN IF NOT EXISTS conversation_snapshot jsonb;
 
 CREATE TABLE IF NOT EXISTS progress_log (
   id             bigserial PRIMARY KEY,

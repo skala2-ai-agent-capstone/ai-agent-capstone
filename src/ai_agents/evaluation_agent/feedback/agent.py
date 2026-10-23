@@ -14,9 +14,11 @@ from .validation import SENSITIVE, validate_feedback, validate_messages
 
 
 class FeedbackAgent:
-    def __init__(self, client, model: str):
+    def __init__(self, client, model: str, *, record_work_refs: bool = True):
         self.client, self.model = client, model
         self.prompt_version = PROMPT_VERSION
+        # 가상 평가셋은 DB에 존재하지 않는 업무·사용자 ID를 프록시에 보내지 않는다.
+        self.record_work_refs = record_work_refs
 
     @trace_step("feedback.generate")
     async def generate(self, context, batch):
@@ -24,6 +26,12 @@ class FeedbackAgent:
         rubric = context.rubric.model_dump(mode="json") if context.rubric else None
         if rubric and SENSITIVE.search(json.dumps(rubric, ensure_ascii=False)):
             raise FeedbackError("UNMASKED_INPUT")
+        headers = {"X-Stage": "live_evaluate"}
+        if self.record_work_refs:
+            # 프록시의 header_tag가 128자로 자르므로 잘린 ID로 기록되지 않게 한다.
+            if any(len(value) > 128 for value in (context.work_id, context.requested_by)):
+                raise FeedbackError("CONTRACT_MISMATCH")
+            headers.update({"X-Work-Id": context.work_id, "X-User-Id": context.requested_by})
         payload = {"turns": turns, "rubric": rubric, "work_type": context.work_type}
         messages = [
             {
@@ -44,6 +52,7 @@ class FeedbackAgent:
                         temperature=0,
                         max_tokens=1800,
                         response_format={"type": "json_object"},
+                        extra_headers=headers,
                     )
                     span.result(reply)
                     usage = getattr(reply, "usage", None)

@@ -140,6 +140,11 @@ async def test_complete_workflow_stores_provenance_and_bound_range(fixture):
     assert result["status"] == "완료"
     assert gateway.calls == ["start_live_evaluation", "get_messages", "save_live_evaluation"]
     assert len(client.calls) == 1
+    assert client.calls[0]["extra_headers"] == {
+        "X-Stage": "live_evaluate",
+        "X-Work-Id": fixture["context"]["work_id"],
+        "X-User-Id": fixture["context"]["requested_by"],
+    }
     assert len(json.loads(client.calls[0]["messages"][1]["content"])["turns"]) == 5
     provenance = gateway.saved["coaching"]["provenance"]
     assert provenance["exchange_ids"] == [101, 102, 103, 104, 105]
@@ -175,6 +180,36 @@ async def test_bad_generation_retries_once_and_never_saves(fixture):
     result = await replay_feedback(fixture)
     assert result["code"] == "INVALID_FEEDBACK"
     assert result["model_calls"] == 2 and not result["saved"]
+
+
+@pytest.mark.asyncio
+async def test_proxy_headers_stay_scoped_across_requests_and_regeneration(fixture):
+    client = FixtureChatClient(fixture["model_output"])
+    agent = FeedbackAgent(client, "test-model")
+    await agent.generate(*typed(fixture))
+    fixture["context"]["requested_by"] = "U-OTHER"
+    fixture["model_output"]["items"][0]["evidence"][0]["quote"] = "invented"
+    with pytest.raises(FeedbackError, match="INVALID_FEEDBACK"):
+        await agent.generate(*typed(fixture))
+    assert len(client.calls) == 3
+    assert client.calls[0]["extra_headers"]["X-User-Id"] == "U-DEMO"
+    assert client.calls[1]["extra_headers"] == client.calls[2]["extra_headers"] == {
+        "X-Stage": "live_evaluate",
+        "X-Work-Id": fixture["context"]["work_id"],
+        "X-User-Id": "U-OTHER",
+    }
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("field", ["work_id", "requested_by"])
+async def test_rejects_ids_that_proxy_would_truncate_before_model_call(fixture, field):
+    fixture["context"][field] = "X" * 129
+    if field == "work_id":
+        fixture["batch"][field] = fixture["context"][field]
+    client = FixtureChatClient(fixture["model_output"])
+    with pytest.raises(FeedbackError, match="CONTRACT_MISMATCH"):
+        await FeedbackAgent(client, "test-model").generate(*typed(fixture))
+    assert not client.calls
 
 
 @pytest.mark.asyncio

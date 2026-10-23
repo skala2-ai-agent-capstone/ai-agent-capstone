@@ -1,4 +1,52 @@
-# 중간 피드백 구현 검증 기록 — 2026-10-22
+# 중간 피드백 구현 검증 기록
+
+## 2026-10-23 — 실제 DB의 최근 5쌍 조회와 요청 스냅샷
+
+- 브랜치: `feat/feedback-mcp-integration`, 기준 HEAD: `62bfcbc`.
+- 미커밋 작업 트리에서 검사했다. 사용자가 커밋한 뒤 동일 명령으로 재실행하면 커밋별 비교가 가능하다.
+- `tests`와 `llm_proxy/tests`: **674 passed, 1 skipped (6.26초)**.
+- 신규 PostgreSQL 회귀 테스트: **13개 통과**, 위 674개에 포함.
+- 환경: 기존 프로젝트 DB와 분리한 임시 PostgreSQL **17.10**. 운영 목표인 16에서의 결과는 아니다.
+- `ruff check src tests`, `ruff check mcp_servers/business_mcp/live.py --ignore E501`,
+  `git diff --check` 통과. MCP 파일의 기존 긴 줄 스타일은 유지했다.
+- 평가 기준 Agent와 MCP 기준 저장 로직은 수정하지 않았다.
+
+검사한 경우:
+
+| 대상 | 확인 결과 |
+|---|---|
+| 완료 1·4·5·7쌍 | 최대 5쌍, 최대 10메시지; 요청에 포함된 이전 대화 중복 없음 |
+| 실패·HTTP 오류·빈 답변·미래 응답·타 업무·Agent 호출 | 대화 후보에서 제외 |
+| 완료 0쌍 | 요청 행을 만들지 않음 |
+| 실패 질문 재전송 | 성공한 응답과 한 쌍, 같은 exchange ID로 반환 |
+| 요청 생성 중 끝난 호출 | 요청 기준 시각 이후이면 제외 |
+| 새 호출·과거 행 삭제·원본 변경·마스킹 버전 변경 | 이미 고정한 대화 그대로 조회, Agent 생성 및 결과 저장 성공 |
+| 마스킹 | 원문 대신 마스킹 본문을 스냅샷에 저장 |
+| 기존 DB 마이그레이션 | 열 추가 재실행 가능, 이전 결과 유지; 스냅샷 없는 이전 요청은 재요청 필요 |
+| 완료 시각 동률 | ID로 순서를 확정; 늦게 적재된 과거 응답으로 최신 대상이 바뀌지 않음 |
+| 짝 없는 독립 응답 | 다른 호출의 미응답 질문에 잘못 연결하지 않음 |
+
+재실행에는 `llm_proxy/requirements.txt` 의존성과 테스트 전용 DB가 필요하다.
+`FEEDBACK_TEST_DATABASE_URL`에 해당 DB 접속 문자열을 설정한다. 테스트마다 임의 스키마를
+생성하고 삭제한다. 운영 DB를 지정하지 않는다.
+
+```bash
+PYTHONPATH=src:mcp_servers:llm_proxy:. .venv/bin/python -m pytest tests llm_proxy/tests -q \
+  --junitxml=outputs/validation/feedback-mcp-snapshot/pytest.xml
+```
+
+JUnit 파일은 로컬 증빙이며 `outputs/`가 Git 무시 대상이므로 GitHub에 포함되지 않는다.
+건너뛴 1개는 `LLM_PROXY_TEST_DATABASE_URL`이 필요한 프록시의 업무 DB 기록 테스트다.
+이번 DB 검증은 실제 SQL과 `LiveStore`를 사용했고, Agent의 모델 응답은 고정 응답으로 대체했다.
+AWS LLM 품질·RabbitMQ에서 실제 MCP HTTP까지의 통합 실행·LangSmith 원격 실험 결과는 아니다.
+
+검증결과서용 문장:
+
+> 요청 시점 이전에 성공한 업무 대화 중 최근 질문·응답 최대 5쌍을 선택하고, 마스킹된 대화를
+> 요청별 스냅샷으로 고정했다. 격리된 PostgreSQL 환경에서 경계 조건과 저장 일관성 관련
+> 13개 회귀 테스트가 통과했다. 실제 배포 환경과 모델 품질 검증은 별도 수행 예정이다.
+
+## 2026-10-22 — Agent 계약과 Worker 최초 구현
 
 브랜치: `feat/recent-five-feedback`.
 기준 HEAD: `2a893e1d700b19873978563da386d9b3141c031b`.
