@@ -74,7 +74,8 @@ class PolicyChecker:
 
         if av["author"] == "employee":
             own = raw["work_case"]["customer_id"]
-            others = [
+            # 고객 미지정 업무는 어느 고객이 "타 고객"인지 알 수 없어 타 고객 노출 검사를 하지 않는다
+            others = [] if own is None else [
                 (c["customer_id"], re.sub(r"\(가상\)$", "", c["name"]).strip())
                 for c in s.customers.values()
                 if c["customer_id"] != own and not c.get("approved_reference")
@@ -115,7 +116,9 @@ class PolicyChecker:
             "scope": {
                 "user_message_ids": [m["message_id"] for m in msgs if m["role"] == "user"],
                 "artifact_ref": {"artifact_id": av["artifact_id"], "version": version, "author": av["author"]},
-                "note": "위반 규칙은 직원 입력과 직원이 저장한 산출물에만 적용. 고객 원문은 마스킹 대상",
+                "note": "위반 규칙은 직원 입력과 직원이 저장한 산출물에만 적용. 고객 원문은 마스킹 대상"
+                        + (". 업무에 고객이 지정되지 않아 다른 고객사 언급(V-OTHER-CUSTOMER)은 검사하지 않음"
+                           if raw["work_case"]["customer_id"] is None else ""),
             },
             "violations": violations,
             "masking": [{"rule_id": r, "source": src, "count": n} for (r, src), n in sorted(counts.items())],
