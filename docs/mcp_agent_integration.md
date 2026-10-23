@@ -1,7 +1,8 @@
-# 업무 분류·승인 Agent MCP 연동: 현재 구현과 실행 방법
+# 업무 유형 확인·승인 Agent MCP 연동: 현재 구현과 실행 방법
 
-이번 범위는 **MCP 업무 조회 → LLM 분류 → RAG 내규 조회 → 매 실행 기준 생성 → 담당자 승인 → 평가 입력 인계**입니다.
-기존 분류 프롬프트 v6는 그대로 유지합니다. 내규는 분류 입력에 넣지 않고, 분류 후 평가기준 생성에 사용합니다.
+현재 흐름은 **MCP 업무 조회 → 사용자 선택 유형 확인 → RAG 내규 조회 → 매 실행 기준 생성 → 담당자 승인 → 평가 입력 인계**입니다.
+2026-10-23부터 일반 실행에서 LLM 분류를 호출하지 않습니다.
+[사용자 선택 유형 계약](user_selected_work_type.md)을 참고하세요. 과거 분류 프롬프트 v6는 실험 재현용으로 보존합니다.
 
 ## 1. 실행 흐름도와 현재 합의의 차이
 
@@ -10,7 +11,7 @@
 | load_context: 권한 확인·평가 건 잠금 | 서버가 발급한 실행 토큰 사용. 서버가 권한을 검증하며 Agent가 권한을 만들어 내지 않음. 평가 건 잠금은 미구현 |
 | fetch_work_case | 고정 스냅샷의 대화 전체 페이지·산출물 버전·첨부 원문·연결 업무 목록·근거 연결·열람 기록·정책 검사·diff 조회 |
 | completeness_check | 필수 조회 실패·대상 산출물 없음은 data_hold, 페이지 누락·범위 불일치는 오류로 중단. 업무별 평가에 충분한지 판단하는 세부 검사는 평가 모듈에서 추가 |
-| 업무 유형 | 서버 work_type을 분류 입력에서 제외하고 기존 분류기로 판단. 복합·미확정·범위 밖은 classification_hold |
+| 업무 유형 | 서버에 저장된 사용자 선택 work_type 사용. 누락·잘못된 유형은 work_type_hold. 일반 실행에서 분류 LLM 미호출 |
 | policy_check_and_mask | 서버가 마스킹한 응답만 사용하고 정책 검사 결과를 평가 모듈에 전달. Agent가 원문 DB에 접속하지 않음 |
 | load_rubric | 확정 루브릭 재사용 대신 search_policy로 내규를 가져와 기존 Python 기준 생성기를 매번 호출 |
 | 담당자 확인 | LangGraph interrupt로 초안 전체 표시 → 승인·수정·취소. 수정된 초안은 재승인 필요 |
@@ -28,7 +29,7 @@
 | --- | --- |
 | src/ai_agents/integrations/mcp_client.py | 두 MCP 연결 수명 관리·Bearer 인증·응답 봉투 해석·읽기 도구 허용·일시 오류 재시도·실행/스냅샷 변경 차단 |
 | src/ai_agents/integrations/mcp_data.py | 페이지 전체 수집·서버 ID/문자열 버전 보존·분류 입력 변환·내규 정확 조회 |
-| src/ai_agents/orchestration/graph.py | 분류·승인 모듈의 LangGraph·승인 대기/재개·수정 반복·평가 입력 인계 계약 |
+| src/ai_agents/orchestration/graph.py | 사용자 선택 유형 확인·승인 LangGraph·승인 대기/재개·수정 반복·평가 입력 인계 계약 |
 | src/ai_agents/cli/mcp.py | 백엔드 없이 실행하는 CLI·개발용 토큰 발급·터미널 승인·JSON 출력 |
 | src/ai_agents/orchestration/approval.py | 기존 승인 흐름과 공통 평가 결과 형식·인용 검증. stash에서 복원해 재사용 |
 | src/ai_agents/criteria_agent/builder.py | 기존 팀원 노트북의 Python 기준 생성기. 이번에 채점 로직을 추가하지 않음 |

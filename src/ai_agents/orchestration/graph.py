@@ -1,4 +1,4 @@
-"""분류·승인 모듈의 LangGraph: 조회 → 분류 → 기준 생성 → 사람 승인 → 평가 모듈 연결/인계."""
+"""조회 → 사용자 선택 유형 확인 → 기준 생성 → 승인 → 평가 연결/인계."""
 
 from datetime import datetime, timezone
 from typing import Protocol, Self, TypedDict
@@ -19,6 +19,7 @@ from ..integrations.mcp_data import (
 )
 from ..observability import trace_step
 from ..shared.models import ClassificationReport, StrictModel, WorkType
+from ..shared.work_selection import UserSelectedWorkType, UserSelectionReport, selected_work_type
 from ..shared.workflow_models import (
     Approval,
     CriteriaDraft,
@@ -50,6 +51,10 @@ class MCPHandoff(StrictModel):
                 or self.evaluation_input.work_record != context or self.source_map != mapping
                 or content_hash(self.business) != self.approved_business_sha256):
             raise ValueError("승인한 업무 스냅샷과 인계 자료가 다릅니다.")
+        selection = self.evaluation_input.classification
+        if isinstance(selection, UserSelectedWorkType):
+            if selection != selected_work_type(self.business.work_case.get("work_type")):
+                raise ValueError("사용자가 선택한 업무 유형과 인계 유형이 다릅니다.")
         return self
 
 
@@ -71,10 +76,13 @@ class AgentState(TypedDict, total=False):
 
 
 def build_agent_graph(
-    gateway: ToolGateway, classifier: ClassificationBackend, builder: CriteriaBuilder,
+    gateway: ToolGateway, classifier: ClassificationBackend | None, builder: CriteriaBuilder,
     *, evaluator: Evaluator | None = None,
 ):
-    """한 실행에 한 그래프. 토큰/SDK 연결은 closure에만 보관. 체크포인트는 메모리 전용."""
+    """일반 실행은 classifier=None. 명시적 classifier 주입은 과거 분류 실험용이다.
+
+    토큰/SDK 연결은 closure에만 보관. 체크포인트는 메모리 전용이다.
+    """
     async def fetch(state):
         try:
             packet = await fetch_business(gateway, state["work_id"])
@@ -83,6 +91,19 @@ def build_agent_graph(
                 raise
             return {"status": "data_hold", "issue": str(exc)}
         return {"business": packet.model_dump(mode="json"), "status": "fetched"}
+
+    async def select_work_type(state):
+        packet = BusinessPacket.model_validate(state["business"])
+        try:
+            selection = selected_work_type(packet.work_case.get("work_type"))
+        except (ValueError, TypeError):
+            return {"status": "work_type_hold", "issue": "USER_WORK_TYPE_REQUIRED"}
+        context, _ = classification_context(packet)
+        report = UserSelectionReport(
+            work_id=packet.work_case["work_id"], input_sha256=content_hash(context),
+            classification=selection,
+        )
+        return {"classification": report.model_dump(mode="json"), "status": "work_type_selected"}
 
     async def classify(state):
         context, _ = classification_context(BusinessPacket.model_validate(state["business"]))
@@ -175,9 +196,10 @@ def build_agent_graph(
         if action == "revise":
             return {"status": "revising", "feedback": decision["feedback"].strip()}
         context, mapping = classification_context(packet)
-        report = ClassificationReport.model_validate(state["classification"])
+        report_model = UserSelectionReport if classifier is None else ClassificationReport
+        report = report_model.model_validate(state["classification"])
         if report.input_sha256 != content_hash(context):
-            raise WorkflowError("분류 이후 업무 기록이 바뀌었습니다.")
+            raise WorkflowError("업무 유형 확인 이후 업무 기록이 바뀌었습니다.")
         request = EvaluationInput(
             run_id=packet.run_id, work_record=context, classification=report.classification,
             approved_criteria=draft, approval=Approval(
@@ -203,15 +225,18 @@ def build_agent_graph(
         return {"status": "completed", "report": result.model_dump(mode="json")}
 
     graph = StateGraph(AgentState)
-    for name, node in (("fetch_work_case", fetch), ("classify_work", classify),
+    type_node = "select_work_type" if classifier is None else "classify_work"
+    type_handler = select_work_type if classifier is None else classify
+    for name, node in (("fetch_work_case", fetch), (type_node, type_handler),
                        ("enrich_context", enrich), ("prepare_criteria", prepare),
                        ("approve_criteria", approval), ("evaluate_or_handoff", evaluate)):
         graph.add_node(name, trace_step(name)(node))
     graph.add_edge(START, "fetch_work_case")
     graph.add_conditional_edges("fetch_work_case", lambda s:
-                                "classify_work" if s["status"] == "fetched" else END)
-    graph.add_conditional_edges("classify_work", lambda s:
-                                "enrich_context" if s["status"] == "classified" else END)
+                                type_node if s["status"] == "fetched" else END)
+    graph.add_conditional_edges(type_node, lambda s:
+                                "enrich_context" if s["status"] in
+                                {"classified", "work_type_selected"} else END)
     graph.add_edge("enrich_context", "prepare_criteria")
     graph.add_conditional_edges("prepare_criteria", lambda s:
                                 "approve_criteria" if s["status"] == "awaiting_approval" else END)

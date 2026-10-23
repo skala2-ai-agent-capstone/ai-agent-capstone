@@ -15,7 +15,6 @@ from openai import AsyncOpenAI
 from pydantic import ValidationError
 
 from ..classification.agent import ClassificationError
-from ..classification.provider import OpenAIClassifier
 from ..criteria_agent.builder import OpenAIRubricBuilder
 from ..integrations.mcp_client import MCPError, MCPGateway
 from ..integrations.mcp_data import classification_context, fetch_business
@@ -23,7 +22,7 @@ from ..orchestration.graph import build_agent_graph
 
 
 def parser():
-    root = argparse.ArgumentParser(description="MCP 조회·분류·평가기준 승인·평가 입력 인계")
+    root = argparse.ArgumentParser(description="MCP 조회·사용자 선택 유형 확인·기준 승인·평가 인계")
     root.add_argument("command", choices=["fetch", "run"])
     root.add_argument("--evaluation-id", help="개발용 내부 API로 실행 토큰 발급")
     root.add_argument("--work-id", help="발급받은 MCP_RUN_TOKEN 사용 시 필수")
@@ -65,7 +64,7 @@ async def connection_settings(args):
 
 
 def human_decision(pending: dict) -> dict:
-    print("\n[담당자 검토: 분류 결과와 평가기준 전체]", file=sys.stderr)
+    print("\n[담당자 검토: 확정 업무 유형과 평가기준 전체]", file=sys.stderr)
     warnings = pending.get("warnings", pending.get("criteria", {}).get("warnings", []))
     if warnings:
         print(f"[검토 경고 {len(warnings)}개: 아래 문맥을 확인한 뒤 결정하세요]", file=sys.stderr)
@@ -115,7 +114,7 @@ async def run(args):
         model = args.model or os.getenv("OPENAI_MODEL", "gpt-4o-mini")
         async with AsyncOpenAI(timeout=60, max_retries=1) as llm:
             graph = build_agent_graph(
-                gateway, OpenAIClassifier(llm, model), OpenAIRubricBuilder(llm, model),
+                gateway, None, OpenAIRubricBuilder(llm, model),
             )
             config = {"configurable": {"thread_id": str(uuid4())}, "recursion_limit": 100}
             result = await graph.ainvoke({"work_id": work_id}, config)
