@@ -14,6 +14,8 @@ from decimal import Decimal
 import psycopg
 from psycopg.rows import dict_row
 
+from .spans import split_spans
+
 KST = timezone(timedelta(hours=9))
 
 
@@ -24,6 +26,11 @@ def iso(v):
     if isinstance(v, date):
         return v.isoformat()
     return v
+
+
+def iso_row(row: dict) -> dict:
+    """DB 행의 시각 값을 모두 iso()로 바꾼다 (응답용)."""
+    return {k: iso(v) for k, v in row.items()}
 
 
 def num(v):
@@ -176,11 +183,14 @@ class Repo:
             wc["reused_sources"] = [{**r, "recorded_at": iso(r["recorded_at"])} for r in reused]
 
         versions = []
-        for v in q(f"SELECT artifact_id, version, author, saved_at, content{sfx} AS content FROM artifact_versions "
+        for v in q("SELECT artifact_id, version, author, saved_at, content, content_masked FROM artifact_versions "
                    "WHERE work_id=%s ORDER BY saved_at, version", (work_id,)):
+            raw_content, shown = v.pop("content"), v.pop("content_masked")
             spans = q(f"SELECT span_id, text{sfx} AS text FROM artifact_spans WHERE artifact_id=%s AND version=%s ORDER BY seq",
                       (v["artifact_id"], v["version"]))
-            versions.append({**v, "saved_at": iso(v["saved_at"]), "spans": spans})
+            if not spans:   # 앱이 저장한 산출물: 구간 행 없이 본문만 있다
+                spans = split_spans(v["artifact_id"], v["version"], raw_content, shown if masked else None)
+            versions.append({**v, "content": shown if masked else raw_content, "saved_at": iso(v["saved_at"]), "spans": spans})
 
         approvals = []
         for a in q("SELECT approval_id, artifact_version, submitted_at FROM approval_requests WHERE work_id=%s ORDER BY submitted_at", (work_id,)):

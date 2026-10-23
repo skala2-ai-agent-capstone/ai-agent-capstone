@@ -183,6 +183,13 @@ class Audit:
 
 
 # ── 도구 실행 골격 ─────────────────────────────────────────────────────
+# 실행 토큰 종류(claims.kind). 예전 토큰에는 kind가 없어 EVALUATION으로 본다
+EVALUATION = "evaluation"   # 최종 평가
+LIVE = "live"               # 중간 점검 (최근 메시지 5개)
+RUBRIC = "rubric"           # 평가 기준 작성
+ALL_KINDS = (EVALUATION, LIVE, RUBRIC)
+
+
 class ToolRuntime:
     def __init__(self, server: str, secret: str, faults: FaultInjector, audit: Audit, masker: Masker,
                  before: Callable[[], None] | None = None):
@@ -213,13 +220,18 @@ class ToolRuntime:
         except runtoken.TokenError as e:
             raise forbidden(str(e))
 
-    async def run(self, ctx: Any, tool: str, args: dict, fn: Callable[[dict], Any]) -> dict:
+    async def run(self, ctx: Any, tool: str, args: dict, fn: Callable[[dict], Any],
+                  kinds: tuple[str, ...] = (EVALUATION,)) -> dict:
+        """kinds: 이 도구를 부를 수 있는 실행 토큰 종류 (EVALUATION·LIVE·RUBRIC)."""
         t0 = time.time()
         claims: dict = {}
         try:
             if self.before:
                 self.before()
             claims = self.claims_from(ctx)
+            kind = claims.get("kind", EVALUATION)
+            if kind not in kinds:
+                raise forbidden(f"{tool}는 이 실행 토큰({kind})으로 호출할 수 없습니다")
             self.faults.check(claims["run_id"], claims["work_id"], tool)
             res = fn(claims)
             extra = {}
@@ -247,6 +259,12 @@ class ToolRuntime:
 def eval_id_for(work_id: str, version: str) -> str:
     """평가 건 ID 규칙: EVAL-{업무 ID에서 W- 제외}-{산출물 버전}. 적재기와 business-mcp가 같이 쓴다."""
     return f"EVAL-{work_id[2:] if work_id.startswith('W-') else work_id}-{version}"
+
+
+def version_number(version: str | None) -> int:
+    """평가 기준 버전 'v12' → 12 (형식이 다르면 0). 현행 기준을 고를 때 두 서버가 같이 쓴다."""
+    m = re.fullmatch(r"v(\d+)", str(version or ""))
+    return int(m.group(1)) if m else 0
 
 
 def new_id(prefix: str) -> str:

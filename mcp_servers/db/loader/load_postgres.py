@@ -5,6 +5,9 @@
     옵션: --reset (전체 비우고 다시 적재), --schema db/postgres/001_schema.sql (스키마 먼저 적용)
 
 - 텍스트는 원문과 마스킹본(policy_rules의 MASK-* 규칙)을 같이 넣는다.
+- 대화는 messages 테이블이 아니라 llm_exchanges에 넣는다. messages는 그것을 펼친 뷰다.
+  data/llm_exchanges.jsonl(모의 데이터 생성기 출력)이 있으면 그대로 쓰고, 없으면 케이스 대화를 chat_log 규칙으로 바꾼다.
+- 시드 사용자는 사번(user_id의 숫자)·역할(member/team_lead)로 바꿔 넣는다. 비밀번호는 SEED_USER_PASSWORD 값.
 - work.completed 이벤트를 중복 키로 묶어 평가 건(evaluations)을 만든다 (백엔드가 하는 일의 테스트용 재현).
 - 다시 실행해도 같은 결과가 나오도록 업무 단위로 지우고 넣는다. 평가 결과 테이블은 --reset일 때만 비운다.
 """
@@ -14,20 +17,28 @@ import argparse
 import glob
 import json
 import os
+import re
 import sys
 import tempfile
 import zipfile
+from collections import defaultdict
 
 import psycopg
 from psycopg.types.json import Jsonb
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from common.runtime import Masker, eval_id_for  # noqa: E402
+from db.loader.chat_log import workspace_exchanges  # noqa: E402
 
-RESULT_TABLES = ["audit_log", "idempotency_keys", "progress_log", "review_requests", "evaluation_coaching", "evaluation_drafts", "evaluations"]
+RESULT_TABLES = ["audit_log", "idempotency_keys", "progress_log", "review_requests", "evaluation_coaching", "evaluation_drafts",
+                 "live_evaluations", "evaluations"]
 WORK_TABLES = ["access_attempts", "fault_injections", "approval_request_items", "approval_requests", "quote_data", "human_actions",
-               "work_events", "evidence_links", "reference_access_logs", "artifact_spans", "artifact_versions", "messages",
+               "work_events", "evidence_links", "reference_access_logs", "artifact_spans", "artifact_versions", "llm_exchanges",
                "attached_references", "source_documents", "reused_sources", "work_links", "source_messages", "work_cases"]
+# 시드의 예전 역할 → users.role. 검토자는 팀장이 겸임한다
+ROLE_MAP = {"team_lead": "team_lead", "reviewer": "team_lead", "member": "member"}
+EXCHANGE_COLUMNS = ["created_at", "member", "endpoint", "stage", "work_id", "user_id", "model", "stream", "status_code", "error",
+                    "latency_ms", "input_tokens", "output_tokens", "request", "response", "response_text"]
 SEED_TABLES = ["historical_works", "rubric_items", "document_chunks", "documents", "policy_meta", "policy_rules", "pricing_policy",
                "exception_rules", "approval_tiers", "discount_components", "price_table_items", "price_tables", "products",
                "customers", "users", "teams", "companies"]
@@ -63,11 +74,45 @@ def j(path: str):
         return json.load(f)
 
 
+def read_exchanges(root: str, cases: list[dict]) -> dict[str | None, list[dict]]:
+    """업무별 llm_exchanges 행(시간순). 키 None은 업무가 없는 호출(개발 테스트 등)."""
+    out: dict[str | None, list[dict]] = defaultdict(list)
+    p = os.path.join(root, "llm_exchanges.jsonl")
+    if os.path.exists(p):
+        with open(p, encoding="utf-8") as f:
+            rows = [json.loads(line) for line in f if line.strip()]
+        for r in sorted(rows, key=lambda r: (r["created_at"], r.get("id", 0))):
+            out[r.get("work_id")].append(r)
+        return out
+    for case in cases:
+        out[case["raw"]["work_case"]["work_id"]] = workspace_exchanges(case)
+    return out
+
+
+def insert_exchanges(ex, rows: list[dict]) -> None:
+    for r in rows:
+        values = [Jsonb(r.get(c)) if c in ("request", "response") and r.get(c) is not None else r.get(c) for c in EXCHANGE_COLUMNS]
+        ex(f"INSERT INTO llm_exchanges ({', '.join(EXCHANGE_COLUMNS)}) VALUES ({', '.join(['%s'] * len(EXCHANGE_COLUMNS))})", values)
+
+
+def employee_no(user: dict) -> int:
+    if user.get("employee_no") is not None:
+        return int(user["employee_no"])
+    digits = re.sub(r"\D", "", user["user_id"])
+    if not digits:
+        raise SystemExit(f"사번을 만들 수 없는 사용자 ID입니다: {user['user_id']} (organization.json에 employee_no를 넣으세요)")
+    return int(digits)
+
+
 def load(conn: psycopg.Connection, root: str, reset: bool) -> dict:
     seed = os.path.join(root, "seed")
     org, customers, pricing = j(f"{seed}/organization.json"), j(f"{seed}/customers.json"), j(f"{seed}/pricing.json")
     policy, documents, historical = j(f"{seed}/policy_rules.json"), j(f"{seed}/documents.json"), j(f"{seed}/historical_works.json")
     cases = read_cases(root)
+    exchanges = read_exchanges(root, cases)
+    seed_password = os.environ.get("SEED_USER_PASSWORD", "")
+    if not seed_password:
+        raise SystemExit("SEED_USER_PASSWORD 환경 변수가 필요합니다(시드 사용자 로그인 비밀번호, .env에 설정)")
     masker = Masker(policy)
     tenant = org["companies"][0]["company_id"]
     warnings: list[str] = []
@@ -85,9 +130,11 @@ def load(conn: psycopg.Connection, root: str, reset: bool) -> dict:
         ex("INSERT INTO teams VALUES (%s,%s,%s) ON CONFLICT (team_id) DO UPDATE SET company_id=EXCLUDED.company_id, name=EXCLUDED.name",
            (t["team_id"], t["company_id"], t["name"]))
     for u in org["users"]:
-        ex("INSERT INTO users VALUES (%s,%s,%s,%s,%s,%s) ON CONFLICT (user_id) DO UPDATE SET company_id=EXCLUDED.company_id, "
-           "team_id=EXCLUDED.team_id, name=EXCLUDED.name, role=EXCLUDED.role, test_token=EXCLUDED.test_token",
-           (u["user_id"], u["company_id"], u.get("team_id"), u["name"], u["role"], u.get("test_token")))
+        # 이미 있는 사용자의 비밀번호는 덮어쓰지 않는다(앱에서 바꾼 비밀번호 유지)
+        ex("INSERT INTO users (user_id, employee_no, password, company_id, team_id, name, role) VALUES (%s,%s,%s,%s,%s,%s,%s) "
+           "ON CONFLICT (user_id) DO UPDATE SET employee_no=EXCLUDED.employee_no, company_id=EXCLUDED.company_id, "
+           "team_id=EXCLUDED.team_id, name=EXCLUDED.name, role=EXCLUDED.role",
+           (u["user_id"], employee_no(u), seed_password, u["company_id"], u.get("team_id"), u["name"], ROLE_MAP.get(u["role"], "member")))
     for c in customers:
         ex("INSERT INTO customers VALUES (%s,%s,%s,%s) ON CONFLICT (customer_id) DO UPDATE SET name=EXCLUDED.name, "
            "approved_reference=EXCLUDED.approved_reference", (c["customer_id"], c.get("company_id", tenant), c["name"], c["approved_reference"]))
@@ -157,14 +204,19 @@ def load(conn: psycopg.Connection, root: str, reset: bool) -> dict:
                 continue
             ex(f"DELETE FROM {t} WHERE work_id=%s", (wid,))
         reg = wc.get("registration")
-        ex("INSERT INTO work_cases VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT (work_id) DO UPDATE SET "
+        summary = case.get("summary")
+        title = wc.get("title") or (summary.split(" (")[0] if summary else None)
+        ex("INSERT INTO work_cases (work_id, case_id, company_id, team_id, employee_id, work_type, customer_id, title, status, "
+           "created_at, completed_at, rfp_status, registration, registration_masked, scenario_summary) "
+           "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT (work_id) DO UPDATE SET "
            "case_id=EXCLUDED.case_id, company_id=EXCLUDED.company_id, team_id=EXCLUDED.team_id, employee_id=EXCLUDED.employee_id, "
-           "work_type=EXCLUDED.work_type, customer_id=EXCLUDED.customer_id, status=EXCLUDED.status, created_at=EXCLUDED.created_at, "
-           "completed_at=EXCLUDED.completed_at, rfp_status=EXCLUDED.rfp_status, registration=EXCLUDED.registration, "
-           "registration_masked=EXCLUDED.registration_masked, scenario_summary=EXCLUDED.scenario_summary",
-           (wid, case.get("case_id"), wc["company_id"], wc.get("team_id"), wc["employee_id"], wc["work_type"], wc["customer_id"],
-            wc["status"], wc["created_at"], wc.get("completed_at"), wc.get("rfp_status") or case.get("rfp_status"),
-            Jsonb(reg) if reg is not None else None, Jsonb(masker.mask_obj(reg)) if reg is not None else None, case.get("summary")))
+           "work_type=EXCLUDED.work_type, customer_id=EXCLUDED.customer_id, title=EXCLUDED.title, status=EXCLUDED.status, "
+           "created_at=EXCLUDED.created_at, completed_at=EXCLUDED.completed_at, rfp_status=EXCLUDED.rfp_status, "
+           "registration=EXCLUDED.registration, registration_masked=EXCLUDED.registration_masked, "
+           "scenario_summary=EXCLUDED.scenario_summary",
+           (wid, case.get("case_id"), wc["company_id"], wc.get("team_id"), wc["employee_id"], wc.get("work_type"), wc["customer_id"],
+            title, wc["status"], wc["created_at"], wc.get("completed_at"), wc.get("rfp_status") or case.get("rfp_status"),
+            Jsonb(reg) if reg is not None else None, Jsonb(masker.mask_obj(reg)) if reg is not None else None, summary))
         sm = wc.get("source_message")
         if sm:
             ex("INSERT INTO source_messages VALUES (%s,%s,%s,%s,%s)",
@@ -179,9 +231,7 @@ def load(conn: psycopg.Connection, root: str, reset: bool) -> dict:
                 d["uploaded_at"], d["content"], masker.mask(d["content"])))
         for i, r in enumerate(raw["attached_references"], 1):
             ex("INSERT INTO attached_references VALUES (%s,%s,%s,%s)", (wid, r["doc_id"], r["version"], i))
-        for m in raw["messages"]:
-            ex("INSERT INTO messages VALUES (%s,%s,%s,%s,%s,%s,%s)",
-               (m["message_id"], wid, m["seq"], m["role"], m["content"], masker.mask(m["content"]), m["created_at"]))
+        insert_exchanges(ex, exchanges.get(wid, []))
         for v in raw["artifact_versions"]:
             ex("INSERT INTO artifact_versions VALUES (%s,%s,%s,%s,%s,%s,%s)",
                (v["artifact_id"], v["version"], wid, v["author"], v["saved_at"], v["content"], masker.mask(v["content"])))
@@ -220,6 +270,21 @@ def load(conn: psycopg.Connection, root: str, reset: bool) -> dict:
                (wid, i, f["target"], f.get("node"), f.get("error", "TEMPORARY_FAILURE"), f.get("times", 1), f.get("on_call", 1), f.get("note")))
         for a in raw.get("access_attempts", []) or []:
             ex("INSERT INTO access_attempts VALUES (%s,%s,%s,%s,%s)", (a["attempt_id"], wid, a["user_id"], a["action"], a["target"]))
+    # 업무 없는 호출(개발 테스트 등)은 같은 호출 주체 단위로 교체한다
+    loose = exchanges.get(None, [])
+    for member in sorted({r["member"] for r in loose}):
+        ex("DELETE FROM llm_exchanges WHERE work_id IS NULL AND member=%s", (member,))
+    insert_exchanges(ex, loose)
+
+    # messages 뷰가 원천 대화를 그대로 돌려주는지 확인한다
+    for case in cases:
+        wid = case["raw"]["work_case"]["work_id"]
+        want = [(m["message_id"], m["seq"], m["role"], m["content"]) for m in sorted(case["raw"]["messages"], key=lambda m: m["seq"])]
+        got = [tuple(r) for r in conn.execute(
+            "SELECT message_id, seq, role, content FROM messages WHERE work_id=%s ORDER BY seq", (wid,)).fetchall()]
+        if got != want:
+            warnings.append(f"{wid}: messages 뷰가 원천 대화와 다릅니다(원천 {len(want)}개, 뷰 {len(got)}개)")
+
     if missing_exc:
         warnings.append(
             f"quote_data.exceptions가 없는 견적 {len(missing_exc)}건은 예외 승인 대상(SLA 상향·결제 조건 변경 등)을 계산하지 못합니다. "
@@ -243,8 +308,8 @@ def load(conn: psycopg.Connection, root: str, reset: bool) -> dict:
         created += r.rowcount
 
     counts = {}
-    for t in ["work_cases", "messages", "artifact_versions", "artifact_spans", "source_documents", "documents", "document_chunks",
-              "rubric_items", "evaluations"]:
+    for t in ["users", "work_cases", "llm_exchanges", "messages", "artifact_versions", "artifact_spans", "source_documents", "documents",
+              "document_chunks", "rubric_items", "evaluations"]:
         counts[t] = conn.execute(f"SELECT count(*) FROM {t}").fetchone()[0]
     return {"counts": counts, "evaluations_created": created, "warnings": warnings}
 

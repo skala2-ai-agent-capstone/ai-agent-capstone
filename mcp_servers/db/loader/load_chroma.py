@@ -16,22 +16,9 @@ import psycopg
 from psycopg.rows import dict_row
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from common.chroma import COLLECTIONS, collection_name, connect  # noqa: E402
+from common.chroma import COLLECTIONS, RUBRIC_ITEM_FIELDS, clean_metadata, collection_name, connect  # noqa: E402
 from common.embedding import EMBEDDING_ID, embed_many  # noqa: E402
 from common.runtime import Masker  # noqa: E402
-
-
-def clean(m: dict) -> dict:
-    out = {}
-    for k, v in m.items():
-        if v is None:
-            continue
-        if isinstance(v, (list, dict)):
-            v = json.dumps(v, ensure_ascii=False)
-        elif not isinstance(v, (str, int, float, bool)):
-            v = str(v)
-        out[k] = v
-    return out
 
 
 def build(conn) -> dict[str, list[tuple[str, str, dict]]]:
@@ -49,18 +36,15 @@ def build(conn) -> dict[str, list[tuple[str, str, dict]]]:
         if coll in ("references", "policies"):
             for c in conn.execute("SELECT * FROM document_chunks WHERE doc_id=%s AND version=%s ORDER BY seq", (d["doc_id"], d["version"])):
                 meta = {**base, "chunk_id": c["chunk_id"], "seq": c["seq"], "clause_id": c["clause_id"], "label": c["label"]}
-                out[coll].append((f"{d['doc_id']}@{d['version']}#{c['chunk_id']}", masker.mask(c["text"]), clean(meta)))
+                out[coll].append((f"{d['doc_id']}@{d['version']}#{c['chunk_id']}", masker.mask(c["text"]), clean_metadata(meta)))
         elif coll == "rubrics":
             for it in conn.execute("SELECT * FROM rubric_items WHERE doc_id=%s AND version=%s ORDER BY seq", (d["doc_id"], d["version"])):
-                meta = {**base, "work_type": d["work_type"], "item_id": it["item_id"], "item": it["item"], "seq": it["seq"],
-                        "criterion": it["criterion"], "score_2": it["score_2"], "score_1": it["score_1"], "score_0": it["score_0"],
-                        "unobserved": it["unobserved"], "needs_review": it["needs_review"],
-                        "evidence_sources": it["evidence_sources"], "related_clauses": it["related_clauses"]}
+                meta = {**base, "work_type": d["work_type"], **{k: it[k] for k in RUBRIC_ITEM_FIELDS}}
                 text = f"{it['item']}: {it['criterion']}"
-                out[coll].append((f"{d['doc_id']}@{d['version']}#{it['item_id']}", text, clean(meta)))
+                out[coll].append((f"{d['doc_id']}@{d['version']}#{it['item_id']}", text, clean_metadata(meta)))
         elif coll == "coaching_examples":
             meta = {**base, "item": d["item"], "work_type": d["work_type"], "score_level": d["score_level"]}
-            out[coll].append((f"{d['doc_id']}@{d['version']}", d["content"], clean(meta)))
+            out[coll].append((f"{d['doc_id']}@{d['version']}", d["content"], clean_metadata(meta)))
     return out
 
 
