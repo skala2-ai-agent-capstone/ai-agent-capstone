@@ -187,7 +187,8 @@ class Audit:
 EVALUATION = "evaluation"   # 최종 평가
 LIVE = "live"               # 중간 피드백 Worker (회사 범위. 요청은 live_eval_id로 확인)
 RUBRIC = "rubric"           # 평가 기준 작성
-ALL_KINDS = (EVALUATION, LIVE, RUBRIC)
+TEAM = "team"               # 팀 평가 (팀 평가 요청 하나. 팀 집계만 보므로 rag 도구는 부를 수 없다)
+ALL_KINDS = (EVALUATION, LIVE, RUBRIC)   # rag-mcp 도구를 부를 수 있는 종류. TEAM은 넣지 않는다
 
 
 class ToolRuntime:

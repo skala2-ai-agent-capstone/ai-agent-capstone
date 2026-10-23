@@ -6,17 +6,20 @@
 ## 동작과 범위
 
 ```text
-백엔드: 관리자 권한 확인 → 확정 평가의 업무별 최신 버전 선택
-       → 기간·업무 유형·평가 기준 버전별 집계 → 공개 가능 여부 검사
+백엔드: 관리자 권한·공개 승인 확인 → POST /internal/team-evaluations (요청 행)
+MCP:   업무별 최신 확정 평가 선택 → 업무 유형·기준 버전·기준 해시별 집계
+       → 공개 기준 적용 → 스냅샷 고정 (team_evaluations)
+백엔드: POST /internal/team-runs → team 토큰을 팀 Agent 실행에 전달
 MCP:   get_team_evaluation_snapshot
 Agent: 입력 검증 → 항목 평균·관측 비율 계산 → LLM 근거/코칭 선택
        → 선택 검증 → 팀 리포트 구성 → 로컬 저장
-MCP:   save_team_evaluation_report (서버 구현 후 연결)
-백엔드: 팀 리포트 조회 권한 확인 → 관리자 화면
+MCP:   save_team_evaluation_report → 재검증 후 team_evaluations 저장
+백엔드: GET /internal/team-evaluations/{request_id} → 팀 리포트 조회 권한 확인 → 관리자 화면
 ```
 
 Agent는 개인 대화, 이름, 이메일, 개인 평가 ID, 원문 코칭을 받지 않는다.
-원본 개인 평가를 익명화하거나 합산하는 작업은 정본 데이터를 가진 백엔드 책임이다.
+원본 개인 평가를 합산하는 작업은 정본 DB를 읽는 business-mcp가 요청 생성 때 한 번 하고,
+관리자 권한과 공개 승인 판단은 백엔드 책임이다.
 Agent는 서버 집계의 산술·범위 일관성을 검증하고 평균·관측 비율을 계산한다.
 실제 원본과 구성원 수의 일치, 확정 여부, 관리자 권한을 독립적으로 증명하지는 못한다.
 
@@ -25,12 +28,15 @@ Agent는 서버 집계의 산술·범위 일관성을 검증하고 평균·관�
 - 입력/출력 계약, 집계 지표 계산, LLM 코칭 선택, 결과 검증, 로컬 CLI.
 - 팀 전용 MCP 클라이언트 허용 목록과 조회/저장 orchestration.
 - 가상 평가셋 8건, 기존 품질 실행기·사람 검토·LangSmith 정제 추적 연결.
+- business-mcp 두 도구와 팀 집계·저장(`mcp_servers/business_mcp/team.py`, `team_evaluations` 테이블),
+  내부 API `/internal/team-evaluations`·`/internal/team-runs`, team 토큰.
 
-아직 서버에 없는 부분:
+아직 없는 부분:
 
-- 아래 두 MCP 도구의 서버 구현, 백엔드 집계/공개 정책 및 관리자 조회 API.
-- 실제 요청 발행·인증 토큰 공급·팀 Worker 배포와 화면 연결.
-- GCP의 실제 모델 품질·지연·MCP 저장 검증.
+- 백엔드가 위 내부 API를 부르는 경로(관리자 권한·공개 승인 확인 포함)와 관리자 조회 API·화면.
+- 팀 Agent 실행 주체(큐 Worker 또는 백엔드 호출)와 team 토큰 전달, 서버(GCP) 배포.
+- 반복 기간 조회 차감 등 보완 억제(아래 공개 정책 참고). 현재는 그룹·항목 최소 인원만 적용한다.
+- GCP의 실제 모델 품질·지연 검증.
 
 ## 점수·공개 정책
 
@@ -129,32 +135,42 @@ LLM 품질 점수 대상에서 제외한다. 나머지 6건의 선택 품질을 
 
 ## MCP·백엔드 담당자에게 전달할 계약
 
-**새 도구 제안이며 기존 MCP 서버에 구현돼 있다는 뜻이 아니다.** 정확한 JSON Schema는
-`python -m ai_agents.cli.team_evaluation schemas`로 출력한다.
+business-mcp에 구현돼 있다(`mcp_servers/business_mcp/team.py`, 사용법은 `mcp_servers/README.md`
+「팀 평가」). 정확한 JSON Schema는 `python -m ai_agents.cli.team_evaluation schemas`로 출력한다.
 
 | 도구 | 요청 | 응답 data |
 | --- | --- | --- |
 | `get_team_evaluation_snapshot` | `request_id` UUID 하나 | `TeamSnapshot` |
 | `save_team_evaluation_report` | `TeamSaveRequest` | `TeamSaveReceipt` |
 
-MCP 공통 응답은 `ok`, `data`, `meta.run_id`, `meta.snapshot`이다.
-조회와 저장에서 run/snapshot 문맥이 바뀌면 클라이언트는 거부한다.
+MCP 공통 응답은 `ok`, `data`, `meta.run_id`, `meta.snapshot`이다. team 토큰의 `meta.snapshot`은
+`{request_id, snapshot_id, snapshot_sha256}`로 고정이며, 조회와 저장에서 이 문맥이 바뀌면 클라이언트는 거부한다.
+
+business-mcp가 하는 일(요청 생성 `/internal/team-evaluations` 때 한 번 계산해 고정):
+
+1. request UUID(백엔드가 주거나 서버가 발급)와 snapshot UUID 발급. 같은 request_id·같은 범위는
+   기존 행, 다른 범위는 `VERSION_CONFLICT`.
+2. `[period_start, period_end)`(KST)의 업무 완료 시각(`work_cases.completed_at`) 기준으로
+   업무별 최신 `확정` 평가 하나만 선택.
+3. 업무 유형·rubric 버전·기준 내용 해시별로 그룹화. 최신 초안에서 `채점`이고 점수가 유효한
+   항목만 `score_sum/scored_evaluations`에 포함하고, 구성원 수는 서로 다른 담당자 수.
+4. 기준 항목 이름(문제 정의·지시 품질·결과 검증·보안 준수·결과물 품질)으로 5개 공통 항목에 매핑.
+   맞지 않는 기준·초안이 있으면 요청 생성을 `VALIDATION_ERROR`로 거부(LLM에 맡기지 않음).
+5. 공개 기준 적용: `min_members` = max(5, 회사 `min_aggregation_size`, 요청 값). 미달 그룹은 제외,
+   미달 항목은 `statistics: null`, `release_approved=false`면 `groups=[]`.
+   Agent에는 팀 코드 대신 회사·팀으로 만든 고정 UUID를 준다.
+6. 저장 시 team 토큰의 요청·회사·팀, snapshot_id, `snapshot_sha256`, `report_sha256`을 확인하고
+   `metrics`를 스냅샷으로 다시 계산해 대조한다. 강점/개선 band, 개선 활동과 항목의 짝, 문장의
+   민감정보 패턴도 본다. 문장 문구 자체는 대조하지 않는다. 요청 하나에 리포트 하나이며 같은 키·같은
+   내용은 기존 receipt(`meta.duplicate`), 다른 내용은 `VERSION_CONFLICT`. 재생성은 새 요청 ID.
 
 백엔드가 할 일:
 
-1. 인증된 관리자와 요청의 회사·팀·기간 권한을 결합하고 고정 request/snapshot UUID 발급.
-2. `[period_start, period_end)`의 업무 최종 완료 시각을 기준으로, 업무별 최신 확정 평가
-   하나만 선택. 기준 매핑과 확정 상태는 서버 정본 사용. 기간의 시간대도 서버에서 고정.
-3. 업무 유형·rubric 버전·내용 해시별로 그룹화. 같은 업무는 중복 집계 금지.
-   항목이 관측되고 점수가 유효한 확정 평가만 `score_sum/scored_evaluations`에 포함.
-   미관측·검토 필요 항목을 합계 분모에 넣지 않고 구성원 수는 distinct로 산출.
-4. 기존 기준 원본 ID를 계약의 5개 공통 항목에 명시적으로 매핑. 호환되지 않는 기준은
-   기존 기준과 섞지 말고 오류/미지원으로 처리. 이 매핑을 LLM에게 맡기지 않음.
-5. 공개 정책을 적용한 집계만 반환. 권한 실패는 오류로 반환하고 데이터가 없는 것으로 위장하지 않음.
-6. 저장 시 request/snapshot/팀 권한, 서버가 고정한 집계 해시, 리포트 내용을 재검증.
-   `(request_id, snapshot_id)`는 논리 실행 하나이며 같은 중복 방지 키와 같은 payload는
-   기존 receipt를 반환. 같은 키에 다른 payload는 충돌로 거부. 재생성은 새 요청 ID 사용.
-7. 관리자에게 팀 리포트만 제공하고 개인 상세 리포트 조회 권한을 추가하지 않음.
+1. 인증된 관리자와 요청의 회사·팀·기간 권한을 확인하고 공개 승인 여부(`release_approved`)를 정해
+   `/internal/team-evaluations`를 부른다. 권한 실패는 오류로 돌려주고 빈 데이터로 위장하지 않는다.
+2. 반복 기간 조회 차감 등 보완 억제가 필요하면 공개 승인 전에 적용한다.
+3. `/internal/team-runs`로 받은 team 토큰을 팀 Agent 실행에 넘긴다.
+4. 관리자에게 팀 리포트만 제공하고 개인 상세 리포트 조회 권한을 추가하지 않는다.
 
 Agent 연동 API:
 
@@ -179,7 +195,24 @@ python -m ai_agents.cli.team_evaluation save-request \
   --output outputs/team/baseline/save-retry.json
 ```
 
-서버 조회·저장과 팀 기준 집계가 확정되기 전에는 제안 계약을 실제 DB 구조라고 설명하지 않는다.
+서버 저장 구조는 `team_evaluations`(`mcp_servers/db/postgres/001_schema.sql`, 기존 DB는
+`004_team_evaluation.sql`)다. 쓴 평가 건 ID는 `source_evaluation_ids`에만 남기고 Agent에 주지 않는다.
+
+## MCP 서버 연동 검증 기록 — 2026-10-23
+
+브랜치 `feat/team-evaluation-mcp`, 기준 커밋 `ed2218b`에 미커밋 변경을 포함해 검증했다.
+로컬 `postgres:16-alpine` 컨테이너와 venv의 business-mcp·rag-mcp(가짜 Chroma)로 돌렸다.
+
+| 검사 | 결과 |
+| --- | --- |
+| `tests/test_team_mcp_postgres.py` (실제 PostgreSQL, Agent 계약 모델로 스냅샷 읽기·리포트 저장) | 6 통과 |
+| 전체 Agent·프록시 회귀 검사(테스트 DB 지정) | 937 통과 / 8 건너뜀(fastapi·aio_pika 미설치) |
+| `mcp_servers/tests/verify_team.py` (HTTP, 토큰 종류·범위·집계·저장·재전송·충돌·정리) | 39/39 |
+| 기존 `verify_spec`·`verify_db`·`verify_app_work`·`verify_live_rubric`·`verify_documents` | 861·42·10·92·30 모두 통과 |
+| 실제 `TeamMCPGateway`·`TeamEvaluationWorkflow`로 HTTP 조회→리포트→저장→재전송 | 스냅샷 해시 일치, 같은 영수증, 서버 저장본 일치 |
+
+종단 확인의 리포트는 LLM 대신 고정 선택(`build_report`)으로 만들었다. 실제 모델 호출, 서버(GCP) 배포,
+백엔드 호출 경로는 확인하지 않았다. `verify_e2e`는 llm-proxy가 필요해 돌리지 않았다.
 
 ## 구현 검증 기록 — 2026-10-23
 

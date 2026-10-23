@@ -459,6 +459,33 @@ CREATE TABLE IF NOT EXISTS live_evaluations (
 -- 기존 계약 v1 DB에도 데이터를 지우지 않고 추가한다. 이전 요청은 NULL로 남긴다.
 ALTER TABLE live_evaluations ADD COLUMN IF NOT EXISTS conversation_snapshot jsonb;
 
+-- 팀 평가(팀 집계 코칭). 백엔드가 요청 행을 만들 때 business-mcp가 확정 평가를 집계해 스냅샷으로 고정하고,
+-- 팀 Agent가 team 토큰으로 스냅샷을 읽어 리포트를 저장한다. 요청 하나에 리포트 하나. 계약: docs/team_evaluation.md
+CREATE TABLE IF NOT EXISTS team_evaluations (
+  request_id             uuid PRIMARY KEY,
+  snapshot_id            uuid NOT NULL UNIQUE,
+  company_id             text NOT NULL REFERENCES companies,
+  team_id                text NOT NULL REFERENCES teams,
+  period_start           date NOT NULL,
+  period_end             date NOT NULL,                  -- 미포함. 업무 완료 시각(KST) 기준
+  requested_by           text REFERENCES users,
+  requested_at           timestamptz NOT NULL DEFAULT now(),
+  release_approved       boolean NOT NULL,              -- 백엔드의 공개 승인. false면 스냅샷 groups=[]
+  min_members            int  NOT NULL CHECK (min_members BETWEEN 5 AND 100),
+  snapshot               jsonb NOT NULL,                -- Agent에 주는 TeamSnapshot 그대로(이름·평가 건 ID·개별 점수 없음)
+  snapshot_sha256        text NOT NULL,
+  source_evaluation_ids  text[] NOT NULL,              -- 집계에 고른 평가 건(업무별 최신 확정). Agent에 주지 않는다
+  status                 text NOT NULL DEFAULT '대기' CHECK (status IN ('대기','완료')),
+  report                 jsonb,                         -- TeamReport
+  report_sha256          text,
+  revision               int,
+  idempotency_key        text,
+  saved_at               timestamptz,
+  run_id                 text,
+  CHECK (period_start < period_end),
+  CHECK ((status = '완료') = (report IS NOT NULL))
+);
+
 CREATE TABLE IF NOT EXISTS progress_log (
   id             bigserial PRIMARY KEY,
   evaluation_id  text NOT NULL REFERENCES evaluations ON DELETE CASCADE,

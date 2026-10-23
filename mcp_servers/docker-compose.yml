@@ -51,8 +51,8 @@ services:
   # 전부 비우고 다시 넣으려면: docker compose run --rm -e LOAD_ARGS=--reset db-init
   db-init:
     <<: *app
-    # 002·003은 이전 DB에 칸을 더하는 변경이라 매번 같이 돌려도 결과가 같다
-    command: ["sh", "-c", "python -m db.loader.load_postgres --data /app/data --schema db/postgres/001_schema.sql --schema db/postgres/002_live_feedback_snapshot.sql --schema db/postgres/003_frontend_upload.sql $${LOAD_ARGS:-} && python -m db.loader.load_chroma"]
+    # 002~004는 이전 DB에 칸·테이블을 더하는 변경이라 매번 같이 돌려도 결과가 같다
+    command: ["sh", "-c", "python -m db.loader.load_postgres --data /app/data --schema db/postgres/001_schema.sql --schema db/postgres/002_live_feedback_snapshot.sql --schema db/postgres/003_frontend_upload.sql --schema db/postgres/004_team_evaluation.sql $${LOAD_ARGS:-} && python -m db.loader.load_chroma"]
     depends_on:
       postgres:
         condition: service_healthy
@@ -103,7 +103,7 @@ services:
   verify:
     <<: *app
     profiles: ["test"]
-    command: ["sh", "-c", "python tests/verify_spec.py && python tests/verify_db.py && python tests/verify_app_work.py && python tests/verify_live_rubric.py && python tests/verify_e2e.py && python tests/verify_documents.py"]
+    command: ["sh", "-c", "python tests/verify_spec.py && python tests/verify_db.py && python tests/verify_app_work.py && python tests/verify_live_rubric.py && python tests/verify_e2e.py && python tests/verify_documents.py && python tests/verify_team.py"]
     environment:
       <<: *app-env
       BUSINESS_MCP_URL: http://business-mcp:8001

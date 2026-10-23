@@ -33,7 +33,7 @@ from common.runtime import Masker, eval_id_for  # noqa: E402
 from db.loader.chat_log import workspace_exchanges  # noqa: E402
 
 RESULT_TABLES = ["audit_log", "idempotency_keys", "progress_log", "review_requests", "evaluation_coaching", "evaluation_drafts",
-                 "live_evaluations", "evaluations"]
+                 "live_evaluations", "team_evaluations", "evaluations"]
 WORK_TABLES = ["access_attempts", "fault_injections", "approval_request_items", "approval_requests", "quote_data", "human_actions",
                "work_events", "evidence_links", "reference_access_logs", "artifact_spans", "artifact_versions", "llm_exchanges",
                "attached_references", "source_documents", "reused_sources", "work_links", "source_messages", "work_cases"]
