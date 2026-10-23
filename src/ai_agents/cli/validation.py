@@ -1,4 +1,4 @@
-"""python -m ai_agents.cli.validation {schemas,run,compare}."""
+"""python -m ai_agents.cli.validation {schemas,run,compare,report}."""
 
 import argparse
 import asyncio
@@ -8,6 +8,7 @@ from pathlib import Path
 
 from ..shared.execution_contracts import EvaluationRequest, FeedbackResult
 from ..validation.models import Dataset, ExperimentResult
+from ..validation.report import render_report
 from ..validation.runner import compare_experiments, run_experiment, write_json
 
 
@@ -35,6 +36,14 @@ def parser():
         choices=["model", "model_settings", "prompt_version", "rubric_version"],
     )
     compare.add_argument("--output", type=Path)
+    report = sub.add_parser("report", help="실험 정본에서 검증결과서용 Markdown 요약 생성")
+    report.add_argument("experiment", type=Path)
+    report.add_argument("--before", type=Path)
+    report.add_argument("--output", type=Path, required=True)
+    report.add_argument(
+        "--allow-change", action="append", default=[],
+        choices=["model", "model_settings", "prompt_version", "rubric_version"],
+    )
     return root
 
 
@@ -46,6 +55,16 @@ def main(argv=None):
                 model.__name__: model.model_json_schema()
                 for model in (EvaluationRequest, FeedbackResult, Dataset)
             }
+        elif args.command == "report":
+            after = ExperimentResult.model_validate_json(args.experiment.read_text())
+            before = (
+                ExperimentResult.model_validate_json(args.before.read_text())
+                if args.before else None
+            )
+            rendered = render_report(after, before=before, allow_changes=args.allow_change)
+            with args.output.open("x", encoding="utf-8") as stream:
+                stream.write(rendered)
+            output = {"status": "report_written", "output": str(args.output)}
         elif args.command == "compare":
             output = compare_experiments(
                 ExperimentResult.model_validate_json(args.before.read_text()),
