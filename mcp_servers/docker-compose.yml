@@ -170,13 +170,18 @@ services:
   llm-proxy:
     profiles: ["llm", "mockllm"]
     build: ../llm_proxy
-    image: ax-eval/llm-proxy:1.1.0
+    image: ax-eval/llm-proxy:1.2.0
     environment:
       UPSTREAM_URL: http://vllm:8000
       UPSTREAM_API_KEY: ${VLLM_API_KEY:-}
       PROXY_KEYS: ${PROXY_KEYS:-}
       DATABASE_URL: postgresql://axeval:${POSTGRES_PASSWORD:?.env에 POSTGRES_PASSWORD 필요}@postgres:5432/axeval
       UPSTREAM_TIMEOUT: ${UPSTREAM_TIMEOUT:-600}
+      # 업무 공간 대화만 vLLM, OPENAI_STAGES의 단계(평가·피드백 등)는 OpenAI로 보낸다. 기록은 둘 다 llm_exchanges
+      OPENAI_STAGES: ${OPENAI_STAGES:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      OPENAI_UPSTREAM_URL: https://api.openai.com
     ports:
       # 보안그룹에서 4000을 열지 않는다. Tailscale IP로 묶으면 사설망에서만 보인다
       - "${PROXY_BIND:-0.0.0.0}:4000:4000"

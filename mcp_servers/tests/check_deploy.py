@@ -31,7 +31,8 @@ PUBLIC_PORTS = {("business-mcp", 8001), ("rag-mcp", 8002), ("llm-proxy", 4000)}
 APP_PUBLIC_PORTS = {("backend", 8080)}
 CODE_DIRS = [os.path.join(ROOT, d) for d in ("common", "business_mcp", "rag_mcp", "db")] + [os.path.join(REPO, "llm_proxy", "proxy")]
 # 코드가 읽지만 compose가 서비스마다 정해 주거나 로컬 개발에서만 쓰는 값
-SET_BY_COMPOSE = {"DATABASE_URL", "CHROMA_HOST", "CHROMA_PORT", "PORT", "UPSTREAM_URL", "UPSTREAM_API_KEY", "DATA_DIR"}
+SET_BY_COMPOSE = {"DATABASE_URL", "CHROMA_HOST", "CHROMA_PORT", "PORT", "UPSTREAM_URL", "UPSTREAM_API_KEY", "DATA_DIR",
+                  "OPENAI_UPSTREAM_URL"}
 LOCAL_ONLY = {"HOST", "MCP_TRANSPORT", "RUN_TOKEN", "CHROMA_FAKE_PATH", "CHROMA_AUTH_TOKEN"}
 results: list[tuple[str, bool, str]] = []
 
@@ -183,7 +184,11 @@ def main() -> int:
         proxy_keys = dict(x.split(":", 1) for x in s["llm-proxy"]["environment"].get("PROXY_KEYS", "").split(",") if ":" in x)
         check("Worker → llm-proxy(/v1), 키가 PROXY_KEYS에 있음",
               wk.get("FEEDBACK_LLM_BASE_URL") == "http://llm-proxy:4000/v1" and wk.get("FEEDBACK_LLM_API_KEY") in proxy_keys.values())
-        check("Worker 모델 이름 = SERVED_MODEL_NAME", wk.get("FEEDBACK_LLM_MODEL") == env["SERVED_MODEL_NAME"])
+        # 프록시가 live_evaluate를 OpenAI로 보내면 그 모델, 아니면 vLLM 모델. 결과의 실행 정보에 남는 이름이다
+        openai_stages = {x.strip() for x in s["llm-proxy"]["environment"].get("OPENAI_STAGES", "").split(",") if x.strip()}
+        want_model = env["OPENAI_MODEL"] if "live_evaluate" in openai_stages else env["SERVED_MODEL_NAME"]
+        check("Worker 모델 이름 = 프록시가 live_evaluate를 보내는 모델", wk.get("FEEDBACK_LLM_MODEL") == want_model,
+              f"{wk.get('FEEDBACK_LLM_MODEL')} != {want_model}")
         check("backend(업무 공간 대화) → llm-proxy, 키가 PROXY_KEYS에 있음, 모델 = SERVED_MODEL_NAME",
               be.get("LLM_PROXY_URL") == "http://llm-proxy:4000" and be.get("LLM_PROXY_KEY") in proxy_keys.values()
               and be.get("LLM_MODEL") == env["SERVED_MODEL_NAME"])
@@ -212,6 +217,12 @@ def main() -> int:
         check("vLLM: --served-model-name = SERVED_MODEL_NAME", f"--served-model-name={env['SERVED_MODEL_NAME']}" in cmd, cmd[:200])
         check("vLLM: 도구 호출 파서 켜짐", "--enable-auto-tool-choice" in cmd and "--tool-call-parser=" in cmd)
         check("llm-proxy → http://vllm:8000", p["environment"].get("UPSTREAM_URL") == "http://vllm:8000")
+        stages = {x.strip() for x in p["environment"].get("OPENAI_STAGES", "").split(",") if x.strip()}
+        check("llm-proxy: 업무 공간 대화 외 단계만 OpenAI로 (workspace_chat은 vLLM)",
+              stages == {"classify", "rubric", "evaluate", "live_evaluate"}, str(sorted(stages)))
+        check("llm-proxy: OpenAI 단계가 있으면 OPENAI_API_KEY·OPENAI_MODEL 전달",
+              not stages or (p["environment"].get("OPENAI_API_KEY") == env["OPENAI_API_KEY"]
+                             and p["environment"].get("OPENAI_MODEL") == env["OPENAI_MODEL"]))
         check("llm-proxy는 적재(db-init) 뒤에 시작",
               (p.get("depends_on") or {}).get("db-init", {}).get("condition") == "service_completed_successfully")
         check("llm-proxy와 MCP가 같은 업무 DB(axeval)", p["environment"]["DATABASE_URL"] == cfg["services"]["business-mcp"]["environment"]["DATABASE_URL"])

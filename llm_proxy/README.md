@@ -17,10 +17,25 @@ postgres axeval: llm_exchanges ──(뷰)──▶ messages ──▶ business-
 | 구성 | 역할 |
 | --- | --- |
 | `vllm` | `vllm/vllm-openai` 이미지. 모델 서빙, 도구 호출 파서 포함 |
-| `llm-proxy` | 프록시 키 확인 → 기록용 헤더 검증 → vLLM 키로 바꿔 요청을 그대로 전달 → 요청·응답을 업무 DB에 기록. 요청 본문을 고치지 않으므로 Chat Completions·Responses API·스트리밍 모두 vLLM 동작 그대로 |
+| `llm-proxy` | 프록시 키 확인 → 기록용 헤더 검증 → vLLM 키로 바꿔 요청을 그대로 전달 → 요청·응답을 업무 DB에 기록. vLLM으로 보내는 요청은 본문을 고치지 않으므로 Chat Completions·Responses API·스트리밍 모두 vLLM 동작 그대로. 업무 대화 외 단계는 OpenAI로 보냄(아래) |
 | `postgres` | 업무 DB. 스키마는 [`mcp_servers/db/postgres/001_schema.sql`](../mcp_servers/db/postgres/001_schema.sql) |
 
 기록하지 않는 것: 키(`Authorization`), 모델 목록 같은 GET 요청. 기록 저장이 실패해도 LLM 응답은 그대로 돌려줍니다.
+
+### 단계별 LLM: 업무 대화만 로컬, 나머지는 OpenAI
+
+`OPENAI_STAGES`에 든 단계(`X-Stage`)는 vLLM 대신 OpenAI로 보냅니다. 서버 설정은 `classify,rubric,evaluate,live_evaluate`라서 **업무 공간 대화(`workspace_chat`)만 로컬 vLLM**이고 분류·기준 생성·평가·중간 피드백은 OpenAI입니다.
+
+| 호출 | 보내는 곳 | 모델 |
+| --- | --- | --- |
+| `X-Stage: workspace_chat` | vLLM | 요청 그대로(`gemma4`) |
+| `X-Stage`가 `OPENAI_STAGES`에 있음 | OpenAI(`OPENAI_API_KEY`) | `OPENAI_MODEL`로 바꿔 보냄(기본 `gpt-4o-mini`) |
+| `X-Stage` 없음(팀원 개발용 호출) | vLLM | 요청 그대로 |
+
+- 호출하는 쪽은 단계 헤더만 정하면 됩니다. 로컬 모델 이름으로 불러도 OpenAI 단계면 프록시가 모델 이름을 바꿔 보내고, `llm_exchanges.model`에는 실제로 보낸 모델이 남습니다. 결과에 모델 이름을 남기는 쪽(중간 피드백 Worker)은 설정한 모델 이름도 `OPENAI_MODEL`과 같게 둡니다.
+- `workspace_chat`은 `OPENAI_STAGES`에 넣을 수 없습니다(프록시가 시작을 거부). `OPENAI_STAGES`가 있는데 `OPENAI_API_KEY`가 비어 있어도 시작을 거부합니다.
+- OpenAI 키는 프록시만 압니다. Worker·팀원은 지금처럼 자기 프록시 키로 부릅니다.
+- GPU 없이 `--profile mockllm`으로 시험할 때는 `OPENAI_STAGES`를 비웁니다(모두 모의 vLLM으로 감).
 
 ## 1. EC2에서 실행
 
