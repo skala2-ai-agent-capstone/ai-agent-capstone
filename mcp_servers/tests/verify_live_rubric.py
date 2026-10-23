@@ -210,21 +210,122 @@ async def rubric_checks() -> None:
                                                          "based_on_version": "v1"})
         check("save_rubric based_on_version이 현행 아님 → VERSION_CONFLICT", code(stale) == "VERSION_CONFLICT", str(stale)[:200])
 
+        # 초안 저장: 현행(v2)은 그대로이고 초안 v3가 생긴다
         k = key()
         ok = await s.call("business", "save_rubric", {"work_type": "quote", "items": items, "idempotency_key": k, "based_on_version": "v2"})
-        check("save_rubric 정상 → RUB-quote v3 현행, v2 폐기",
-              ok["ok"] and ok["data"]["version"] == "v3" and ok["data"]["retired_versions"] == ["v2"], str(ok)[:300])
+        check("save_rubric 정상 → RUB-quote v3 초안(기반 v2)",
+              ok["ok"] and ok["data"]["version"] == "v3" and ok["data"]["status"] == "초안" and ok["data"]["based_on_version"] == "v2"
+              and ok["data"]["replaced_draft"] is False, str(ok)[:300])
         dup = await s.call("business", "save_rubric", {"work_type": "quote", "items": items, "idempotency_key": k, "based_on_version": "v2"})
         check("같은 idempotency_key → 기존 결과(duplicate)", dup["ok"] and dup["meta"].get("duplicate") and dup["data"] == ok["data"])
         cur2 = await s.call("rag", "get_current_rubric", {"work_type": "quote"})
-        check("저장 직후 rag get_current_rubric = v3(수정된 기준)",
-              cur2["ok"] and cur2["data"]["version"] == "v3" and cur2["data"]["items"][0]["criterion"].endswith("(기준 생성 Agent 수정)"),
-              str(cur2)[:200])
+        check("초안 저장 뒤에도 get_current_rubric = v2(승인 전엔 평가에 안 씀)", cur2["ok"] and cur2["data"]["version"] == "v2", str(cur2)[:200])
+        draft = await s.call("rag", "search_rubric", {"work_type": "quote", "rubric_version": "v3"})
+        check("초안 v3는 search_rubric으로 초안 상태로 조회",
+              draft["ok"] and draft["data"]["status"] == "초안" and draft["data"]["items"][0]["criterion"].endswith("(기준 생성 Agent 수정)"),
+              str(draft)[:200])
+
+        # 다시 설계하면 열린 초안을 같은 버전으로 덮어쓴다
+        items2 = rubric_payload(cur["data"], " (재설계)")
+        redo = await s.call("business", "save_rubric", {"work_type": "quote", "items": items2, "idempotency_key": key()})
+        check("초안이 있을 때 save_rubric → 같은 v3 덮어씀(replaced_draft)",
+              redo["ok"] and redo["data"]["version"] == "v3" and redo["data"]["replaced_draft"] is True, str(redo)[:300])
+        draft2 = await s.call("rag", "search_rubric", {"work_type": "quote", "rubric_version": "v3"})
+        check("덮어쓴 초안 내용이 반영됨", draft2["ok"] and draft2["data"]["items"][0]["criterion"].endswith("(재설계)"), str(draft2)[:200])
+
+    # 관리자 승인(백엔드 내부 API)
+    check("승인: 없는 회사 → NOT_FOUND", code(internal("POST", "/internal/rubrics/approve", {"company_id": "NOPE"})) == "NOT_FOUND")
+    check("승인: 초안 없는 유형 지정 → NOT_FOUND",
+          code(internal("POST", "/internal/rubrics/approve", {"company_id": "C-LGCNS-SALES", "work_types": ["proposal"]})) == "NOT_FOUND")
+    check("승인: 잘못된 유형 → VALIDATION_ERROR",
+          code(internal("POST", "/internal/rubrics/approve", {"company_id": "C-LGCNS-SALES", "work_types": ["nope"]})) == "VALIDATION_ERROR")
+    ap = internal("POST", "/internal/rubrics/approve", {"company_id": "C-LGCNS-SALES", "approved_by": "AD-4001"})
+    check("승인 → v3 현행, v2 폐기",
+          ap["ok"] and ap["data"]["approved"] == [{"work_type": "quote", "doc_id": "RUB-quote", "version": "v3", "retired_versions": ["v2"]}],
+          str(ap)[:300])
+    check("승인할 초안이 더 없으면 NOT_FOUND", code(internal("POST", "/internal/rubrics/approve", {"company_id": "C-LGCNS-SALES"})) == "NOT_FOUND")
+
+    async with Session(tok["data"]["run_token"]) as s:
+        cur3 = await s.call("rag", "get_current_rubric", {"work_type": "quote"})
+        check("승인 뒤 get_current_rubric = v3(재설계 기준)",
+              cur3["ok"] and cur3["data"]["version"] == "v3" and cur3["data"]["items"][0]["criterion"].endswith("(재설계)"), str(cur3)[:200])
         old = await s.call("rag", "search_rubric", {"work_type": "quote", "rubric_version": "v2"})
         check("이전 버전 v2는 폐기 상태로 조회 가능", old["ok"] and old["data"]["status"] == "폐기", str(old)[:200])
         again = await s.call("business", "save_rubric", {"work_type": "quote", "items": items, "idempotency_key": key(),
                                                          "based_on_version": "v2"})
         check("이미 바뀐 기준 위에 다시 저장 → VERSION_CONFLICT", code(again) == "VERSION_CONFLICT")
+
+        # 초안 폐기: 초안 v4를 만들고 지운다. 현행 v3는 그대로
+        d4 = await s.call("business", "save_rubric", {"work_type": "quote", "items": items, "idempotency_key": key(), "based_on_version": "v3"})
+        check("새 초안 v4(기반 v3)", d4["ok"] and d4["data"]["version"] == "v4" and d4["data"]["based_on_version"] == "v3", str(d4)[:200])
+        dis = internal("POST", "/internal/rubrics/discard", {"company_id": "C-LGCNS-SALES", "work_types": ["quote"]})
+        check("초안 폐기 → v4 삭제", dis["ok"] and dis["data"]["discarded"] == [{"work_type": "quote", "doc_id": "RUB-quote", "version": "v4"}],
+              str(dis)[:200])
+        gone = await s.call("rag", "search_rubric", {"work_type": "quote", "rubric_version": "v4"})
+        check("폐기한 초안은 Chroma에서도 없음(NOT_FOUND)", code(gone) == "NOT_FOUND", str(gone)[:200])
+        cur4 = await s.call("rag", "get_current_rubric", {"work_type": "quote"})
+        check("폐기 뒤에도 현행은 v3", cur4["ok"] and cur4["data"]["version"] == "v3", str(cur4)[:200])
+    check("폐기할 초안이 없으면 NOT_FOUND", code(internal("POST", "/internal/rubrics/discard", {"company_id": "C-LGCNS-SALES"})) == "NOT_FOUND")
+
+    # 관리자 '수정 초안 만들기'(현행 복사) → '항목 저장'(항목 하나의 칸 일부) → 승인
+    co = "C-LGCNS-SALES"
+    check("수정 초안: 없는 회사 → NOT_FOUND", code(internal("POST", "/internal/rubrics/drafts", {"company_id": "NOPE"})) == "NOT_FOUND")
+    check("수정 초안: 잘못된 유형 → VALIDATION_ERROR",
+          code(internal("POST", "/internal/rubrics/drafts", {"company_id": co, "work_types": ["nope"]})) == "VALIDATION_ERROR")
+    fk = internal("POST", "/internal/rubrics/drafts", {"company_id": co, "work_types": ["quote"], "created_by": "AD-4001"})
+    check("수정 초안 만들기 → v4(현행 v3 복사)",
+          fk["ok"] and fk["data"]["created"] == [{"work_type": "quote", "doc_id": "RUB-quote", "version": "v4", "based_on_version": "v3"}],
+          str(fk)[:300])
+    check("초안이 있는 유형에 다시 만들기 → VERSION_CONFLICT",
+          code(internal("POST", "/internal/rubrics/drafts", {"company_id": co, "work_types": ["quote"]})) == "VERSION_CONFLICT")
+    check("전체 유형 만들기도 한 유형에 초안이 있으면 VERSION_CONFLICT",
+          code(internal("POST", "/internal/rubrics/drafts", {"company_id": co})) == "VERSION_CONFLICT")
+
+    def edit(**body) -> dict:
+        return internal("POST", "/internal/rubrics/drafts/items", {"company_id": co, "work_type": "quote", **body})
+
+    check("항목 저장: 초안 없는 유형 → NOT_FOUND",
+          code(internal("POST", "/internal/rubrics/drafts/items", {"company_id": co, "work_type": "proposal", "item": "결과 검증",
+                                                                   "fields": {"criterion": "x"}})) == "NOT_FOUND")
+    bad_edits = {
+        "없는 항목 이름": {"item": "속도", "fields": {"criterion": "x"}},
+        "고칠 수 없는 칸(item_id)": {"item": "결과 검증", "fields": {"item_id": "quote.9"}},
+        "평가 질문 비움": {"item": "결과 검증", "fields": {"criterion": " "}},
+        "보안 준수 score_1 바꿈": {"item": "보안 준수", "fields": {"score_1": "일부 준수"}},
+        "현행 내규에 없는 조항": {"item": "결과 검증", "fields": {"related_clauses": ["ART-99"]}},
+        "근거 비움": {"item": "결과 검증", "fields": {"evidence_sources": []}},
+    }
+    for name, body in bad_edits.items():
+        check(f"항목 저장 {name} → VALIDATION_ERROR", code(edit(**body)) == "VALIDATION_ERROR")
+
+    async with Session(tok["data"]["run_token"]) as s:
+        v3 = (await s.call("rag", "search_rubric", {"work_type": "quote", "rubric_version": "v3"}))["data"]
+        v4 = await s.call("rag", "search_rubric", {"work_type": "quote", "rubric_version": "v4"})
+        check("수정 초안 v4는 초안 상태이고 항목은 v3와 같음",
+              v4["ok"] and v4["data"]["status"] == "초안" and v4["data"]["items"] == v3["items"], str(v4)[:200])
+        target = next(i for i in v3["items"] if i["item"] == "결과 검증")
+        new_criterion = target["criterion"] + " (관리자 수정)"
+        ed = edit(item="결과 검증", edited_by="AD-4001",
+                  fields={"criterion": new_criterion, "evidence_sources": target["evidence_sources"] + ["관리자 추가 근거"]})
+        check("항목 저장 → 바뀐 칸만 보고, item_id 유지",
+              ed["ok"] and ed["data"]["version"] == "v4" and ed["data"]["changed_fields"] == ["criterion", "evidence_sources"]
+              and ed["data"]["item"]["item_id"] == target["item_id"], str(ed)[:300])
+        v4b = (await s.call("rag", "search_rubric", {"work_type": "quote", "rubric_version": "v4"}))["data"]
+        others_same = [i for i in v4b["items"] if i["item"] != "결과 검증"] == [i for i in v3["items"] if i["item"] != "결과 검증"]
+        edited = next(i for i in v4b["items"] if i["item"] == "결과 검증")
+        check("Chroma 초안에 그 항목만 반영", others_same and edited["criterion"] == new_criterion
+              and edited["evidence_sources"][-1] == "관리자 추가 근거", str(edited)[:200])
+        cur5 = await s.call("rag", "get_current_rubric", {"work_type": "quote"})
+        check("항목 저장 뒤에도 현행은 v3", cur5["ok"] and cur5["data"]["version"] == "v3", str(cur5)[:200])
+    ap2 = internal("POST", "/internal/rubrics/approve", {"company_id": co, "approved_by": "AD-4001"})
+    check("관리자 수정 초안 승인 → v4 현행, v3 폐기",
+          ap2["ok"] and ap2["data"]["approved"] == [{"work_type": "quote", "doc_id": "RUB-quote", "version": "v4", "retired_versions": ["v3"]}],
+          str(ap2)[:300])
+    async with Session(tok["data"]["run_token"]) as s:
+        cur6 = await s.call("rag", "get_current_rubric", {"work_type": "quote"})
+        check("승인 뒤 현행 v4에 관리자 수정이 반영",
+              cur6["ok"] and cur6["data"]["version"] == "v4"
+              and next(i for i in cur6["data"]["items"] if i["item"] == "결과 검증")["criterion"] == new_criterion, str(cur6)[:200])
 
     run = issue_run("EVAL-E2E-QT-01-v2")
     async with Session(run["run_token"]) as s:
@@ -235,8 +336,10 @@ async def rubric_checks() -> None:
 
     with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
         rows = conn.execute("SELECT version, status FROM documents WHERE doc_id='RUB-quote' ORDER BY version").fetchall()
-        n = conn.execute("SELECT count(*) FROM rubric_items WHERE doc_id='RUB-quote' AND version='v3'").fetchone()[0]
-    check("PG documents·rubric_items 반영", rows == [("v2", "폐기"), ("v3", "현행")] and n == 5, str(rows))
+        n = conn.execute("SELECT count(*) FROM rubric_items WHERE doc_id='RUB-quote' AND version='v4'").fetchone()[0]
+        drafts = conn.execute("SELECT count(*) FROM documents WHERE collection='rubrics' AND status='초안'").fetchone()[0]
+    check("PG documents·rubric_items 반영", rows == [("v2", "폐기"), ("v3", "폐기"), ("v4", "현행")] and n == 5, str(rows))
+    check("남은 초안 없음(VERSION_CONFLICT로 거절된 전체 만들기는 아무것도 만들지 않음)", drafts == 0, str(drafts))
 
 
 async def main() -> int:

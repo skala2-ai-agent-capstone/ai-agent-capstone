@@ -4,3 +4,5 @@ mcp==2.3.0
 psycopg[binary]==3.2.3
 # ChromaDB HTTP 클라이언트. docker-compose의 chromadb/chroma 이미지와 같은 버전이어야 한다
 chromadb-client==0.6.3
+# 내규 PDF 텍스트 추출(/internal/documents). 평가 기준 생성 Agent(루트 requirements.txt)와 같은 버전
+pdfplumber==0.11.10

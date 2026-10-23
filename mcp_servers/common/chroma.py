@@ -2,7 +2,7 @@
 
 이 프로젝트는 chromadb 클라이언트의 안정적인 메서드만 쓴다:
 HttpClient, heartbeat, get_or_create_collection, get_collection, delete_collection,
-Collection.upsert / get / query / count. 임베딩은 클라이언트에서 계산해 넘긴다(embedding_function=None).
+Collection.upsert / get / query / count / delete(평가 기준 초안 폐기). 임베딩은 클라이언트에서 계산해 넘긴다(embedding_function=None).
 """
 from __future__ import annotations
 

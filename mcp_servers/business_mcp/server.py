@@ -3,15 +3,17 @@
 실행: python -m business_mcp.server   (환경 변수는 README 참고)
 MCP 엔드포인트: http://<host>:8001/mcp  (Streamable HTTP, 요청마다 Authorization: Bearer <run_token>)
 내부 API(/internal/*)는 백엔드·테스트 하네스용이며 X-Internal-Key가 필요하다. Agent에는 노출하지 않는다.
+내규 적재(/internal/documents)는 저장 뒤 RAG_MCP_URL의 rag-mcp /internal/reload를 부른다.
 
 실행 토큰 종류(kind)별로 부를 수 있는 도구가 다르다.
 - evaluation(최종 평가, 평가 건마다 발급): 조회 14개, save_evaluation_draft·save_coaching·request_review·update_progress
 - live(중간 피드백 Worker, 회사 범위로 한 번 발급): start_live_evaluation·get_messages·save_live_evaluation.
   요청은 토큰이 아니라 live_eval_id로 찾고 매번 회사를 확인한다
-- rubric(평가 기준 작성): save_rubric
+- rubric(평가 기준 작성): save_rubric(초안). 현행 전환은 관리자 승인 내부 API(/internal/rubrics/approve)가 한다
 """
 from __future__ import annotations
 
+import asyncio
 import functools
 import logging
 import os
@@ -30,6 +32,7 @@ from common.runtime import (EVALUATION, LIVE, RUBRIC, Audit, FaultInjector, Mask
                             validation, version_conflict)
 
 from . import quote
+from .documents import PolicyDocWriter
 from .live import LiveStore
 from .pg import Db, Repo
 from .policy import PolicyChecker
@@ -69,6 +72,7 @@ policy = PolicyChecker(store)
 writes = WriteStore(db, store)
 live = LiveStore(db, store)
 rubric_writer = RubricWriter(db, store)
+doc_writer = PolicyDocWriter(db, store, os.environ.get("RAG_MCP_URL"), INTERNAL_KEY)
 
 
 def _audit_sink(row: dict) -> None:
@@ -316,7 +320,9 @@ async def save_live_evaluation(live_eval_id: str, status: str, ctx: Context, ite
 @mcp.tool()
 async def save_rubric(work_type: str, items: list[dict[str, Any]], idempotency_key: str, ctx: Context,
                       based_on_version: str | None = None, note: str | None = None) -> dict:
-    """평가 기준 생성 Agent가 만든 기준표를 새 버전으로 저장하고 바로 현행으로 만든다(이전 현행은 폐기).
+    """평가 기준 생성 Agent가 만든 기준표를 초안으로 저장한다. 현행은 관리자가 승인할 때 바뀐다(그 전까지 평가에 쓰이지 않음).
+    회사·유형마다 초안은 하나: 이미 있으면 같은 버전으로 덮어쓰고(replaced_draft:true), 없으면 새 버전을 만든다.
+    응답: {doc_id, version, work_type, status:'초안', based_on_version(저장 때 현행), replaced_draft, items_saved}.
     work_type: rfp_analysis|proposal|quote|inquiry_reply.
     items[] 5개, 순서 고정(문제 정의·지시 품질·결과 검증·보안 준수·결과물 품질):
     {item, criterion, score_2, score_1, score_0, unobserved, needs_review, evidence_sources[], related_clauses[]}.
@@ -464,6 +470,49 @@ async def issue_rubric_run(request: Request) -> dict:
     claims = {"kind": RUBRIC, "run_id": new_id("RUN"), "company_id": company, "requested_by": body.get("requested_by"),
               "work_id": "", "snapshot": {}}
     return _run_token(claims, body, 1800)
+
+
+@internal("/internal/rubrics/drafts", ["POST"])
+async def create_rubric_drafts(request: Request) -> dict:
+    """관리자 '수정 초안 만들기': 현행 기준을 그대로 복사한 초안을 만든다(AI 없이). body: {company_id, work_types?(생략하면 4개 모두), created_by?}.
+    요청한 유형에 초안이 이미 있으면 VERSION_CONFLICT(400), 현행이 없으면 404이고 둘 다 아무것도 만들지 않는다.
+    응답: {created[{work_type, doc_id, version, based_on_version}]}."""
+    return rubric_writer.create_draft(await request.json())
+
+
+@internal("/internal/rubrics/drafts/items", ["POST"])
+async def update_rubric_draft_item(request: Request) -> dict:
+    """관리자 '항목 저장': 초안의 기준 항목 하나에서 보낸 칸만 고친다. body: {company_id, work_type, item(항목 이름), fields{...}, edited_by?}.
+    fields: criterion·score_2·score_1·score_0·unobserved·needs_review·evidence_sources[]·related_clauses[] 중 일부.
+    고친 항목은 save_rubric과 같은 검사(빈 칸·보안 준수 score_1·현행 내규 조항·민감정보)를 거친다. 초안이 없으면 404.
+    응답: {work_type, doc_id, version, item{...}, changed_fields[]}."""
+    return rubric_writer.update_item(await request.json())
+
+
+@internal("/internal/rubrics/approve", ["POST"])
+async def approve_rubrics(request: Request) -> dict:
+    """관리자 승인: 평가 기준 초안을 현행으로, 같은 기준의 이전 현행을 폐기로 바꾼다(화면의 '승인 후 적용').
+    body: {company_id, work_types?(생략하면 회사의 모든 초안), approved_by?}. 초안이 없으면 404.
+    초안이 현행 내규에 없는 조항을 인용하면 400. 응답: {approved[{work_type, doc_id, version, retired_versions[]}]}."""
+    return rubric_writer.approve(await request.json())
+
+
+@internal("/internal/rubrics/discard", ["POST"])
+async def discard_rubrics(request: Request) -> dict:
+    """관리자 초안 폐기: 평가 기준 초안을 지운다(현행은 그대로). body: {company_id, work_types?}. 초안이 없으면 404.
+    응답: {discarded[{work_type, doc_id, version}]}."""
+    return rubric_writer.discard(await request.json())
+
+
+@internal("/internal/documents", ["POST"])
+async def upload_policy(request: Request) -> dict:
+    """관리자가 올린 내규 파일을 새 버전으로 적재하고 바로 현행으로 만든다(이전 현행은 폐기). 백엔드 업로드 API가 부른다.
+    body: {company_id, version, source_file(.pdf|.txt), content_base64, doc_id?, title?, grade?(사내|대외비), effective_from?, uploaded_by?}.
+    doc_id·title·grade는 생략하면 회사의 현행 내규 것을 쓴다. 평가 기준 생성에 필요한 조항이 없으면 400.
+    응답: {doc_id, version, status, title, chunks, clauses, retired_docs[], diff{base, added, removed, changed}|null, duplicate, rag_reloaded}."""
+    body = await request.json()
+    # PDF 분할·임베딩이 몇 초 걸릴 수 있어 이벤트 루프(다른 도구 호출)를 막지 않도록 스레드에서 처리한다
+    return await asyncio.to_thread(doc_writer.save, body)
 
 
 @internal("/internal/faults/reset", ["POST"])

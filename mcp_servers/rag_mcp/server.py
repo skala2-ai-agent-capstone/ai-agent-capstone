@@ -217,10 +217,13 @@ def _policy(c: dict, query: str | None, clause_ids: list[str] | None, top_k: int
         raise validation("query와 clause_ids 중 하나는 필요합니다")
     k = _top_k(top_k, 5, 5)
     company = {"company_id": c["company_id"]}
+    # 내규를 새 버전으로 올리면 이전 버전은 폐기로 남는다. 같은 조항이 버전마다 나오지 않도록 현행만 돌려준다
+    current = {"status": "현행"}
     if clause_ids:
         ids = list(dict.fromkeys(clause_ids))
-        g = ccall("policies", "get", where=where_all(company, {"$or": [{"clause_id": {"$in": ids}}, {"chunk_id": {"$in": ids}}]}),
-                                include=["documents", "metadatas"])
+        g = ccall("policies", "get",
+                  where=where_all(company, current, {"$or": [{"clause_id": {"$in": ids}}, {"chunk_id": {"$in": ids}}]}),
+                  include=["documents", "metadatas"])
         rows = sorted(rows_of(g), key=lambda r: r["seq"])
         if query:
             sc = {r["id"]: s for s, r in zip(mirror("policies")["bm25"].scores(query), mirror("policies")["rows"])}
@@ -228,14 +231,16 @@ def _policy(c: dict, query: str | None, clause_ids: list[str] | None, top_k: int
         chunks = [{**_chunk_out(r), "clause_id": r.get("clause_id"), "label": r.get("label"), "score": None} for r in rows]
         found = {r.get("clause_id") for r in rows} | {r.get("chunk_id") for r in rows}
         return {"mode": "clause_ids", "chunks": chunks, "missing_clause_ids": sorted(set(ids) - found), "no_evidence": not chunks}
-    hits = hybrid("policies", query, company, lambda r: r["company_id"] == c["company_id"], k)
+    hits = hybrid("policies", query, where_all(company, current),
+                  lambda r: r["company_id"] == c["company_id"] and r.get("status") == "현행", k)
     chunks = [{**_chunk_out(r, s, kk, v), "clause_id": r.get("clause_id"), "label": r.get("label")} for s, kk, v, r in hits]
     return {"mode": "query", "chunks": chunks, "no_evidence": not chunks}
 
 
 @mcp.tool()
 async def search_policy(ctx: Context, query: str | None = None, clause_ids: list[str] | None = None, top_k: int | None = 5) -> dict:
-    """영업 AI 활용 지침(SALES-AI-GL-001 v1.0)을 조회한다. query 또는 clause_ids 중 하나는 필수.
+    """영업 AI 활용 지침(SALES-AI-GL-001)의 현행 버전을 조회한다. query 또는 clause_ids 중 하나는 필수.
+    폐기된 이전 버전은 나오지 않는다(이전 버전 구간은 get_reference(doc_id, version)로 정확 조회).
     clause_ids(예 ART-13, APX-2, ART-07-1)를 주면 그 조항의 모든 구간을 정확 조회한다(루브릭 related_clauses용).
     query는 하이브리드 검색(벡터+키워드)이며 기준 미달이면 no_evidence:true와 빈 결과를 돌려준다. top_k 최대 5."""
     args = {"query": query, "clause_ids": clause_ids, "top_k": top_k}
