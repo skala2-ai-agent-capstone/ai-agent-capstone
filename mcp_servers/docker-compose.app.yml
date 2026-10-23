@@ -45,6 +45,8 @@ services:
       SWAGGER_ENABLED: ${SWAGGER_ENABLED:-true}
       # 최종 평가 Worker가 읽는 평가별 실행 토큰 파일. 백엔드가 /internal/runs로 발급해 몇 초마다 갱신한다
       FINAL_TOKEN_FILE: /app/run-tokens/final-tokens.json
+      # 팀 평가 Worker가 읽는 요청별 실행 토큰 파일. 백엔드가 /internal/team-runs로 발급한다
+      TEAM_TOKEN_FILE: /app/run-tokens/team-tokens.json
     volumes:
       - run-tokens:/app/run-tokens
     ports:
@@ -113,9 +115,39 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # 팀 평가 Worker: team_evaluation.requests의 TEAM_EVALUATE를 받아 고정 스냅샷으로 팀 코칭 리포트를 만들어
+  # business-mcp에 저장한다(완료는 MCP가 기록, 실패만 DLQ). team 토큰은 백엔드가 쓰는 파일을 읽기만 한다.
+  # 기본으로는 뜨지 않는다: --profile team. 절차는 ../docs/team_evaluation.md 「서버에서 켜기」
+  team-worker:
+    image: ax-eval/feedback-worker:${WORKER_TAG:-local}   # feedback-worker와 같은 이미지(Dockerfile.worker)
+    profiles: ["team"]
+    command: ["python", "-m", "ai_agents.cli.team_worker", "worker",
+              "--token-file", "outputs/run-tokens/team-tokens.json",
+              "--checkpoint-dir", "outputs/team-checkpoints", "--trace-dir", "outputs/team-worker-traces"]
+    environment:
+      TEAM_AMQP_URL: amqp://${RABBITMQ_USERNAME:-axeval}:${RABBITMQ_PASSWORD:?.env에 RABBITMQ_PASSWORD 필요}@rabbitmq:5672/
+      TEAM_BUSINESS_MCP_URL: http://business-mcp:8001/mcp
+      # 팀 Agent는 X-Stage: evaluate로 부른다(OPENAI_STAGES에 있으면 OpenAI). 모델 이름은 실제 모델과 같게 둔다
+      TEAM_LLM_BASE_URL: ${TEAM_LLM_BASE_URL:-http://llm-proxy:4000/v1}
+      TEAM_LLM_MODEL: ${TEAM_LLM_MODEL:-${OPENAI_MODEL:-gpt-4o-mini}}
+      # PROXY_KEYS에 team-worker:<이 값>으로 같이 넣는다. profile을 안 쓸 때도 compose가 읽으므로 필수 표시는 하지 않는다
+      TEAM_LLM_API_KEY: ${TEAM_LLM_API_KEY:-}
+    volumes:
+      - run-tokens:/app/outputs/run-tokens:ro
+      - team-checkpoints:/app/outputs/team-checkpoints   # 저장 재시도는 여기 리포트를 다시 쓴다(LLM 재호출 없음)
+      - team-worker-traces:/app/outputs/team-worker-traces
+    depends_on:
+      backend:   # 큐와 토큰 파일은 백엔드가 만든다
+        condition: service_healthy
+      business-mcp:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
   rabbitmq-data:
   feedback-traces:
   run-tokens:
   final-checkpoints:
   final-worker-traces:
+  team-checkpoints:
+  team-worker-traces:

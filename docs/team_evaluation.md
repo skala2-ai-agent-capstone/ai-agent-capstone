@@ -6,15 +6,18 @@
 ## 동작과 범위
 
 ```text
-백엔드: 관리자 권한·공개 승인 확인 → POST /internal/team-evaluations (요청 행)
+화면:   팀장이 기간 선택 → POST /api/teams/{team_id}/evaluations
+백엔드: 담당 팀장 확인 → 공개 승인 판단(같은 기간 집계 승인) → POST /internal/team-evaluations (요청 행)
 MCP:   업무별 최신 확정 평가 선택 → 업무 유형·기준 버전·기준 해시별 집계
-       → 공개 기준 적용 → 스냅샷 고정 (team_evaluations)
-백엔드: POST /internal/team-runs → team 토큰을 팀 Agent 실행에 전달
-MCP:   get_team_evaluation_snapshot
+       → 공개 기준 적용 → 스냅샷 고정 (team_evaluations, 대기)
+백엔드: outbox TEAM_EVALUATE → team_evaluation.requests
+백엔드: 3초마다 대기 요청마다 POST /internal/team-runs → team 토큰을 토큰 파일(team-tokens.json)에 공급
+Worker: 토큰 파일에서 request_id 토큰 → get_team_evaluation_snapshot
 Agent: 입력 검증 → 항목 평균·관측 비율 계산 → LLM 근거/코칭 선택
-       → 선택 검증 → 팀 리포트 구성 → 로컬 저장
-MCP:   save_team_evaluation_report → 재검증 후 team_evaluations 저장
-백엔드: GET /internal/team-evaluations/{request_id} → 팀 리포트 조회 권한 확인 → 관리자 화면
+       → 선택 검증 → 팀 리포트 구성 → 체크포인트
+MCP:   save_team_evaluation_report → 재검증 후 team_evaluations 저장(완료)
+       실패: Worker가 retry 또는 team_evaluation.dlq(error_code) → 백엔드 team_evaluation_failures
+화면:   GET /api/teams/{team_id}/evaluations[/{request_id}] 폴링 → 팀 리포트
 ```
 
 Agent는 개인 대화, 이름, 이메일, 개인 평가 ID, 원문 코칭을 받지 않는다.
@@ -30,11 +33,13 @@ Agent는 서버 집계의 산술·범위 일관성을 검증하고 평균·관�
 - 가상 평가셋 8건, 기존 품질 실행기·사람 검토·LangSmith 정제 추적 연결.
 - business-mcp 두 도구와 팀 집계·저장(`mcp_servers/business_mcp/team.py`, `team_evaluations` 테이블),
   내부 API `/internal/team-evaluations`·`/internal/team-runs`, team 토큰.
+- 큐 Worker(`python -m ai_agents.cli.team_worker`, 아래 「큐 Worker」)와 compose `team-worker`(`--profile team`).
+- 백엔드(aworko-server 로컬 `fix/sync-mcp-schema`, 미커밋): 요청·목록·상세 API, 공개 승인 판단, TEAM_EVALUATE 발행,
+  요청별 team 토큰 파일 공급, DLQ 실패 기록.
 
 아직 없는 부분:
 
-- 백엔드가 위 내부 API를 부르는 경로(관리자 권한·공개 승인 확인 포함)와 관리자 조회 API·화면.
-- 팀 Agent 실행 주체(큐 Worker 또는 백엔드 호출)와 team 토큰 전달, 서버(GCP) 배포.
+- 관리자 화면(프론트) 연결과 서버(GCP) 배포.
 - 반복 기간 조회 차감 등 보완 억제(아래 공개 정책 참고). 현재는 그룹·항목 최소 인원만 적용한다.
 - GCP의 실제 모델 품질·지연 검증.
 
@@ -183,7 +188,7 @@ async with TeamMCPGateway(team_scoped_token, business_url) as gateway:
     # 응답 유실 시 영속화한 동일 객체로 save만 재호출한다. LLM 재생성 금지.
 ```
 
-위 코드는 연결 예시다. 토큰 발급/영속화/큐 Worker는 배포 애플리케이션에서 연결해야 한다.
+이 흐름을 큐 Worker가 그대로 쓴다(아래). 영속화는 체크포인트 파일이다.
 팀 gateway는 두 도구만 허용하며 개인 평가·대화 조회와 기준 생성·저장 도구는 막는다.
 읽기와 저장은 분리해 호출자가 실패한 저장만 재시도할 수 있게 했다.
 로컬 파일을 다시 읽어 저장 인자만 만들려면 다음을 사용한다(네트워크 호출 없음).
@@ -197,6 +202,79 @@ python -m ai_agents.cli.team_evaluation save-request \
 
 서버 저장 구조는 `team_evaluations`(`mcp_servers/db/postgres/001_schema.sql`, 기존 DB는
 `004_team_evaluation.sql`)다. 쓴 평가 건 ID는 `source_evaluation_ids`에만 남기고 Agent에 주지 않는다.
+
+## 백엔드 API (aworko-server, 담당 팀장만)
+
+| 화면 동작 | API |
+| --- | --- |
+| 팀 평가 요청 | `POST /api/teams/{team_id}/evaluations` `{from, to}`(끝 포함, 최대 93일) → 202 `{request_id, status:대기, release_approved, unapproved_work_types[]}` |
+| 목록 | `GET /api/teams/{team_id}/evaluations` → 최근 20건 `{request_id, status(대기·완료·실패), error, period_from, period_to, release_approved, report_status, …}` |
+| 상세 | `GET /api/teams/{team_id}/evaluations/{request_id}` → `{evaluation, report}`(완료일 때 TeamReport) |
+
+- **공개 승인:** 기간에 확정 평가가 있고 최소 인원을 넘는 업무 유형이 모두 팀 대시보드에서 **같은 기간으로 집계 승인**돼 있어야
+  `release_approved=true`다. 하나라도 빠지면 false로 요청해 수치 없는 보류(`withheld`) 리포트가 되고, 빠진 유형을
+  `unapproved_work_types`로 돌려준다. 공개할 유형이 없어도 false다.
+- **상태:** `team_evaluations.status='완료'`면 완료, 백엔드 `team_evaluation_failures`(Flyway V6)에 기록이 있으면 실패(`error`=Worker 오류 코드),
+  30분(`app.team-evaluation.stale-after`) 넘게 대기면 실패(`TIMED_OUT`)로 보이고 토큰 공급도 멈춘다.
+- **토큰:** `TEAM_TOKEN_FILE`을 주면 백엔드가 3초마다 대기 요청마다 `/internal/team-runs`(`ttl_sec` 7200)로 발급해 둔다.
+  남은 수명이 30분 아래일 때만 다시 발급하고, 끝난 요청은 뺀다. 형식·권한(600)·원자적 교체는 최종 평가 토큰 파일과 같다.
+- MCP 요청 만들기가 거절되면(`VALIDATION_ERROR` 등) 400·404·409로 돌려주고 TEAM_EVALUATE는 보내지 않는다.
+
+## 큐 Worker
+
+큐는 백엔드가 선언한다(`team_evaluation.exchange`, direct). Worker는 선언하지 않고 없으면 소비 전에 실패한다.
+
+| 큐 | 방향 | 내용 |
+| --- | --- | --- |
+| `team_evaluation.requests` | 백엔드 → Worker | `TEAM_EVALUATE` `{message_id, type, request_id(UUID), company_id, attempt}` (routing key `team_evaluate`) |
+| `team_evaluation.retry` | Worker → (30초 뒤 requests) | 원래 요청, `attempt + 1` |
+| `team_evaluation.dlq` | Worker → 백엔드 | 원래 요청 + `error_code` 헤더. 형식 오류면 `request_id`만 |
+
+결과 큐는 없다. `save_team_evaluation_report`가 성공하면 MCP가 요청을 완료로 바꾸고 Worker는 ack한다.
+스냅샷·리포트는 저장 전에 `--checkpoint-dir/{request_id}.json`(600)에 남기고, 재시도 때는 LLM을 부르지 않고 저장만 다시 한다.
+
+| 코드 | 재시도 | 원인 |
+| --- | --- | --- |
+| `TOKEN_NOT_READY`·`TOKEN_EXPIRED`·`TOKEN_FILE_UNAVAILABLE` | O | 토큰 파일에 아직 그 요청이 없음 등(백엔드 공급 주기 3초) |
+| `MCP_UNAVAILABLE` | O | MCP 연결 실패·일시 오류 |
+| `LLM_UNAVAILABLE` | O | 모델 API 연결·시간 초과·5xx |
+| `LLM_REJECTED`·`INVALID_TEAM_DECISION` | X | 모델 거절·선택 형식 오류(재생성 1회 뒤) |
+| `REPORT_CONFLICT` | X | 이 요청에 다른 리포트가 이미 저장됨. 다시 만들려면 새 요청 |
+| `REPORT_REJECTED`·`INVALID_RESULT`·`CHECKPOINT_INVALID` | X | MCP 재검증 실패·리포트/스냅샷 불일치·체크포인트 손상 |
+| `TOKEN_REJECTED`·`REQUEST_NOT_FOUND`·`SNAPSHOT_CHANGED` | X | 토큰 범위·서명 불일치, 요청 없음, 실행 중 스냅샷 문맥 변경 |
+| `INVALID_EVENT`·`RETRY_EXHAUSTED`·`MCP_REJECTED`·`UNEXPECTED_ERROR` | X | 그 밖 |
+
+```dotenv
+TEAM_AMQP_URL=amqp://ACCOUNT:PASSWORD@TAILSCALE_IP:5672/
+TEAM_BUSINESS_MCP_URL=http://TAILSCALE_IP:8001/mcp
+TEAM_LLM_BASE_URL=http://TAILSCALE_IP:4000/v1
+TEAM_LLM_MODEL=gpt-4o-mini
+TEAM_LLM_API_KEY=ISSUED_PROXY_KEY
+```
+
+```bash
+python -m ai_agents.cli.team_worker check-event --event samples/integration/team-evaluate-v1.json
+python -m ai_agents.cli.team_worker worker --token-file outputs/run-tokens/team-tokens.json \
+  --checkpoint-dir outputs/team-checkpoints --trace-dir outputs/team-worker-traces --langsmith
+```
+
+### 서버에서 켜기
+
+1. 백엔드(이 변경 포함)를 올린다. Flyway V6이 돌고 `team_evaluation.*` 큐가 생긴다. V4·V5와 함께 올린다(번호 순서).
+2. llm-proxy `PROXY_KEYS`에 `team-worker:<TEAM_LLM_API_KEY 값>`을 넣고 `.env`에 `TEAM_LLM_API_KEY`를 둔다.
+3. `docker compose --profile team up -d team-worker`. 팀 대시보드에서 유형별 집계를 승인한 뒤 같은 기간으로 팀 평가를 요청하고,
+   목록이 `대기 → 완료`로 바뀌는지 본다.
+
+## 백엔드·큐 Worker 연결 검증 기록 — 2026-10-23
+
+- Agent(브랜치 `feat/team-evaluation-worker`, 기준 `990a367`): `tests/test_team_worker.py` 10개 포함 전체 947 통과·4 건너뜀,
+  Ruff 통과. 가짜 MCP·모델로 요청 토큰으로 조회→리포트→체크포인트(600, 토큰 없음)→저장→ack, 저장 응답 유실 뒤 재시도 때
+  LLM·스냅샷 재호출 없이 저장만, 빈 토큰 목록 → `TOKEN_NOT_READY` 재시도 → 공급 뒤 성공, 비재시도 오류·재시도 한도 DLQ,
+  형식 오류 시 request_id만 남기기, 손상된 체크포인트 저장 거부를 확인했다.
+- 백엔드(aworko-server 로컬, 미커밋): 전체 157 통과(Testcontainers Postgres·RabbitMQ). 요청 → MCP 대역 호출(기간 끝+1일)·
+  TEAM_EVALUATE 아웃박스, 담당 팀장 외 403, MCP 거절 시 메시지 없음, 공개 승인 판단 3가지, DLQ → 실패 기록, `TIMED_OUT`,
+  실제 RabbitMQ로 발행 칸·DLQ 소비, team 토큰 파일 발급·정리, `/internal/team-runs` HTTP 계약.
+- `docker compose ... --profile team config` 통과. 실제 business-mcp·RabbitMQ·모델을 한 번에 잇는 실행은 하지 않았다.
 
 ## MCP 서버 연동 검증 기록 — 2026-10-23
 

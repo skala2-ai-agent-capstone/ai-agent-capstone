@@ -94,6 +94,7 @@ RabbitMQ 관리 화면은 서버 안에만 열려 있습니다: `ssh -L 15672:lo
 | 기능 | 이유 | 맡을 쪽 |
 | --- | --- | --- |
 | 최종 평가(EVALUATE → 확인 대기) | 코드는 맞춰 둠: Agent `backend-v1` Worker, 백엔드 완료 큐 소비자·RESUME 폐지(이의·검토는 백엔드가 바로 처리)·평가별 토큰 파일 공급, compose `final-worker`(`--profile final`). 아직 서버에 안 올라감. 켜기 전 확인(쌓인 RESUME 비우기, `PROXY_KEYS`의 final-worker 키): [backend_worker_alignment.md](backend_worker_alignment.md) 5절 | 배포 |
+| 팀 평가(팀 코칭 리포트) | 코드는 맞춰 둠: MCP 팀 도구·내부 API, Agent 큐 Worker(`ai_agents.cli.team_worker`), 백엔드 요청·목록·상세 API·공개 승인 판단·요청별 team 토큰 파일 공급·DLQ 기록, compose `team-worker`(`--profile team`). 아직 서버에 안 올라감, 관리자 화면 없음. 켜는 절차: [team_evaluation.md](team_evaluation.md) 「서버에서 켜기」 | 배포·프론트 |
 | 운영 설정: 자료 업로드 → 평가 기준 자동 생성·승인 | MCP는 준비됨(`/internal/documents` 내규 적재, `/internal/rubrics/drafts`·`drafts/items`·`approve`·`discard`). 백엔드 쓰기 API(조회만 있음)와 평가 기준 생성 Agent Worker·요청 큐가 없음 | Agent·백엔드 |
 | 대화 중 사내 자료 자동 참고(RAG) | rag-mcp가 Agent 토큰으로만 열려 있음 | MCP |
 | 브라우저에서 백엔드 호출 | CORS 설정이 없어 프론트가 다른 출처면 막힘 | 백엔드 |
