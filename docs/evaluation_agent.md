@@ -1,5 +1,107 @@
 # 평가 Agent: 모델과 MCP 입력 연결
 
+## 저장된 기준으로 평가하고 MCP에 저장하기 — 2026-10-23
+
+새 경로는 **평가 건 정본 조회 → 고정된 기준 조회 → 업무 근거 수집 → 평가·인용 검증
+→ 체크포인트 → 평가 초안 저장 → 코칭 저장**이다. 팀원의 평가 기준 생성 로직은 호출하거나 수정하지 않는다.
+아래 기존 승인형 CLI와 별도 진입점이며, 사람 승인 기록을 만들어 넣지 않는다.
+
+```bash
+python -m ai_agents.cli.final_evaluation \
+  --evaluation-id EVAL-E2E-RFP-01-v2 \
+  --operation-id final-v1
+```
+
+루트 `.env`에 `FINAL_LLM_BASE_URL`, `FINAL_LLM_MODEL`, `FINAL_LLM_API_KEY`,
+`FINAL_BUSINESS_MCP_URL`, `FINAL_RAG_MCP_URL`, `FINAL_MCP_TOKEN`을 설정한다.
+모델 URL과 이름을 필수로 요구하며, Chat Completions의 JSON Schema 응답을 사용하는
+자체 호스팅 모델/프록시에 연결한다. 프록시에는 `X-Stage=evaluate`, `X-Work-Id`를 보낸다.
+실제 배포 모델의 JSON Schema 지원·응답 속도·평가 품질은 별도 확인이 필요하다.
+
+`FINAL_MCP_TOKEN`은 백엔드가 해당 평가 건에 발급한 **evaluation 토큰**이다.
+Agent는 DB·백엔드 내부 API를 직접 호출하지 않는다. 새 `get_evaluation_context`가 포함된
+business-mcp를 먼저 배포해야 한다. 이 단계에는 DB 스키마 변경이 없다.
+
+| 단계 | 동작 |
+|---|---|
+| 실행 범위 | `get_evaluation_context(evaluation_id)`로 업무·산출물·기준 버전·상태·저장 리비전 확인 |
+| 기준 조회 | RAG `search_rubric(work_type, rubric_version)` 정확 조회. 최신 기준으로 임의 대체하지 않음 |
+| 변환 | 점수 조건·미관측·검토 조건·원본 항목 ID를 보존하며 기존 평가기 입력 형식으로 변환 |
+| 평가 | 스냅샷 범위 전체 대화·산출물·추가 자료를 사용. 중간 피드백의 5쌍 제한을 적용하지 않음 |
+| 검증 | 기존 항목별 근거 종류·점수·보안·버전·인용 검증을 재사용. 실패하면 저장하지 않음 |
+| 저장 | 원래 루브릭 항목 ID로 `save_evaluation_draft` → `save_coaching` 호출 |
+| 재개 | 검증된 결과와 각 저장 응답을 체크포인트에 기록. 재시도 때 재생성 없이 미완료 저장부터 진행 |
+
+저장된 루브릭 항목 ID(`quote.1` 등)와 평가기 내부 ID(`quotation.problem_definition` 등)는
+명시적으로 대응한다. 기준 문구와 원본 ID는 보존한다. 보안 항목의 `score_1='해당 없음'`은
+원본에 남기되 평가 가능한 점수는 0·2만 사용한다. 기준이 없거나 필수 조건이 빠지면 실패하며
+기준 생성 Agent를 자동 호출하지 않는다. 고정된 이전 기준이 `폐기`여도 해당 버전은 사용하고,
+`초안` 기준은 거부한다. 기준 자체의 인용은 정확 조회한 루브릭 원본에서 구성한다.
+
+**저장 완료는 최종 확정이 아니다.** 성공 반환 상태는 `draft_and_coaching_saved`다.
+DB에는 기존 MCP 계약의 5개 항목(점수·상태·이유·근거 ID)과 코칭이 저장된다.
+전체 인용문·기준 원본·종합 리포트·코드 버전은 로컬 체크포인트에 남는다.
+`확인 대기`·`검토 대기`·`확정` 상태 전환, 본인만 조회하는 결과 API, 팀 집계는 백엔드 연동 작업이다.
+검토 필요 항목은 점수 null과 `검토 필요`로 저장하며 검토 요청을 자동으로 팀장에게 보내지 않는다.
+
+### 재시도와 실행 기록
+
+- 같은 실행은 **같은 evaluation ID·operation ID·체크포인트 폴더**로 재실행한다.
+- 기본 체크포인트: `outputs/final-checkpoints/`. 파일 권한은 0600이며 마스킹된 업무 내용도
+  포함되므로 Git에 올리지 않는다. 서버 재시작 후 유지되는 볼륨에 보관한다.
+- 저장 요청 전에 결과를 원자적으로 파일에 기록한다. 응답 유실 시 같은 payload·중복 방지 키로
+  재시도하며, 코칭만 실패했으면 초안·LLM을 다시 실행하지 않는다.
+- 서버에 이미 초안이 있는데 체크포인트가 없으면 자동 재평가를 거부한다. 파일을 복구해서 재개한다.
+- 같은 폴더를 사용하는 프로세스는 평가 건 단위 잠금을 사용한다. 여러 호스트의 동시 실행을
+  제어하는 분산 잠금이나 초안·코칭의 단일 DB 트랜잭션은 이번 구현에 포함되지 않는다.
+  백엔드에서 같은 평가 건의 동시 작업을 막아야 한다.
+- `--langsmith`를 붙이면 기존 정제 추적 경로를 사용한다. 기본 로컬 추적은
+  `outputs/final-traces/`이며 코드 커밋·dirty 상태·모델 설정을 기록한다.
+- 커밋 후 같은 평가셋으로 재실행해야 커밋별 검증결과서 증빙이 된다. 고정 응답 테스트는
+  실제 LLM 평가 정확도나 품질 개선의 증거가 아니다.
+
+### 새 파일과 변경 경계
+
+- `evaluation_agent/final/stored_rubric.py`: 저장 기준 계약·원문 보존 변환, 승인 입력과 분리.
+- `evaluation_agent/final/persistence.py`: 검증 결과 → 기존 MCP 초안·코칭 저장 계약.
+- `orchestration/final_evaluation.py`: 조회·평가·저장·재개.
+- `integrations/final_mcp.py`: 조회와 두 저장 도구만 허용. 기존 읽기 전용 gateway는 유지.
+- `cli/final_evaluation.py`: 명시적 모델 설정과 evaluation 토큰으로 1건 실행.
+- business-mcp: 읽기 전용 `get_evaluation_context` 추가. 기준 생성·기준 저장 코드는 변경하지 않음.
+
+### 이번 단계의 검증 기록
+
+기준 커밋 `8e699f5`, 작업 브랜치 `feat/stored-rubric-final-evaluation`의 미커밋 코드로 검증했다.
+
+| 검사 | 결과·한계 |
+|---|---|
+| 전체 Agent·프록시 테스트 | 700 passed, 1 skipped, 7.71초 |
+| 새 최종 평가 테스트 | 26개 통과: 위 700개에 포함 |
+| 저장 기준·평가 흐름 | 4개 업무 유형, 고정 버전, 초안 기준·잘못된 유형 거부, 미관측·검토 필요 매핑 |
+| 실패·재개 | 저장 응답 유실, 코칭 저장 실패 후 재시작, 완료 재호출, 체크포인트 범위 변경·유실 거부 |
+| 실제 저장 | MCP SDK/Streamable HTTP로 실제 WriteStore 호출, 격리된 PostgreSQL 17.10에 초안·코칭 각각 1회 저장 |
+| 권한 경계 | 다른 평가 건·회사 문맥 거부, 읽기 전용 gateway 유지, 기준 저장·확정 도구 호출 차단 |
+| 정적 검사 | `ruff check src tests`, `git diff --check` 통과 |
+
+실제 저장 테스트의 업무 자료 조회·모델 응답은 대역이고, 루브릭은 테스트 DB 시드에서 읽었다.
+운영 RAG/Chroma 검색, JWT 전송 경로, AWS 모델 품질, PostgreSQL 16 배포 환경 전체를 검증한 것은 아니다.
+건너뛴 1개는 별도 업무 DB 접속 설정을 요구하는 프록시 테스트다. LangSmith 원격 실험은 실행하지 않았다.
+로컬 JUnit 증빙: `outputs/validation/stored-final-evaluation/pytest.xml` (Git 무시 대상).
+
+재현하려면 Agent·프록시 의존성을 준비하고 `FEEDBACK_TEST_DATABASE_URL`을 **테스트 전용 DB**로
+설정한다. 각 DB 테스트는 임의 스키마를 생성하고 종료 시 삭제한다.
+
+```bash
+PYTHONPATH=src:mcp_servers:llm_proxy:. .venv/bin/python -m pytest tests llm_proxy/tests -q \
+  --junitxml=outputs/validation/stored-final-evaluation/pytest.xml
+```
+
+검증결과서에는 “저장된 기준 버전을 사용한 최종 평가와 MCP 초안·코칭 저장 흐름을 구현하고,
+저장 실패·재전달 및 실제 DB 저장 회귀 검증을 수행했다”고 기록할 수 있다.
+점수 정확도·코칭 유용성·모델 지연 시간은 실제 모델 평가셋 실험 후 별도로 작성한다.
+
+## 기존 승인 입력 기반 경로
+
 현재 구현 범위는 **승인된 평가 입력 → business/RAG MCP 조회 → GPT 평가 → 원문 검증 → 코칭·리포트**입니다.
 현재 범위에서는 DB에 저장하지 않고 결과를 반환하거나 화면에 출력합니다.
 평가기준 생성 코드는 기존 구현을 그대로 사용합니다.

@@ -12,6 +12,7 @@ from .contract import (
 )
 from .materials import EvaluationMaterials
 from .models import AgentEvaluationOutput
+from .stored_rubric import StoredEvaluationInput, checked_input
 
 VISIBLE_SECRET = re.compile(
     r"01[016789]-?\d{3,4}-?\d{4}|[\w.+-]+@[\w-]+(?:\.[\w-]+)+|\bsk-[A-Za-z0-9_-]{20,}\b"
@@ -35,7 +36,10 @@ def validate_criteria(request: EvaluationInput) -> None:
 
 
 def evidence_catalog(request, evidence, materials):
-    sources = request.work_record.evidence_sources()
+    # 저장 기준 경로의 WorkContext는 업무 메타데이터만 담는다. 근거는 MCP 원본 ID만 사용한다.
+    sources = (
+        {} if isinstance(request, StoredEvaluationInput) else request.work_record.evidence_sources()
+    )
     kinds = {key: "context" for key in sources}
     kinds.update({m.id: f"message:{m.role}" for m in request.work_record.messages})
     kinds.update(
@@ -115,7 +119,7 @@ def validate_evaluation_result(
     evidence: EvaluationEvidence,
     materials: EvaluationMaterials,
 ) -> AgentEvaluationOutput:
-    request = EvaluationInput.model_validate(request.model_dump(mode="json"))
+    request = checked_input(request)
     evidence = EvaluationEvidence.model_validate(evidence.model_dump(mode="json"))
     materials = EvaluationMaterials.model_validate(materials.model_dump(mode="json"))
     result = AgentEvaluationOutput.model_validate(result.model_dump(mode="json"))
@@ -123,7 +127,7 @@ def validate_evaluation_result(
     validate_materials(request, evidence, materials)
     if (
         result.run_id != request.run_id
-        or result.criteria_sha256 != request.approval.criteria_sha256
+        or result.criteria_sha256 != content_hash(request.approved_criteria)
     ):
         raise EvaluationError("평가 결과의 실행 또는 기준 해시가 다릅니다.")
     criteria = {item.id: item for item in request.approved_criteria.items}
@@ -133,6 +137,11 @@ def validate_evaluation_result(
     references = {key: ref.content for key, ref in reference_catalog(request, materials).items()}
     for item in result.items:
         criterion = criteria[item.criterion_id]
+        if (isinstance(request, StoredEvaluationInput) and item.review_required
+                and item.observation not in {"needs_review", "insufficient_data"}):
+            raise EvaluationError(
+                "저장 평가의 검토 필요 항목은 needs_review와 score=null로 반환해야 합니다."
+            )
         if item.score is not None and item.score not in {level.score for level in criterion.levels}:
             raise EvaluationError("승인된 기준에서 허용하지 않는 점수입니다.")
         work_ids = set()

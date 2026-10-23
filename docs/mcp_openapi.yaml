@@ -20,7 +20,7 @@ info:
     ### 실행 토큰 (Authorization: Bearer)
     | kind | 발급 (내부 API) | 쓰는 Agent | 부를 수 있는 도구 |
     |---|---|---|---|
-    | `evaluation` | `POST /internal/runs` | 최종 평가 | business 조회 13개·최종 평가 저장 4개, rag 6개 |
+    | `evaluation` | `POST /internal/runs` | 최종 평가 | business 조회 14개·최종 평가 저장 4개, rag 6개 |
     | `live` | `POST /internal/live-worker-token` | 중간 피드백 Worker (회사 범위, 요청은 live_eval_id로 확인) | 중간 피드백 3개, rag search_rubric·get_current_rubric·search_policy·search_examples |
     | `rubric` | `POST /internal/rubric-runs` | 평가 기준 생성 | save_rubric, rag search_rubric·get_current_rubric·search_policy·search_examples |
 
@@ -59,6 +59,69 @@ tags:
 - name: 상태 확인
   description: 헬스 체크와 운영용 엔드포인트 (두 서버 공통).
 paths:
+  /tools/get_evaluation_context:
+    servers:
+    - url: http://localhost:8001
+      description: business-mcp
+    post:
+      tags:
+      - business · 조회
+      operationId: get_evaluation_context
+      summary: 최종 평가 건에 고정된 업무·산출물·기준 버전과 저장 리비전 조회
+      description: |-
+        실제 호출은 POST /mcp의 tools/call이다. evaluation 토큰에 귀속된 평가 건만 조회한다.
+        Agent는 반환된 rubric_version으로 search_rubric을 호출한다. draft_revision 또는
+        coaching_revision이 있으면 기존 체크포인트로 재개하며 임의로 재평가하지 않는다.
+        이 도구는 상태·기준·평가 결과를 변경하지 않는다.
+      security:
+      - runToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [evaluation_id]
+              properties:
+                evaluation_id:
+                  type: string
+            example:
+              evaluation_id: EVAL-E2E-RFP-01-v2
+      responses:
+        '200':
+          description: 성공·실패는 MCP 봉투의 ok로 구분한다. meta는 실행 ID와 스냅샷이다.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      evaluation_id:
+                        type: string
+                      work_id:
+                        type: string
+                      company_id:
+                        type: string
+                      artifact_id:
+                        type: string
+                      artifact_version:
+                        type: string
+                      rubric_version:
+                        type: string
+                      status:
+                        type: string
+                      draft_revision:
+                        type: [integer, 'null']
+                      coaching_revision:
+                        type: [integer, 'null']
+                  meta:
+                    type: object
+                  error:
+                    type: object
   /tools/get_work_case:
     servers:
     - url: http://localhost:8001

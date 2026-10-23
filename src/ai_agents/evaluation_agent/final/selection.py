@@ -8,6 +8,7 @@ from pydantic import BeforeValidator, Field, ValidationError, WrapValidator, cre
 from pydantic_core import PydanticCustomError
 
 from ...shared.models import NonEmpty, StrictModel
+from ...shared.workflow_models import content_hash
 from .contract import MISSING_WORK_MESSAGES, eligible_work_sources, score_issue
 from .models import AgentEvaluationOutput
 from .validation import EvaluationError
@@ -323,6 +324,6 @@ def resolve_selection(raw, choices: EvidenceChoices, request) -> AgentEvaluation
         ]
         items.append(item)
     return AgentEvaluationOutput.model_validate({
-        "run_id": request.run_id, "criteria_sha256": request.approval.criteria_sha256,
+        "run_id": request.run_id, "criteria_sha256": content_hash(request.approved_criteria),
         "items": items, "coaching": checked["coaching"], "summary": "근거·점수 검증 대기",
     })

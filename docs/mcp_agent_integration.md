@@ -1,5 +1,13 @@
 # 업무 유형 확인·승인 Agent MCP 연동: 현재 구현과 실행 방법
 
+## 저장 기준 기반 최종 평가 경로 추가 — 2026-10-23
+
+`python -m ai_agents.cli.final_evaluation`은 아래 기존 기준 생성·승인 경로와 별도다.
+`get_evaluation_context` → `search_rubric`(평가 건의 고정 버전) → 평가·근거 검증 →
+`save_evaluation_draft` → `save_coaching`을 연결한다.
+기준 생성 로직과 읽기 전용 gateway는 유지하고, 새 최종 평가 gateway만 두 저장 도구를 허용한다.
+설정·재시도·백엔드 담당 범위는 [평가 Agent 문서](evaluation_agent.md)를 참고한다.
+
 현재 흐름은 **MCP 업무 조회 → 사용자 선택 유형 확인 → RAG 내규 조회 → 매 실행 기준 생성 → 담당자 승인 → 평가 입력 인계**입니다.
 2026-10-23부터 일반 실행에서 LLM 분류를 호출하지 않습니다.
 [사용자 선택 유형 계약](user_selected_work_type.md)을 참고하세요. 과거 분류 프롬프트 v6는 실험 재현용으로 보존합니다.

@@ -1,11 +1,11 @@
-"""business-mcp: 업무 시스템 조회 13개 + 저장 5개 + 중간 피드백 3개 도구 (명세 3·4장, 평가 기준 저장·중간 피드백 추가).
+"""business-mcp: 업무 시스템 조회 14개 + 저장 5개 + 중간 피드백 3개 도구 (명세 3·4장, 평가 기준 저장·중간 피드백 추가).
 
 실행: python -m business_mcp.server   (환경 변수는 README 참고)
 MCP 엔드포인트: http://<host>:8001/mcp  (Streamable HTTP, 요청마다 Authorization: Bearer <run_token>)
 내부 API(/internal/*)는 백엔드·테스트 하네스용이며 X-Internal-Key가 필요하다. Agent에는 노출하지 않는다.
 
 실행 토큰 종류(kind)별로 부를 수 있는 도구가 다르다.
-- evaluation(최종 평가, 평가 건마다 발급): 조회 13개, save_evaluation_draft·save_coaching·request_review·update_progress
+- evaluation(최종 평가, 평가 건마다 발급): 조회 14개, save_evaluation_draft·save_coaching·request_review·update_progress
 - live(중간 피드백 Worker, 회사 범위로 한 번 발급): start_live_evaluation·get_messages·save_live_evaluation.
   요청은 토큰이 아니라 live_eval_id로 찾고 매번 회사를 확인한다
 - rubric(평가 기준 작성): save_rubric
@@ -98,7 +98,15 @@ def _eval_of(claims: dict, evaluation_id: str) -> dict:
     return writes._own_eval(claims, evaluation_id)
 
 
-# ───────────────────────────── 조회 도구 13개 ─────────────────────────────
+# ───────────────────────────── 조회 도구 14개 ─────────────────────────────
+@mcp.tool()
+async def get_evaluation_context(evaluation_id: str, ctx: Context) -> dict:
+    """토큰에 귀속된 최종 평가 건의 업무·산출물 버전·기준 버전·상태를 조회한다.
+    Agent는 외부 입력의 최신 버전을 추측하지 않고 이 고정 버전으로 평가한다."""
+    return await rt.run(ctx, "get_evaluation_context", {"evaluation_id": evaluation_id},
+                        lambda c: writes.evaluation_context(c, evaluation_id))
+
+
 @mcp.tool()
 async def get_work_case(work_id: str, ctx: Context) -> dict:
     """업무 건의 등록 정보·고객·직원·상태·고객 원문 목록·첨부 자료·산출물 버전·연결 업무를 조회한다.
