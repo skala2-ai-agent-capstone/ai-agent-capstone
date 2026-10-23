@@ -34,9 +34,15 @@ class TokenFile(StrictModel):
 
 
 class FileFinalTokenProvider:
-    def __init__(self, path, *, now=None):
+    """key: 토큰을 찾을 이벤트 속성.
+
+    최종 평가는 evaluation_id, 팀 평가는 request_id(같은 파일 형식).
+    """
+
+    def __init__(self, path, *, now=None, key="evaluation_id"):
         self.path = Path(path)
         self.now = now or (lambda: datetime.now(timezone.utc))
+        self.key = key
 
     def read(self):
         try:
@@ -52,7 +58,7 @@ class FileFinalTokenProvider:
             raise FinalTokenError("TOKEN_FILE_INVALID") from None
 
     async def __call__(self, event):
-        entry = self.read().tokens.get(event.evaluation_id)
+        entry = self.read().tokens.get(str(getattr(event, self.key)))
         if entry is None:
             raise FinalTokenError("TOKEN_NOT_READY", retryable=True)
         if entry.expires_at <= self.now():
