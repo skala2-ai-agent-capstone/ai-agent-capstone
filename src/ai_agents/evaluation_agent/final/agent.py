@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+from types import SimpleNamespace
 
 from openai import APIConnectionError, APIStatusError, APITimeoutError, AsyncOpenAI
 from pydantic import ValidationError
@@ -13,6 +14,7 @@ from ...integrations.mcp_adapter import (
     decode_mcp_result,
     read_mcp_response,
 )
+from ...observability.tracing import trace_span
 from ...shared.evidence_models import EvaluationEvidence, EvaluationRun
 from ...shared.workflow_models import EvaluationInput
 from .contract import MISSING_WORK_MESSAGES
@@ -28,6 +30,7 @@ from .selection import (
     security_choice_ids,
     selection_model,
 )
+from .stored_rubric import checked_input
 from .validation import (
     EvaluationError,
     evidence_catalog,
@@ -109,15 +112,20 @@ class OpenAIEvaluator:
         rag_call: BusinessToolCaller,
         model: str = "gpt-4o-mini",
         max_validation_retries: int = 1,
+        api_mode: str = "responses",
+        extra_headers: dict | None = None,
     ):
         if not 0 <= max_validation_retries <= 2:
             raise ValueError("평가 검증 재시도는 0~2회로 제한합니다.")
         self.client, self.context = client, context
         self.business_call, self.rag_call = business_call, rag_call
         self.model, self.max_validation_retries = model, max_validation_retries
+        if api_mode not in {"responses", "chat"}:
+            raise ValueError("지원하지 않는 평가 모델 API입니다.")
+        self.api_mode, self.extra_headers = api_mode, extra_headers
 
     async def evaluate(self, request: EvaluationInput) -> AgentEvaluationOutput:
-        request = EvaluationInput.model_validate(request.model_dump(mode="json"))
+        request = checked_input(request)
         validate_criteria(request)
         context = EvaluationRun.model_validate(self.context.model_dump(mode="json"))
         if request.run_id != context.run_id or request.work_record.work_id != context.work_id:
@@ -158,7 +166,7 @@ class OpenAIEvaluator:
         materials: EvaluationMaterials,
     ) -> AgentEvaluationOutput:
         """이미 수집한 자료를 사용하는 경계. 테스트·분류·승인 모듈의 수집 노드 재사용용."""
-        request = EvaluationInput.model_validate(request.model_dump(mode="json"))
+        request = checked_input(request)
         evidence = EvaluationEvidence.model_validate(evidence.model_dump(mode="json"))
         materials = EvaluationMaterials.model_validate(materials.model_dump(mode="json"))
         validate_criteria(request)
@@ -194,14 +202,7 @@ class OpenAIEvaluator:
         ]
         for attempt in range(self.max_validation_retries + 1):
             try:
-                response = await self.client.responses.parse(
-                    model=self.model,
-                    input=messages,
-                    text_format=response_format,
-                    max_output_tokens=6000,
-                    temperature=0,
-                    store=False,
-                )
+                response = await self.generate(messages, response_format)
             except (APITimeoutError, APIConnectionError) as exc:
                 raise EvaluationError("평가 API 연결 또는 시간 초과 오류입니다.") from exc
             except APIStatusError as exc:
@@ -251,6 +252,32 @@ class OpenAIEvaluator:
                 }
             )
         raise AssertionError("unreachable")
+
+    async def generate(self, messages, response_format):
+        headers = {"extra_headers": self.extra_headers} if self.extra_headers else {}
+        if self.api_mode == "responses":
+            return await self.client.responses.parse(
+                model=self.model, input=messages, text_format=response_format,
+                max_output_tokens=6000, temperature=0, store=False, **headers,
+            )
+        with trace_span("final.llm", inputs=messages, run_type="llm") as span:
+            reply = await self.client.chat.completions.create(
+                model=self.model, messages=messages, temperature=0, max_tokens=6000,
+                response_format={"type": "json_schema", "json_schema": {
+                    "name": "final_evaluation", "strict": True,
+                    "schema": response_format.model_json_schema(),
+                }}, **headers,
+            )
+            span.result(reply)
+        if not reply.choices or reply.choices[0].finish_reason != "stop":
+            raise EvaluationError("최종 평가 모델 응답이 완료되지 않았습니다.")
+        message = reply.choices[0].message
+        if getattr(message, "refusal", None) or not isinstance(message.content, str):
+            raise EvaluationError("최종 평가 모델이 결과를 반환하지 않았습니다.")
+        return SimpleNamespace(
+            status="completed", output=[],
+            output_parsed=response_format.model_validate_json(message.content),
+        )
 
 
 def render_evaluation_report(result: AgentEvaluationOutput) -> str:

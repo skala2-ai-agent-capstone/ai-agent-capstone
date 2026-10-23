@@ -88,6 +88,17 @@ class WriteStore:
         return ev
 
     # ── 공통 ──
+    def evaluation_context(self, claims: dict, evaluation_id: str) -> dict:
+        """최종 평가 입력의 정본과 저장 존재 여부. 기준 생성·평가 상태를 변경하지 않는다."""
+        with self.db.tx() as c:
+            ev = self._own_eval(claims, evaluation_id, c)
+            for table, key in (("evaluation_drafts", "draft_revision"),
+                               ("evaluation_coaching", "coaching_revision")):
+                ev[key] = c.execute(
+                    f"SELECT max(revision) AS revision FROM {table} WHERE evaluation_id=%s",
+                    (evaluation_id,)).fetchone()["revision"]
+        return ev
+
     def _own_eval(self, claims: dict, evaluation_id: str, c=None) -> dict:
         if evaluation_id != claims["evaluation_id"]:
             raise forbidden(f"{evaluation_id}는 이 실행의 평가 건이 아닙니다")

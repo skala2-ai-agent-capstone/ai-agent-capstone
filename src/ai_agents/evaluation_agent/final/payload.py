@@ -3,6 +3,7 @@
 from ...integrations.mcp_adapter import BusinessToolCaller, collect_evaluation_evidence
 from ...shared.evidence_models import EvaluationEvidence, EvaluationRun
 from ...shared.workflow_models import EvaluationInput, content_hash
+from .stored_rubric import checked_input
 
 
 def build_evaluation_payload(
@@ -12,11 +13,11 @@ def build_evaluation_payload(
 ) -> dict[str, object]:
     """승인 정보를 확인하고 AI 평가에 전달할 자료를 정리한다."""
 
-    checked = EvaluationInput.model_validate(request.model_dump(mode="json"))
+    checked = checked_input(request)
 
     payload = {
         "run_id": checked.run_id,
-        "criteria_sha256": checked.approval.criteria_sha256,
+        "criteria_sha256": content_hash(checked.approved_criteria),
         "work_type": checked.classification.work_type,
         "work_record": checked.work_record.model_dump(mode="json"),
         "criteria": checked.approved_criteria.model_dump(mode="json"),

@@ -190,7 +190,7 @@ def mcp_client(run_token: str) -> MultiServerMCPClient:
 
 | 토큰 | 발급 | 범위 | 쓸 수 있는 도구 |
 | --- | --- | --- | --- |
-| `evaluation` | `/internal/runs` | 평가 건 1개(스냅샷) | 조회 13개 · 저장 4개, rag 6개 |
+| `evaluation` | `/internal/runs` | 평가 건 1개(스냅샷) | 조회 14개 · 저장 4개, rag 6개 |
 | `live` | `/internal/live-worker-token` | 회사(피드백 Worker에 한 번 발급) | `start_live_evaluation`, `get_messages`, `save_live_evaluation`, rag `get_current_rubric`·`search_rubric`·`search_policy`·`search_examples` |
 | `rubric` | `/internal/rubric-runs` | 회사 | `save_rubric`, rag `get_current_rubric`·`search_rubric`·`search_policy`·`search_examples` |
 
@@ -215,6 +215,12 @@ business-mcp를 새 코드로 재배포합니다. 데이터 초기화는 필요 
 | 중복 | 키 없이 상태로 처리. 이미 `완료·실패`면 덮어쓰지 않고 `{status: 현재, duplicate: true}` |
 
 **평가 기준(규칙) 저장 흐름**: `save_rubric`이 새 버전을 만들어 바로 `현행`으로 바꾸고, 이전 `현행`은 `폐기`로 바꿉니다(관리자 승인 없음).
+
+**저장된 기준으로 최종 평가**: Agent의 `cli.final_evaluation`은 evaluation 토큰으로
+`get_evaluation_context(evaluation_id)`를 먼저 호출합니다. 이 읽기 도구는 토큰에 귀속된
+평가 건의 업무·산출물·루브릭 버전·상태와 현재 `draft_revision`·`coaching_revision`을 반환합니다.
+Agent는 해당 버전의 `search_rubric`을 조회하고 검증 후 `save_evaluation_draft`·`save_coaching`을
+호출합니다. 최종 확정 상태는 서버 소유입니다. [Agent 실행 안내](../docs/evaluation_agent.md).
 
 | 검증 | 규칙 |
 | --- | --- |
