@@ -112,9 +112,9 @@ class WriteStore:
         need_key(idempotency_key)
         pool = self.store.evidence_pool(claims)
         with self.db.tx() as c:
-            if (dup := replay(c, "save_evaluation_draft", idempotency_key)) is not None:
+            ev = self._own_eval(claims, evaluation_id, c)   # 권한 확인 뒤에 키를 본다(다른 평가 건의 결과를 돌려주지 않음)
+            if (dup := replay(c, "save_evaluation_draft", evaluation_id, idempotency_key)) is not None:
                 return dup
-            ev = self._own_eval(claims, evaluation_id, c)
             if ev["status"] not in WRITABLE:
                 raise validation(f"평가 상태가 '{ev['status']}'라 초안을 저장할 수 없습니다")
             if rubric_version != ev["rubric_version"]:
@@ -127,7 +127,7 @@ class WriteStore:
                 "SELECT %s, COALESCE(MAX(revision),0)+1, %s, %s FROM evaluation_drafts WHERE evaluation_id=%s RETURNING revision, saved_at",
                 (evaluation_id, Jsonb(clean), claims["run_id"], evaluation_id)).fetchone()
             result = {"evaluation_id": evaluation_id, "draft_revision": row["revision"], "saved_at": iso(row["saved_at"]), "items_saved": len(clean)}
-            remember(c, "save_evaluation_draft", idempotency_key, result, evaluation_id)
+            remember(c, "save_evaluation_draft", evaluation_id, idempotency_key, result, evaluation_id)
             return result
 
     # ── save_coaching ──
@@ -135,9 +135,9 @@ class WriteStore:
         need_key(idempotency_key)
         pool = self.store.evidence_pool(claims)
         with self.db.tx() as c:
-            if (dup := replay(c, "save_coaching", idempotency_key)) is not None:
+            ev = self._own_eval(claims, evaluation_id, c)   # 권한 확인 뒤에 키를 본다(다른 평가 건의 결과를 돌려주지 않음)
+            if (dup := replay(c, "save_coaching", evaluation_id, idempotency_key)) is not None:
                 return dup
-            ev = self._own_eval(claims, evaluation_id, c)
             if ev["status"] not in WRITABLE:
                 raise validation(f"평가 상태가 '{ev['status']}'라 코칭을 저장할 수 없습니다")
             draft = self._latest_items(c, "evaluation_drafts", evaluation_id)
@@ -150,7 +150,7 @@ class WriteStore:
                 "SELECT %s, COALESCE(MAX(revision),0)+1, %s, %s FROM evaluation_coaching WHERE evaluation_id=%s RETURNING revision, saved_at",
                 (evaluation_id, Jsonb(clean), claims["run_id"], evaluation_id)).fetchone()
             result = {"evaluation_id": evaluation_id, "coaching_revision": row["revision"], "saved_at": iso(row["saved_at"]), "items_saved": len(clean)}
-            remember(c, "save_coaching", idempotency_key, result, evaluation_id)
+            remember(c, "save_coaching", evaluation_id, idempotency_key, result, evaluation_id)
             return result
 
     # ── request_review ──
@@ -158,9 +158,9 @@ class WriteStore:
         need_key(idempotency_key)
         pool = self.store.evidence_pool(claims)
         with self.db.tx() as c:
-            if (dup := replay(c, "request_review", idempotency_key)) is not None:
+            ev = self._own_eval(claims, evaluation_id, c)   # 권한 확인 뒤에 키를 본다(다른 평가 건의 결과를 돌려주지 않음)
+            if (dup := replay(c, "request_review", evaluation_id, idempotency_key)) is not None:
                 return dup
-            ev = self._own_eval(claims, evaluation_id, c)
             if ev["status"] != "확인 대기":
                 raise validation(f"검토 요청은 평가 상태가 '확인 대기'일 때만 가능합니다 (현재 '{ev['status']}')")
             wt = self.store.raw[ev["work_id"]]["work_case"]["work_type"]
@@ -201,7 +201,7 @@ class WriteStore:
             c.execute("UPDATE evaluations SET status='검토 대기', updated_at=now() WHERE evaluation_id=%s", (evaluation_id,))
             result = {"review_request_id": rrid, "evaluation_id": evaluation_id, "target_items": norm, "reviewer_id": reviewer,
                       "status": "검토 대기", "created_at": iso(row["created_at"])}
-            remember(c, "request_review", idempotency_key, result, evaluation_id)
+            remember(c, "request_review", evaluation_id, idempotency_key, result, evaluation_id)
             return result
 
     # ── update_progress ──

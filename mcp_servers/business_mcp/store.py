@@ -6,6 +6,8 @@
 """
 from __future__ import annotations
 
+import hashlib
+import json
 import re
 import threading
 from difflib import SequenceMatcher
@@ -78,6 +80,10 @@ class Store:
         self.docs = {(d["doc_id"], d["version"]): d for d in self.documents}
         self.rubrics = {(d["work_type"], d["version"]): d for d in self.documents if d.get("collection") == "rubrics"}
         self.fault_plans = r.fault_plans("business-mcp")
+        # 응답 마스킹에 쓴 규칙의 버전 (중간 피드백 get_messages의 masking_version). 규칙이 바뀌면 값도 바뀐다
+        masking = [x for x in self.policy_rules["rules"] if x.get("kind") == "masking"]
+        digest = hashlib.sha256(json.dumps(masking, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
+        self.masking_version = f"mask-{digest[:12]}"
 
     def rubric(self, work_type: str, version: str) -> dict:
         r = self.rubrics.get((work_type, version))

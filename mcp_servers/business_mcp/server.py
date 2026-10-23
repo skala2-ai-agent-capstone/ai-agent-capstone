@@ -1,12 +1,13 @@
-"""business-mcp: 업무 시스템 조회 13개 + 저장 8개 도구 (명세 3·4장, 중간 점검·평가 기준 저장 추가).
+"""business-mcp: 업무 시스템 조회 13개 + 저장 5개 + 중간 피드백 3개 도구 (명세 3·4장, 평가 기준 저장·중간 피드백 추가).
 
 실행: python -m business_mcp.server   (환경 변수는 README 참고)
 MCP 엔드포인트: http://<host>:8001/mcp  (Streamable HTTP, 요청마다 Authorization: Bearer <run_token>)
 내부 API(/internal/*)는 백엔드·테스트 하네스용이며 X-Internal-Key가 필요하다. Agent에는 노출하지 않는다.
 
 실행 토큰 종류(kind)별로 부를 수 있는 도구가 다르다.
-- evaluation(최종 평가): 조회 13개, save_evaluation_draft·save_coaching·request_review·update_progress
-- live(중간 점검): get_conversation(최근 메시지 범위), start·save·fail_live_evaluation
+- evaluation(최종 평가, 평가 건마다 발급): 조회 13개, save_evaluation_draft·save_coaching·request_review·update_progress
+- live(중간 피드백 Worker, 회사 범위로 한 번 발급): start_live_evaluation·get_messages·save_live_evaluation.
+  요청은 토큰이 아니라 live_eval_id로 찾고 매번 회사를 확인한다
 - rubric(평가 기준 작성): save_rubric
 """
 from __future__ import annotations
@@ -109,11 +110,9 @@ async def get_work_case(work_id: str, ctx: Context) -> dict:
 @mcp.tool()
 async def get_conversation(work_id: str, ctx: Context, from_seq: int | None = None, to_seq: int | None = None, limit: int | None = 50) -> dict:
     """직원(user)과 업무 AI(assistant)의 대화를 순번 구간으로 조회한다 (limit 최대 50, next_seq로 이어 읽기).
-    스냅샷 conversation_range 밖을 요청하면 VERSION_CONFLICT. 메시지 ID({work_id}-Mnn)가 근거 ID다.
-    중간 점검(live) 토큰이면 범위가 요청 시점의 최근 메시지 5개다."""
+    스냅샷 conversation_range 밖을 요청하면 VERSION_CONFLICT. 메시지 ID({work_id}-Mnn)가 근거 ID다."""
     args = {"work_id": work_id, "from_seq": from_seq, "to_seq": to_seq, "limit": limit}
-    return await rt.run(ctx, "get_conversation", args, lambda c: store.get_conversation(c, work_id, from_seq, to_seq, limit),
-                        kinds=(EVALUATION, LIVE))
+    return await rt.run(ctx, "get_conversation", args, lambda c: store.get_conversation(c, work_id, from_seq, to_seq, limit))
 
 
 @mcp.tool()
@@ -269,34 +268,40 @@ async def update_progress(evaluation_id: str, stage: str, ctx: Context, idempote
     return await rt.run(ctx, "update_progress", args, lambda c: writes.update_progress(c, evaluation_id, stage))
 
 
-# ───────────────────── 중간 점검 저장 도구 3개 (live 토큰) ─────────────────────
+# ───────────────────── 중간 피드백 도구 3개 (live 토큰 = 피드백 Worker) ─────────────────────
+# 계약 정본: docs/recent_five_feedback.md. 응답 data는 Agent 계약 모델과 칸이 같다.
 @mcp.tool()
-async def start_live_evaluation(live_eval_id: str, idempotency_key: str, ctx: Context) -> dict:
-    """중간 점검을 '생성 중'으로 바꾼다(화면 폴링용). 대기·생성 중일 때만 가능."""
-    args = {"live_eval_id": live_eval_id, "idempotency_key": idempotency_key}
-    return await rt.run(ctx, "start_live_evaluation", args, lambda c: live.start(c, live_eval_id, idempotency_key), kinds=(LIVE,))
-
-
-@mcp.tool()
-async def save_live_evaluation(live_eval_id: str, work_type: str, rubric_version: str, items: list[dict[str, Any]],
-                               coaching: list[dict[str, Any]], idempotency_key: str, ctx: Context,
-                               model: str | None = None, latency_ms: int | None = None) -> dict:
-    """중간 점검 결과를 저장하고 '완료'로 바꾼다. work_type·rubric_version은 판단에 쓴 기준(rag-mcp get_current_rubric).
-    items[]: {item_id, item, status(채점|미관측|검토 필요), score, reason, evidence_ids[]} — 루브릭 5개 항목 전부.
-    evidence_ids는 점검 범위(최근 메시지) 안의 메시지 ID만. 산출물이 없으므로 결과물 품질은 미관측만 허용.
-    coaching[]: {item_id, kind(강점|보완점|기록 안내), target_span_id(범위 안 메시지 ID), text}."""
-    args = {"live_eval_id": live_eval_id, "work_type": work_type, "rubric_version": rubric_version, "items": items,
-            "coaching": coaching, "idempotency_key": idempotency_key, "model": model, "latency_ms": latency_ms}
-    return await rt.run(ctx, "save_live_evaluation", args,
-                        lambda c: live.save(c, live_eval_id, work_type, rubric_version, items, coaching, idempotency_key, model, latency_ms),
+async def start_live_evaluation(live_eval_id: str, ctx: Context) -> dict:
+    """중간 피드백 요청을 시작하고 고정된 문맥을 돌려준다: {live_eval_id, company_id, work_id, requested_by, requested_at,
+    from_seq, to_seq, status, work_type, rubric_doc_id, rubric_version, rubric{doc_id, version, items[{item_id, item, criterion}]}|null}.
+    대기면 생성 중으로 바꾼다. 생성 중(큐 재전달)은 같은 문맥, 완료·실패는 바꾸지 않고 그 상태 그대로 돌려준다."""
+    return await rt.run(ctx, "start_live_evaluation", {"live_eval_id": live_eval_id}, lambda c: live.start(c, live_eval_id),
                         kinds=(LIVE,))
 
 
 @mcp.tool()
-async def fail_live_evaluation(live_eval_id: str, error: str, idempotency_key: str, ctx: Context) -> dict:
-    """중간 점검을 '실패'로 바꾼다. error는 화면에 보일 짧은 사유(민감정보 금지)."""
-    args = {"live_eval_id": live_eval_id, "error": error, "idempotency_key": idempotency_key}
-    return await rt.run(ctx, "fail_live_evaluation", args, lambda c: live.fail(c, live_eval_id, error, idempotency_key), kinds=(LIVE,))
+async def get_messages(live_eval_id: str, work_id: str, from_seq: int, to_seq: int, ctx: Context) -> dict:
+    """요청에 고정된 범위의 완료 질문·응답 쌍(최대 5쌍, 10개)을 마스킹본으로 돌려준다.
+    work_id·from_seq·to_seq는 start_live_evaluation 문맥과 같아야 한다. 답이 없는 질문은 빠진다.
+    messages[]: {message_id, exchange_id(그 쌍에 답한 호출), seq, role, content, created_at}. masking_applied·masking_version·complete 포함."""
+    args = {"live_eval_id": live_eval_id, "work_id": work_id, "from_seq": from_seq, "to_seq": to_seq}
+    return await rt.run(ctx, "get_messages", args, lambda c: live.get_messages(c, live_eval_id, work_id, from_seq, to_seq),
+                        kinds=(LIVE,))
+
+
+@mcp.tool()
+async def save_live_evaluation(live_eval_id: str, status: str, ctx: Context, items: list[dict[str, Any]] | None = None,
+                               coaching: dict[str, Any] | None = None, model: str | None = None,
+                               latency_ms: int | None = None, error: str | None = None) -> dict:
+    """중간 피드백 결과를 저장한다. 응답 {live_eval_id, status, duplicate}.
+    status=완료: items 1~3개 {item_id, criterion_id(고정 기준 항목|null), kind(strength|improvement|needs_check), diagnosis,
+    evidence[{message_id, quote(그 메시지의 실제 문장)}]}, coaching {schema_version:'1', provenance{…},
+    suggestions[{item_id, target_message_id(직원 질문), next_action, suggested_prompt}]} — 개선 항목에는 추천 필수.
+    status=실패: error 코드(예 MODEL_TIMEOUT). 이미 완료·실패면 바꾸지 않고 현재 상태와 duplicate:true를 돌려준다."""
+    args = {"live_eval_id": live_eval_id, "status": status, "items": items, "coaching": coaching, "model": model,
+            "latency_ms": latency_ms, "error": error}
+    return await rt.run(ctx, "save_live_evaluation", args,
+                        lambda c: live.save(c, live_eval_id, status, items, coaching, model, latency_ms, error), kinds=(LIVE,))
 
 
 # ───────────────────── 평가 기준 저장 도구 1개 (rubric 토큰) ─────────────────────
@@ -415,23 +420,30 @@ async def evaluation_status(request: Request) -> dict:
 
 @internal("/internal/live-evaluations", ["POST"])
 async def live_create(request: Request) -> dict:
-    """중간 점검 요청 행 생성(백엔드 역할 재현). body: {work_id, requested_by, live_eval_id?}.
-    범위는 최근 메시지 5개. 업무 담당자만, 사용자별 5분에 1회(429 RATE_LIMITED). 같은 live_eval_id는 기존 행."""
+    """중간 피드백 요청 행 생성(백엔드 역할 재현). body: {work_id, requested_by, live_eval_id?, work_type?}.
+    최근 완료 질문·응답 5쌍 범위와 유형·현행 기준을 고정한다. 업무 담당자만, 사용자별 5분에 1회(429 RATE_LIMITED).
+    완료 쌍이 없으면 400. 같은 live_eval_id는 기존 행."""
     row, created = live.create_request(await request.json())
     return {**row, "created": created}
 
 
 @internal("/internal/live-evaluations/{live_eval_id}", ["GET"])
 async def live_detail(request: Request) -> dict:
-    """중간 점검 상태·결과 조회(화면 폴링)."""
+    """중간 피드백 상태·결과 조회(화면 폴링)."""
     return live.get(request.path_params["live_eval_id"])
 
 
-@internal("/internal/live-runs", ["POST"])
-async def issue_live_run(request: Request) -> dict:
-    """중간 점검 실행 토큰(kind=live) 발급. body: {live_eval_id, ttl_sec?}."""
+@internal("/internal/live-worker-token", ["POST"])
+async def issue_live_worker_token(request: Request) -> dict:
+    """중간 피드백 Worker 토큰(kind=live, 회사 범위) 발급. body: {company_id, ttl_sec?(기본 30일)}.
+    Worker 환경 변수(FEEDBACK_MCP_TOKEN)에 넣는다. 요청 권한은 도구가 live_eval_id로 매번 확인한다.
+    회수는 RUN_TOKEN_SECRET 교체(모든 토큰 무효) 또는 짧은 ttl로 다시 발급."""
     body = await request.json()
-    return _run_token(live.claims_for(body.get("live_eval_id") or "", new_id("RUN")), body, 900)
+    company = body.get("company_id")
+    if company not in {c["company_id"] for c in store.org["companies"]}:
+        raise not_found(f"회사 {company}")
+    claims = {"kind": LIVE, "run_id": new_id("WORKER"), "company_id": company, "work_id": "", "snapshot": {}}
+    return _run_token(claims, body, 30 * 24 * 3600)
 
 
 @internal("/internal/rubric-runs", ["POST"])

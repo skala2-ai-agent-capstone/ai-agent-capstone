@@ -62,7 +62,7 @@ OPENAI_MODEL=gemma4
 | --- | --- | --- |
 | `X-Work-Id` | `work_id` | 업무 DB `work_cases.work_id` |
 | `X-User-Id` | `user_id` | 업무 DB `users.user_id`(로그인한 직원) |
-| `X-Stage` | `stage` | `workspace_chat`(직원 대화), `classify`·`rubric`·`evaluate`(최종 평가 Agent), `live_evaluate`(중간 점검) |
+| `X-Stage` | `stage` | `workspace_chat`(직원 대화), `classify`·`rubric`·`evaluate`(최종 평가 Agent), `live_evaluate`(중간 피드백) |
 
 `llm_exchanges`는 업무 DB의 외래 키와 CHECK를 따르므로, 프록시는 **저장할 수 없는 헤더를 vLLM에 넘기기 전에 `400 invalid_trace_headers`로 거절**합니다.
 답은 받았는데 기록만 사라지는 일을 막기 위해서입니다.
@@ -73,8 +73,16 @@ OPENAI_MODEL=gemma4
 | `X-Stage: workspace_chat`인데 `X-Work-Id`나 `X-User-Id`가 없음 | 대화가 어느 업무·직원에도 붙지 않음 |
 | `X-Work-Id`·`X-User-Id`가 업무 DB에 없음 | 외래 키 위반 |
 
-Agent(`src/ai_agents`)의 분류·기준 생성·평가 호출은 `X-Stage`와 `X-Work-Id`를 자동으로 붙입니다(`src/ai_agents/shared/llm_trace.py`).
-업무 공간 백엔드는 대화를 보낼 때 세 헤더를 직접 붙이고, `X-User-Id`에는 JWT에서 꺼낸 사용자를 넣습니다.
+헤더는 호출하는 쪽이 붙입니다. 프록시가 알아서 채우지 않으므로, 빠지면 기록의 `stage`·`work_id`·`user_id`가 비어 남습니다.
+
+| 호출하는 쪽 | 붙일 헤더 |
+| --- | --- |
+| 업무 공간 백엔드(직원 대화) | `X-Stage: workspace_chat`, `X-Work-Id`, `X-User-Id`(JWT에서 꺼낸 사용자) |
+| 최종 평가 Agent(분류·기준 생성·평가) | `X-Stage: classify`·`rubric`·`evaluate`, `X-Work-Id` |
+| 중간 피드백 Worker | `X-Stage: live_evaluate`, `X-Work-Id`, `X-User-Id`(요청한 직원 `requested_by`) |
+
+Agent 쪽은 아직 연결 중입니다. 최종 평가 경로는 `src/ai_agents/shared/llm_trace.py`로 붙이는 변경이 별도 브랜치에 있고, 중간 피드백 Worker(`cli/feedback.py`의 `AsyncOpenAI`)에는 아직 없습니다.
+업무 공간 백엔드는 대화를 보낼 때 세 헤더를 직접 붙입니다.
 대화 이력은 `messages` 뷰에서 읽어 그대로 보내고, 첨부 본문 같은 백엔드가 붙이는 자료는 `system` 메시지로 넣습니다.
 
 ```python

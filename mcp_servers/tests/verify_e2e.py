@@ -204,7 +204,8 @@ class Scenario:
         check("헤더 오류 요청은 기록하지 않음", not self.one("SELECT 1 FROM llm_exchanges WHERE work_id=%s AND stage='workspace_chat' "
                                                       "AND request->'messages'->0->>'content'='헤더 확인'", (self.work,)))
 
-        msgs = self.all("SELECT message_id, seq, role, content, content_masked, created_at FROM messages WHERE work_id=%s ORDER BY seq",
+        msgs = self.all("SELECT message_id, seq, role, content, content_masked, created_at, exchange_id FROM messages WHERE work_id=%s "
+                        "ORDER BY seq",
                         (self.work,))
         self.messages = msgs
         check("messages 뷰: 12개 (질문 6 + 답변 6, 실패 뒤 재전송 질문은 한 번)", len(msgs) == 12, str(len(msgs)))
@@ -220,58 +221,68 @@ class Scenario:
               PHONE not in pii["content_masked"] and EMAIL not in pii["content_masked"] and PHONE in pii["content"],
               pii["content_masked"][:120])
 
-    # ── 5) 중간 점검 (live 토큰) ──
+    # ── 5) 중간 피드백 (Worker 토큰, 계약 docs/recent_five_feedback.md) ──
+    def live_before_chat(self) -> None:
+        r = internal("POST", "/internal/live-evaluations", {"work_id": self.work, "requested_by": self.owner})
+        check("대화 전 중간 피드백 요청 → VALIDATION_ERROR(완료 질문·응답 없음)", code(r) == "VALIDATION_ERROR", str(r)[:200])
+
     async def live(self) -> None:
         r = internal("POST", "/internal/live-evaluations", {"work_id": self.work, "requested_by": self.other_user})
-        check("중간 점검: 담당자가 아니면 FORBIDDEN", code(r) == "FORBIDDEN", str(r)[:200])
+        check("중간 피드백: 담당자가 아니면 FORBIDDEN", code(r) == "FORBIDDEN", str(r)[:200])
         r = internal("POST", "/internal/live-evaluations", {"work_id": self.work, "requested_by": self.owner})
-        if not check("중간 점검 요청: 대기, 범위 최근 5개(8~12)",
-                     r.get("ok") and r["data"]["status"] == "대기" and (r["data"]["from_seq"], r["data"]["to_seq"]) == (8, 12), str(r)[:300]):
+        d = r.get("data") or {}
+        # 완료 6쌍 중 최근 5쌍 = 3~12. 미분류 업무라 기준 없이 일반 코칭
+        if not check("요청: 대기, 최근 완료 5쌍 → 범위 3~12, 유형 미분류 → 기준 없음",
+                     r.get("ok") and d["status"] == "대기" and (d["from_seq"], d["to_seq"]) == (3, 12) and d["work_type"] is None
+                     and d["rubric_doc_id"] is None, str(r)[:300]):
             return
-        lid = r["data"]["live_eval_id"]
-        check("중간 점검 5분 안 재요청 → RATE_LIMITED", code(internal("POST", "/internal/live-evaluations",
-                                                                {"work_id": self.work, "requested_by": self.owner})) == "RATE_LIMITED")
-        run = internal("POST", "/internal/live-runs", {"live_eval_id": lid})
-        if not check("live 실행 토큰 발급", run.get("ok") and run["data"]["kind"] == "live", str(run)[:200]):
+        lid = d["live_eval_id"]
+        check("중간 피드백 5분 안 재요청 → RATE_LIMITED", code(internal("POST", "/internal/live-evaluations",
+                                                                  {"work_id": self.work, "requested_by": self.owner})) == "RATE_LIMITED")
+        tok = internal("POST", "/internal/live-worker-token", {"company_id": self.company})
+        if not check("Worker 토큰 발급", tok.get("ok") and tok["data"]["kind"] == "live", str(tok)[:200]):
             return
-        ids = [f"{self.work}-M{n:02d}" for n in range(8, 13)]
-        async with Session(run["data"]["run_token"]) as s:
-            conv = await s.call("business", "get_conversation", {"work_id": self.work})
-            got = [m["message_id"] for m in conv.get("data", {}).get("messages", [])]
-            check("live get_conversation = 범위 메시지 5개", got == ids, str(got))
-            check("live get_conversation 본문 = messages 뷰 마스킹본",
-                  conv.get("ok") and [m["content"] for m in conv["data"]["messages"]] == [m["content_masked"] for m in self.messages[7:12]])
-            r = await s.call("business", "get_conversation", {"work_id": self.work, "from_seq": 1, "to_seq": 12})
-            check("live 범위 밖 구간 → VERSION_CONFLICT", code(r) == "VERSION_CONFLICT", str(r)[:200])
-            r = await s.call("business", "get_work_case", {"work_id": self.work})
-            check("live 토큰으로 get_work_case → FORBIDDEN", code(r) == "FORBIDDEN", str(r)[:200])
-            rub = await s.call("rag", "get_current_rubric", {"work_type": "proposal"})
-            if not check("live get_current_rubric(proposal)", rub.get("ok"), str(rub)[:200]):
-                return
-            by = {i["item"]: i["item_id"] for i in rub["data"]["items"]}
-            r = await s.call("business", "start_live_evaluation", {"live_eval_id": lid, "idempotency_key": new_key("e2e")})
-            check("start_live_evaluation → 생성 중", r.get("ok") and r["data"]["status"] == "생성 중", str(r)[:200])
-            items = [
-                {"item_id": by["문제 정의"], "item": "문제 정의", "status": "미관측", "score": None, "reason": None, "evidence_ids": []},
-                {"item_id": by["지시 품질"], "item": "지시 품질", "status": "채점", "score": 1, "reason": "분량은 정했으나 근거 자료 지정이 없음",
-                 "evidence_ids": [ids[0]]},
-                {"item_id": by["결과 검증"], "item": "결과 검증", "status": "미관측", "score": None, "reason": None, "evidence_ids": []},
-                {"item_id": by["보안 준수"], "item": "보안 준수", "status": "미관측", "score": None, "reason": None, "evidence_ids": []},
-                {"item_id": by["결과물 품질"], "item": "결과물 품질", "status": "미관측", "score": None, "reason": None, "evidence_ids": []},
-            ]
-            base = {"live_eval_id": lid, "work_type": "proposal", "rubric_version": rub["data"]["version"]}
-            bad = [dict(items[1], evidence_ids=[f"{self.work}-M03"]) if i == 1 else it for i, it in enumerate(items)]
-            r = await s.call("business", "save_live_evaluation", {**base, "items": bad, "coaching": [], "idempotency_key": new_key("e2e")})
-            check("live 범위 밖 근거(M03) → VALIDATION_ERROR", code(r) == "VALIDATION_ERROR", str(r)[:200])
-            coaching = [{"item_id": by["지시 품질"], "kind": "보완점", "target_span_id": ids[0],
-                         "text": "줄일 분량과 함께 근거로 쓸 제품 설명서 조항을 지시에 적어 보세요."}]
-            r = await s.call("business", "save_live_evaluation", {**base, "items": items, "coaching": coaching, "idempotency_key": new_key("e2e"),
-                                                                  "model": MODEL, "latency_ms": 1200})
-            check("save_live_evaluation → 완료", r.get("ok") and r["data"]["status"] == "완료", str(r)[:200])
+        view = {m["message_id"]: m for m in self.messages}
+        async with Session(tok["data"]["run_token"]) as s:
+            st = await s.call("business", "start_live_evaluation", {"live_eval_id": lid})
+            ctx = st.get("data") or {}
+            check("start: 생성 중, 요청자·회사·범위, 기준 없음(rubric null)",
+                  st.get("ok") and ctx["status"] == "생성 중" and ctx["requested_by"] == self.owner and ctx["company_id"] == self.company
+                  and (ctx["from_seq"], ctx["to_seq"]) == (3, 12) and ctx["rubric"] is None, str(st)[:300])
+            gm = await s.call("business", "get_messages", {"live_eval_id": lid, "work_id": self.work, "from_seq": 3, "to_seq": 12})
+            b = gm.get("data") or {}
+            msgs = b.get("messages") or []
+            ids = [f"{self.work}-M{n:02d}" for n in range(3, 13)]
+            check("get_messages: M03~M12 10개, complete, 본문 = messages 뷰 마스킹본",
+                  [m["message_id"] for m in msgs] == ids and b.get("complete") is True
+                  and all(m["content"] == view[m["message_id"]]["content_masked"] for m in msgs), str(gm)[:300])
+            check("get_messages: 직원이 입력한 연락처는 마스킹", msgs and PHONE not in msgs[0]["content"])
+            q3, a3 = f"{self.work}-M05", f"{self.work}-M06"   # 실패 뒤 재전송한 질문과 그 답
+            pair = {m["message_id"]: m["exchange_id"] for m in msgs}
+            check("실패 뒤 재전송한 질문: 뷰에서는 호출이 달라도 쌍의 exchange_id는 답한 호출로 같음",
+                  view[q3]["exchange_id"] != view[a3]["exchange_id"] and pair.get(q3) == pair.get(a3) == view[a3]["exchange_id"],
+                  str({k: (view[k]["exchange_id"], pair.get(k)) for k in (q3, a3)}))
+            q = msgs[0]
+            good = {"live_eval_id": lid, "status": "완료", "model": MODEL, "latency_ms": 1500, "error": None,
+                    "items": [{"item_id": "F-1", "criterion_id": None, "kind": "improvement",
+                               "diagnosis": "고객 연락처를 대화에 그대로 입력했습니다.",
+                               "evidence": [{"message_id": q["message_id"], "quote": q["content"][:12]}]}],
+                    "coaching": {"schema_version": "1", "provenance": {"trace_id": "e2e"},
+                                 "suggestions": [{"item_id": "F-1", "target_message_id": q["message_id"],
+                                                  "next_action": "연락처 대신 [고객 담당자]처럼 대체 표기를 쓰세요.",
+                                                  "suggested_prompt": "[고객 담당자]와 일정을 협의하는 메일 초안을 써 줘."}]}}
+            r = await s.call("business", "save_live_evaluation",
+                             {**good, "items": [dict(good["items"][0], criterion_id="proposal.1")]})
+            check("기준 없는 요청에 criterion_id → VALIDATION_ERROR", code(r) == "VALIDATION_ERROR", str(r)[:200])
+            r = await s.call("business", "save_live_evaluation", good)
+            check("save → 완료, duplicate:false", r.get("ok") and r["data"] == {"live_eval_id": lid, "status": "완료", "duplicate": False},
+                  str(r)[:200])
+            r = await s.call("business", "save_live_evaluation", good)
+            check("큐 재전달 save → duplicate:true", r.get("ok") and r["data"]["duplicate"] is True, str(r)[:200])
         got = internal("GET", f"/internal/live-evaluations/{lid}")
-        check("중간 점검 결과 조회(폴링): 완료·항목 5·코칭 1",
-              got.get("ok") and got["data"]["status"] == "완료" and len(got["data"]["items"]) == 5 and len(got["data"]["coaching"]) == 1,
-              str(got)[:200])
+        check("중간 피드백 결과 조회(폴링): 완료·진단 1·추천 1",
+              got.get("ok") and got["data"]["status"] == "완료" and len(got["data"]["items"]) == 1
+              and len(got["data"]["coaching"]["suggestions"]) == 1, str(got)[:200])
 
     # ── 6) 최종 평가: 분류 → 산출물 저장(구간 없음) → 완료 이벤트 → 평가 ──
     def save_artifacts(self) -> None:
@@ -376,6 +387,7 @@ async def main() -> int:
     sc.span_rule()
     sc.create_work()
     try:
+        sc.live_before_chat()
         if sc.wait_llm():
             sc.conversation()
             sc.header_checks()
