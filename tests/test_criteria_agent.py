@@ -7,7 +7,7 @@ from pydantic import ValidationError
 from test_criteria_mcp_input import gateway_for, policy_reply
 from test_rubric_builder import fake_rubric, response
 
-from ai_agents.criteria_agent.agent import generate_criteria
+from ai_agents.criteria_agent.agent import generate_criteria, generate_mcp_criteria
 from ai_agents.criteria_agent.builder import (
     ITEM_NAMES,
     OpenAIRubricBuilder,
@@ -61,11 +61,12 @@ async def test_standalone_generation_returns_validated_criteria_without_work_rec
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("generate", [generate_criteria, generate_mcp_criteria])
 @pytest.mark.parametrize("case,code", [
     ("missing_clause", "POLICY_INCOMPLETE"),
     ("wrong_version", "VERSION_CONFLICT"),
 ])
-async def test_policy_failure_stops_before_model_generation(case, code):
+async def test_policy_failure_stops_before_model_generation(generate, case, code):
     reply = policy_reply()
     if case == "missing_clause":
         reply["data"]["chunks"] = [
@@ -78,7 +79,7 @@ async def test_policy_failure_stops_before_model_generation(case, code):
     )
 
     with pytest.raises(MCPError) as error:
-        await generate_criteria(gateway, builder, "rfp_analysis", expected_policy=expected)
+        await generate(gateway, builder, "rfp_analysis", expected_policy=expected)
 
     assert error.value.code == code
     parse.assert_not_awaited()
@@ -86,13 +87,14 @@ async def test_policy_failure_stops_before_model_generation(case, code):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("generate", [generate_criteria, generate_mcp_criteria])
 @pytest.mark.parametrize("code", ["FORBIDDEN", "NOT_FOUND", "TEMPORARY_FAILURE"])
-async def test_mcp_failure_propagates_without_generating_or_storing_a_result(code):
+async def test_mcp_failure_propagates_without_generating_or_storing_a_result(generate, code):
     gateway = SimpleNamespace(call=AsyncMock(side_effect=MCPError(code, "search_policy")))
     builder, parse = builder_for(fake_rubric("rfp_analysis"))
 
     with pytest.raises(MCPError) as error:
-        await generate_criteria(gateway, builder, "rfp_analysis")
+        await generate(gateway, builder, "rfp_analysis")
 
     assert error.value.code == code
     parse.assert_not_awaited()
@@ -100,14 +102,15 @@ async def test_mcp_failure_propagates_without_generating_or_storing_a_result(cod
 
 
 @pytest.mark.asyncio
-async def test_invalid_generated_evidence_is_not_returned_as_a_success():
+@pytest.mark.parametrize("generate", [generate_criteria, generate_mcp_criteria])
+async def test_invalid_generated_evidence_is_not_returned_as_a_success(generate):
     gateway = gateway_for(policy_reply())
     rubric = fake_rubric("rfp_analysis")
     rubric.rows[0].related_clauses = ["ART-999"]
     builder, parse = builder_for(rubric)
 
     with pytest.raises(RubricError, match="검증 실패"):
-        await generate_criteria(gateway, builder, "rfp_analysis")
+        await generate(gateway, builder, "rfp_analysis")
 
     parse.assert_awaited_once()
     gateway.call.assert_awaited_once()
@@ -115,12 +118,13 @@ async def test_invalid_generated_evidence_is_not_returned_as_a_success():
 
 
 @pytest.mark.asyncio
-async def test_invalid_work_type_does_not_call_mcp_or_model():
+@pytest.mark.parametrize("generate", [generate_criteria, generate_mcp_criteria])
+async def test_invalid_work_type_does_not_call_mcp_or_model(generate):
     gateway = gateway_for(policy_reply())
     builder, parse = builder_for(fake_rubric("rfp_analysis"))
 
     with pytest.raises(ValidationError):
-        await generate_criteria(gateway, builder, "unsupported")
+        await generate(gateway, builder, "unsupported")
 
     gateway.call.assert_not_awaited()
     parse.assert_not_awaited()
