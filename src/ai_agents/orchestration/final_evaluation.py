@@ -16,6 +16,7 @@ from pydantic import Field
 from ..evaluation_agent.final.agent import OpenAIEvaluator
 from ..evaluation_agent.final.materials import EvaluationMaterials, collect_evaluation_materials
 from ..evaluation_agent.final.models import AgentEvaluationOutput
+from ..evaluation_agent.final.page import build_final_page
 from ..evaluation_agent.final.persistence import save_arguments
 from ..evaluation_agent.final.stored_rubric import StoredEvaluationInput, StoredRubric
 from ..evaluation_agent.final.validation import EvaluationError
@@ -23,6 +24,7 @@ from ..integrations.mcp_adapter import collect_evaluation_evidence, read_mcp_res
 from ..integrations.mcp_client import MCPError
 from ..observability import trace_step
 from ..shared.evidence_models import EvaluationEvidence, EvaluationRun
+from ..shared.final_page_contracts import FinalEvaluationPage
 from ..shared.live_feedback_contracts import ID
 from ..shared.models import StrictModel, WorkContext
 from ..shared.work_selection import selected_work_type
@@ -48,6 +50,7 @@ class PreparedFinalEvaluation(StrictModel):
     report: AgentEvaluationOutput
     code_provenance: dict = Field(default_factory=dict)
     receipts: dict[str, dict] = Field(default_factory=dict)
+    page_result: FinalEvaluationPage | None = None  # 이전 체크포인트도 읽을 수 있다.
 
 
 class FinalCheckpoint:
@@ -167,6 +170,10 @@ class FinalEvaluationWorkflow:
                             "서버의 저장 리비전이 체크포인트 이후 변경되었습니다."
                         )
             payloads = save_arguments(prepared)
+            # 기존 근거 검증을 통과한 결과만 화면 형식으로 구성해 영속 체크포인트에 남긴다.
+            # 아직 서버에 없는 report 저장 도구를 호출하거나 완료로 간주하지 않는다.
+            prepared.page_result = build_final_page(prepared)
+            checkpoint.write(prepared)
             for tool, payload in payloads.items():
                 if tool in prepared.receipts:
                     self.check_receipt(tool, prepared.receipts[tool], job)
@@ -192,6 +199,11 @@ class FinalEvaluationWorkflow:
                 ),
                 "receipts": prepared.receipts,
                 "checkpoint": str(checkpoint.path),
+                "page_result": {
+                    "schema_version": prepared.page_result.schema_version,
+                    "sha256": content_hash(prepared.page_result),
+                    "persistence": "checkpoint_only",
+                },
             }
 
     async def prepare(self, job, context, target):
