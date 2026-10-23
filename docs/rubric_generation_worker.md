@@ -93,6 +93,18 @@ python -m ai_agents.cli.rubric_worker worker --langsmith   # LangSmith 설정이
 서버 전제: business-mcp에 `/internal/documents`·`/internal/rubric-runs`와 `RAG_MCP_URL`(업로드 뒤 rag-mcp 갱신)이 있어야 하고,
 백엔드에 Flyway `V4__rubric_generations.sql`과 `rubric_generation.*` 큐 선언·결과/DLQ 소비자가 있어야 한다.
 
+### compose로 서버에서 켜기
+
+`mcp_servers/docker-compose.app.yml`의 `rubric-worker`(`--profile rubric`)를 쓴다. 기록 프록시를 거치도록
+`RUBRIC_LLM_BASE_URL` 기본값이 `http://llm-proxy:4000/v1`이다.
+
+1. 위 `curl`로 회사 토큰을 받아 `.env`의 `RUBRIC_MCP_TOKEN`에 넣는다(값은 출력하지 않는다).
+2. llm-proxy `PROXY_KEYS`에 `rubric-worker:<RUBRIC_LLM_API_KEY 값>`을 넣고 `.env`에 `RUBRIC_LLM_API_KEY`를 둔다.
+   `OPENAI_STAGES`에 `rubric`이 있어야 OpenAI로 간다.
+3. `docker compose --profile rubric up -d rubric-worker` 뒤 `docker compose run --rm rubric-worker python -m ai_agents.cli.rubric_worker check-config`.
+
+토큰이 회사 하나 범위라 다른 회사의 업로드는 `TOKEN_SCOPE_MISMATCH`로 실패한다. 회사가 늘면 회사별 Worker를 따로 띄워야 한다.
+
 ## 검증 기록 — 2026-10-23
 
 - Agent: 기준 커밋 `f5eba27`에서 `tests/test_rubric_worker.py` 14개 포함 전체 937개 통과
