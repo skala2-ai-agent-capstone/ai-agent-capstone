@@ -2,7 +2,7 @@
 
 백엔드가 요청 행(대기)을 만들어 큐에 발행하고, 피드백 Worker가 Worker 토큰으로
 start_live_evaluation → get_messages → save_live_evaluation 순서로 부른다.
-- 범위: 요청 시점의 최근 완료 질문·응답 최대 5쌍(DB 함수 conversation_pairs). 0쌍이면 요청을 만들지 않는다.
+- 범위: 요청 시점까지 성공한 최근 질문·응답 최대 5쌍. 마스킹본을 요청 행에 고정하며 0쌍이면 요청하지 않는다.
 - 유형·기준: 요청 때 고정한다(work_type, rubric_doc_id·rubric_version). 저장 때 다른 값으로 바꿀 수 없다.
 - 권한: Worker 토큰은 회사 범위다. 매 호출마다 live_eval_id로 요청 행을 찾아 토큰의 회사와 같은지 확인한다.
 - 중복: 키 없이 상태로 처리한다. 대기 → 생성 중 → 완료|실패. 완료·실패는 다시 바꾸지 않고,
@@ -14,9 +14,8 @@ from __future__ import annotations
 import json
 import re
 
-from psycopg.types.json import Jsonb
-
 from common.runtime import MCPFail, forbidden, new_id, not_found, validation, version_number
+from psycopg.types.json import Jsonb
 
 from .pg import Db, iso, iso_row
 from .store import Store
@@ -56,6 +55,7 @@ class LiveStore:
             raise validation(f"work_type은 {', '.join(WORK_TYPES)} 중 하나입니다")
         lid = body.get("live_eval_id") or new_id("LIVE")
         with self.db.tx() as c:
+            requested_at = c.execute("SELECT transaction_timestamp() AS at").fetchone()["at"]
             old = c.execute(f"SELECT {LIVE_COLS} FROM live_evaluations WHERE live_eval_id=%s", (lid,)).fetchone()
             if old:
                 return iso_row(old), False
@@ -71,17 +71,55 @@ class LiveStore:
                 "ORDER BY requested_at DESC LIMIT 1", (user, RATE_LIMIT_SEC)).fetchone()
             if recent:
                 raise MCPFail("RATE_LIMITED", f"중간 피드백은 5분에 한 번만 요청할 수 있습니다 (마지막 요청 {iso(recent['requested_at'])})")
-            rng = c.execute("SELECT min(q_seq) AS from_seq, max(a_seq) AS to_seq, count(*) AS pairs "
-                            "FROM (SELECT * FROM conversation_pairs(%s) ORDER BY q_seq DESC LIMIT %s) p", (wid, PAIRS)).fetchone()
-            if not rng["pairs"]:
+            messages = self._recent_messages(c, wid, requested_at)
+            if not messages:
                 raise validation("완료된 질문·응답이 아직 없어 중간 피드백을 요청할 수 없습니다")
             work_type = work_type or work["work_type"]
             doc_id, version = self._current_rubric(c, work["company_id"], work_type) if work_type else (None, None)
             row = c.execute(
-                "INSERT INTO live_evaluations (live_eval_id, work_id, requested_by, work_type, from_seq, to_seq, rubric_doc_id, "
-                f"rubric_version) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING {LIVE_COLS}",
-                (lid, wid, user, work_type, rng["from_seq"], rng["to_seq"], doc_id, version)).fetchone()
+                "INSERT INTO live_evaluations (live_eval_id, work_id, requested_by, requested_at, work_type, from_seq, to_seq, "
+                "rubric_doc_id, rubric_version, conversation_snapshot) "
+                f"VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING {LIVE_COLS}",
+                (lid, wid, user, requested_at, work_type, messages[0]["seq"], messages[-1]["seq"], doc_id, version,
+                 Jsonb({"masking_version": self.store.masking_version, "messages": messages}))).fetchone()
         return iso_row(row), True
+
+    @staticmethod
+    def _recent_messages(c, work_id: str, requested_at) -> list[dict]:
+        """요청 전에 성공한 최근 5회. 같은 SQL 스냅샷에서 짝·본문을 읽어 범위 재계산을 막는다.
+
+        llm_exchanges.request에는 이전 대화도 있으므로 messages/conversation_pairs로 현재 질문만
+        추출한다. 응답 행의 마지막 질문과도 대조해 서로 다른 호출의 질문·답변을 잘못 묶지 않는다.
+        """
+        rows = c.execute("""
+            WITH selected AS (
+                SELECT p.*, q.content_masked AS question, a.content_masked AS answer,
+                       q.created_at AS question_at, a.created_at AS answer_at
+                FROM conversation_pairs(%s) p
+                JOIN messages q ON q.message_id = p.q_message_id
+                JOIN messages a ON a.message_id = p.a_message_id
+                JOIN llm_exchanges e ON e.id = p.exchange_id
+                WHERE e.stage = 'workspace_chat' AND e.status_code BETWEEN 200 AND 299
+                  AND e.error IS NULL AND e.created_at <= %s
+                  AND q.created_at <= %s AND a.created_at <= %s
+                  AND btrim(q.content) <> '' AND btrim(a.content) <> ''
+                  AND q.content = (
+                      SELECT CASE WHEN m->>'role' = 'user' THEN m->>'content' END
+                      FROM jsonb_array_elements(CASE WHEN jsonb_typeof(e.request->'messages') = 'array'
+                                                    THEN e.request->'messages' ELSE '[]'::jsonb END)
+                           WITH ORDINALITY AS t(m, n)
+                      WHERE m->>'role' IN ('user', 'assistant')
+                      ORDER BY n DESC LIMIT 1
+                  )
+                ORDER BY e.created_at DESC, e.id DESC LIMIT %s
+            )
+            SELECT q_message_id AS message_id, exchange_id, q_seq AS seq, 'user' AS role,
+                   question AS content, question_at AS created_at FROM selected
+            UNION ALL
+            SELECT a_message_id, exchange_id, a_seq, 'assistant', answer, answer_at FROM selected
+            ORDER BY seq
+        """, (work_id, requested_at, requested_at, requested_at, PAIRS)).fetchall()
+        return [iso_row(row) for row in rows]
 
     def get(self, live_eval_id: str) -> dict:
         row = self.db.one(f"SELECT {LIVE_COLS} FROM live_evaluations WHERE live_eval_id=%s", (live_eval_id,))
@@ -99,7 +137,8 @@ class LiveStore:
     # ── Worker 도구(live 토큰) ──
     def _request(self, claims: dict, live_eval_id: str, c=None) -> dict:
         """요청 행과 회사. c(트랜잭션)가 있으면 행을 잠근다. 토큰의 회사와 다르면 FORBIDDEN."""
-        sql = (f"SELECT l.{LIVE_COLS.replace(', ', ', l.')}, w.company_id FROM live_evaluations l JOIN work_cases w USING (work_id) "
+        sql = (f"SELECT l.{LIVE_COLS.replace(', ', ', l.')}, l.conversation_snapshot, w.company_id "
+               "FROM live_evaluations l JOIN work_cases w USING (work_id) "
                "WHERE l.live_eval_id=%s")
         row = c.execute(sql + " FOR UPDATE OF l", (live_eval_id,)).fetchone() if c is not None else self.db.one(sql, (live_eval_id,))
         if not row:
@@ -127,20 +166,13 @@ class LiveStore:
                 "to_seq": row["to_seq"], "status": row["status"], "work_type": row["work_type"],
                 "rubric_doc_id": row["rubric_doc_id"], "rubric_version": row["rubric_version"], "rubric": rubric}
 
-    def _pairs(self, work_id: str, from_seq: int, to_seq: int) -> list[dict]:
-        """범위 안의 완료 쌍 메시지(마스킹본). exchange_id는 그 쌍에 답한 호출이라 질문·답변이 같은 값이다."""
-        pairs = self.db.q("SELECT q_message_id, a_message_id, exchange_id FROM conversation_pairs(%s) "
-                          "WHERE q_seq >= %s AND a_seq <= %s ORDER BY q_seq", (work_id, from_seq, to_seq))
-        rows = {m["message_id"]: m for m in self.db.q(
-            "SELECT message_id, seq, role, content_masked AS content, created_at FROM messages "
-            "WHERE work_id=%s AND seq BETWEEN %s AND %s", (work_id, from_seq, to_seq))}
-        out = []
-        for p in pairs:
-            for mid in (p["q_message_id"], p["a_message_id"]):
-                m = rows[mid]
-                out.append({"message_id": mid, "exchange_id": p["exchange_id"], "seq": m["seq"], "role": m["role"],
-                            "content": m["content"], "created_at": iso(m["created_at"])})
-        return out
+    @staticmethod
+    def _snapshot(row: dict) -> dict:
+        snapshot = row["conversation_snapshot"]
+        if snapshot is None:
+            # 이전 요청의 범위를 현재 뷰에서 재구성하면 당시와 다른 내용을 평가할 수 있다.
+            raise validation("대화 스냅샷이 없는 이전 요청입니다. 중간 피드백을 새로 요청하세요")
+        return snapshot
 
     def get_messages(self, claims: dict, live_eval_id: str, work_id: str, from_seq: int, to_seq: int) -> dict:
         row = self._request(claims, live_eval_id)
@@ -148,11 +180,12 @@ class LiveStore:
             raise validation(f"요청에 고정된 범위와 다릅니다 (고정 {row['work_id']} {row['from_seq']}~{row['to_seq']})")
         if row["status"] != "생성 중":
             raise validation(f"상태가 '{row['status']}'입니다. start_live_evaluation 뒤 생성 중일 때만 대화를 읽습니다")
-        messages = self._pairs(work_id, from_seq, to_seq)
+        snapshot = self._snapshot(row)
+        messages = snapshot["messages"]
         complete = (bool(messages) and len(messages) <= 2 * PAIRS
                     and messages[0]["seq"] == from_seq and messages[-1]["seq"] == to_seq)
         return {"live_eval_id": live_eval_id, "work_id": work_id, "from_seq": from_seq, "to_seq": to_seq,
-                "masking_applied": True, "masking_version": self.store.masking_version, "complete": complete,
+                "masking_applied": True, "masking_version": snapshot["masking_version"], "complete": complete,
                 "messages": messages}
 
     def save(self, claims: dict, live_eval_id: str, status: str, items: list | None, coaching: dict | None,
@@ -171,7 +204,7 @@ class LiveStore:
             if status == "완료":
                 if error is not None:
                     raise validation("완료 결과에는 error를 넣지 않습니다")
-                messages = {m["message_id"]: m for m in self._pairs(row["work_id"], row["from_seq"], row["to_seq"])}
+                messages = {m["message_id"]: m for m in self._snapshot(row)["messages"]}
                 criteria = {r["item_id"] for r in c.execute("SELECT item_id FROM rubric_items WHERE doc_id=%s AND version=%s",
                                                             (row["rubric_doc_id"], row["rubric_version"]))}
                 clean_items = check_items(items, messages, criteria, self.store.masker)

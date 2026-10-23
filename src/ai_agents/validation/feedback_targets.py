@@ -99,7 +99,8 @@ async def model_feedback(inputs):
         timeout=45,
         max_retries=0,
     ) as client:
-        result = await FeedbackAgent(client, model).generate(
+        # 가상 업무 ID는 운영 DB의 FK를 만족하지 않는다. 단계만 기록한다.
+        result = await FeedbackAgent(client, model, record_work_refs=False).generate(
             context,
             MessageBatch.model_validate(inputs["batch"]),
         )

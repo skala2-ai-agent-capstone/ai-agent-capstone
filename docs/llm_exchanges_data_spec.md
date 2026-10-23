@@ -17,7 +17,7 @@ vLLM 앞의 기록 프록시(`llm_proxy/`)가 LLM 호출 1회마다 1행을 **�
    ├─ 업무 공간 대화    member=workspace-backend  stage=workspace_chat  user_id=직원
    │     답변 1개 = 1행 (POST /v1/chat/completions)
    │
-   ├─ [중간 점검] Agent stage=live_evaluate  (최근 대화 5개)
+   ├─ [중간 점검] Agent stage=live_evaluate  (요청 시점까지 성공한 최근 질문·응답 5쌍)
    │
    └─ [최종 완료] Agent member=eval-agent  user_id 없음
          classify → rubric → evaluate   (POST /v1/responses)
@@ -30,6 +30,12 @@ vLLM 앞의 기록 프록시(`llm_proxy/`)가 LLM 호출 1회마다 1행을 **�
 | 저장하지 않는 값 | `Authorization` 헤더(키). 기록용 헤더 `X-*`는 vLLM에 전달하지 않음 |
 | 기록 시각 | 응답이 끝난 뒤(실패면 실패가 확정된 뒤). `created_at`은 DB 기본값 `now()` |
 | 기록 실패 | DB 저장이 실패해도 LLM 응답은 그대로 반환하고 프록시 로그에 예외 종류만 남김 |
+
+중간 피드백의 “5개”는 메시지 5행이 아니라 **완료된 호출에 대응하는 질문·응답 5쌍**이다.
+`request`에는 이전 대화가 포함될 수 있으므로 전체 배열을 새 대화로 세지 않는다.
+`conversation_pairs`로 질문·응답을 연결한 뒤, 해당 업무의 `workspace_chat`, HTTP 2xx,
+오류 없음, 비어 있지 않은 질문·답변, 요청 시각 이전 완료 조건을 적용한다.
+선택 결과는 `live_evaluations.conversation_snapshot`에 마스킹본으로 고정한다.
 
 ## 2. 컬럼 명세
 

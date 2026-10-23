@@ -5,6 +5,40 @@ LLM을 호출하지 않으며, MCP가 저장된 유형을 문맥에 반환한다
 아래 null 유형 예시/가상 데이터는 이전 요청 호환용이다. 새 업무는 필수 선택이다.
 [유형 선택 계약과 담당자별 변경](user_selected_work_type.md)을 참고한다.
 
+2026-10-23 연동 진행: `main`의 `62bfcbc`를 반영했다. 팀원이 Worker 토큰과
+시작·조회·저장 도구를 Agent 계약에 맞췄고, `conversation_pairs`로 완료 5쌍을 고르는 기능도 추가했다.
+이번 작업은 요청 시각 이전의 성공 응답 필터와 대화 스냅샷 저장을 보완했다.
+`live_evaluations.conversation_snapshot`에 최대 10개의 마스킹 메시지·exchange ID·마스킹 버전을
+고정하고, `get_messages`와 저장 시 인용 검증이 같은 스냅샷을 사용한다.
+완료 시각 내림차순, 같은 시각이면 exchange ID 내림차순으로 5쌍을 선택하며,
+Agent에는 대화 seq 순서로 돌려준다. 새 호출이나 원본 변경으로 평가 근거가 바뀌지 않는다.
+
+앞선 작업인 중간 피드백 LLM 호출의 프록시 기록 헤더 연결도 유지했다.
+일반 실행은 `X-Stage=live_evaluate`와 MCP 문맥의 업무·요청자 ID를 보내며,
+가상 대화 품질 실험은 DB에 없는 ID를 보내지 않고 단계만 기록한다.
+재생성에도 같은 헤더를 사용하고, 프록시의 128자 제한을 넘는 참조 ID는 자르지 않고 거부한다.
+
+검증 기록: `62bfcbc` 기반 미커밋 작업 트리에서 **674개 통과, 프록시의 별도 업무 DB 검증
+1개 건너뜀**. 이 중 새 PostgreSQL 테스트 13개는 임시 PostgreSQL 17에서 실제 SQL·요청 저장·
+Agent 계약·결과 저장을 검사했다. 운영 목표 PostgreSQL 16에서는 추가 확인이 필요하다.
+HTTP 연동 테스트는 실제 OpenAI SDK와 프록시 앱을 쓰되 모델 응답과 프록시 DB 기록기는 대체한다.
+AWS 모델 품질, 실제 RabbitMQ→MCP HTTP 전체 경로는 아직 검증하지 않았다.
+의존성(`llm_proxy/requirements.txt`)과 별도 테스트 DB를 준비한 뒤 다음과 같이 재현한다.
+
+```bash
+# FEEDBACK_TEST_DATABASE_URL은 운영 DB가 아닌 테스트 DB 접속 문자열로 설정한다.
+# 이 환경변수가 없으면 새 PostgreSQL 테스트 13개는 건너뛴다.
+PYTHONPATH=src:mcp_servers:llm_proxy:. .venv/bin/python -m pytest tests llm_proxy/tests -q
+```
+
+이 기록은 로컬 자동 테스트 결과이며, LangSmith 원격 실험 실행 결과는 아니다.
+
+기존 DB에는 서버 코드 교체 전에 `mcp_servers/db/postgres/002_live_feedback_snapshot.sql`을
+적용해야 한다. 열 추가만 하며 데이터 초기화는 하지 않는다. 이전 요청의 스냅샷은 소급 생성하지
+않는다. 이전 완료 결과는 유지하고, 스냅샷 없는 대기·생성 중 요청은 새로 요청해야 한다.
+백엔드가 직접 요청 행을 만드는 경우에도 같은 시점·필터·스냅샷 계약을 적용해야 한다.
+현재 `/internal/live-evaluations`가 이 처리를 구현한다.
+
 2026-10-22. 입력 자료: 사용자가 제공한 `realtime-feedback-flow (1).md`와
 `axeval` PostgreSQL 16 DB 명세(동일 날짜). 이 문서는 해당 자료를 검토해 구현한
 **Agent 측 계약 v1 및 서버 담당자에게 제안하는 연동 계약**이다.
@@ -57,12 +91,10 @@ MCP가 Spring 내부 API를 사용할지 DB에 접근할지는 서버 담당 영
    이전 대화가 중복되므로, 각 exchange의 현재 사용자 질문과 해당 응답을 한 번만 노출해야 한다.
 2. 백엔드가 요청 시점에 최근 5개 exchange를 선택하고 `from_seq`, `to_seq` 및
    `rubric_doc_id`, `rubric_version`을 고정한다. 5분 제한은 사용자별로 동시 요청까지 막아야 한다.
-3. `messages` 뷰의 `seq`, `message_id`, 원문은 요청 후에도 변하지 않아야 한다.
-   조회 때마다 필터 후 `row_number()`로 재번호를 부여하면 범위가 변할 수 있다.
-   수정·삭제가 가능한 로그라면 선택 exchange/message ID와 마스킹본 스냅샷을 별도로 보존해야 한다.
-   현재 첨부 자료만으로 뷰 SQL과 불변성은 확인되지 않았다.
-4. `*_masked`가 원문을 그대로 반환한다는 스키마 주석이 있다. 이름만으로 마스킹 완료로
-   취급할 수 없다. 실제 마스킹 처리 후에만 `masking_applied=true`를 반환해야 한다.
+3. 현재 `messages`는 `row_number()`로 seq·message ID를 만드는 뷰다. 중간 피드백은 요청 당시의
+   exchange/message ID·seq·마스킹 본문을 스냅샷으로 저장해 이후 뷰 변경과 분리한다.
+4. 현재 `messages.content_masked`는 `policy_rules`의 규칙을 `mask_text`로 적용한다.
+   스냅샷에도 이 값을 저장한다. 마스킹 규칙의 실제 배포·등록과 Agent의 잔여 패턴 검사도 필요하다.
 5. `live_evaluations.items/coaching` JSONB에 출력과 실행 정보를 저장할 수 있어
    Agent 때문에 별도 결과 테이블을 즉시 만들 필요는 없다. 아래 JSON 구조는 프론트와 합의할 제안이다.
 6. 기존 `evaluation_failures`가 최종 `evaluations` FK를 참조한다면 live ID를 넣을 수 없다.
@@ -70,7 +102,7 @@ MCP가 Spring 내부 API를 사용할지 DB에 접근할지는 서버 담당 영
 
 ## MCP 담당자에게 전달할 계약
 
-현재 저장소의 MCP 구현은 첨부 DB와 다르며, 아래 도구는 신규 구현이 필요하다.
+현재 저장소에는 아래 Agent 계약의 중간 평가용 MCP 도구가 추가되어 있다.
 기존 최종 평가 토큰을 중간 평가에 재사용하지 않는다. Worker 자격증명으로 접근 가능한
 회사·요청 범위를 서버에서 검증하고, 큐에 들어온 `company_id`를 인증 근거로 믿지 않는다.
 `live_eval_id`로 요청자·회사·업무를 조회해 본인 요청인지 검사한다.

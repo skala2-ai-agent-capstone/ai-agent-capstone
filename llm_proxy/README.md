@@ -81,8 +81,23 @@ OPENAI_MODEL=gemma4
 | 최종 평가 Agent(분류·기준 생성·평가) | `X-Stage: classify`·`rubric`·`evaluate`, `X-Work-Id` |
 | 중간 피드백 Worker | `X-Stage: live_evaluate`, `X-Work-Id`, `X-User-Id`(요청한 직원 `requested_by`) |
 
-Agent 쪽은 아직 연결 중입니다. 최종 평가 경로는 `src/ai_agents/shared/llm_trace.py`로 붙이는 변경이 별도 브랜치에 있고, 중간 피드백 Worker(`cli/feedback.py`의 `AsyncOpenAI`)에는 아직 없습니다.
-업무 공간 백엔드는 대화를 보낼 때 세 헤더를 직접 붙입니다.
+중간 피드백 Agent(`src/ai_agents/evaluation_agent/feedback/agent.py`)는 MCP에서 검증한 문맥의
+업무·요청자 ID를 `X-Work-Id`, `X-User-Id`로 보내고, `X-Stage: live_evaluate`를 붙입니다.
+기준 생성·최종 평가 호출의 자동 헤더 연결은 아직 구현되지 않았습니다.
+가상 대화 품질 실험(`validation.feedback_targets:model_feedback`)은 `X-Stage`만 보냅니다.
+가상 업무·사용자 ID를 실제 DB 외래 키에 넣지 않기 위해서이며, 이 실행은 해당 ID가 null로 기록됩니다.
+
+중간 피드백 실행에서는 일반 `OPENAI_*` 대신 다음 환경변수를 설정합니다.
+
+```dotenv
+FEEDBACK_LLM_BASE_URL=http://100.x.y.z:4000/v1
+FEEDBACK_LLM_API_KEY=<본인 프록시 키>
+FEEDBACK_LLM_MODEL=gemma4
+```
+
+이 헤더들은 기록용이며 권한을 증명하지 않습니다. 프록시 키로 인증하고, 실제 요청자의 권한은
+백엔드·MCP에서 검증해야 합니다. 프록시는 참조 ID 존재 여부를 검사합니다.
+업무 공간 백엔드는 대화를 보낼 때 세 헤더를 직접 붙이고, `X-User-Id`에는 JWT에서 꺼낸 사용자를 넣습니다.
 대화 이력은 `messages` 뷰에서 읽어 그대로 보내고, 첨부 본문 같은 백엔드가 붙이는 자료는 `system` 메시지로 넣습니다.
 
 ```python

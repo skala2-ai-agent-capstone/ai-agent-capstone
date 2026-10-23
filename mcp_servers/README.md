@@ -195,7 +195,13 @@ def mcp_client(run_token: str) -> MultiServerMCPClient:
 | `rubric` | `/internal/rubric-runs` | 회사 | `save_rubric`, rag `get_current_rubric`·`search_rubric`·`search_policy`·`search_examples` |
 
 **중간 피드백(최근 질문·응답 5쌍 코칭)**. 계약 정본은 Agent 쪽 [docs/recent_five_feedback.md](../docs/recent_five_feedback.md)이고, 응답 칸은 Agent 계약 모델(모르는 칸 거부)과 같습니다.
-1. 백엔드가 요청 행(`대기`)을 만들고 큐에 `LIVE_EVALUATE`를 발행합니다. 범위는 DB 함수 `conversation_pairs(work_id)`의 최근 5쌍으로 정하고, 유형(사용자 선택, 없으면 업무 분류)과 그 유형의 현행 기준 버전을 같이 고정합니다. 테스트에서는 `/internal/live-evaluations`가 이 역할을 합니다.
+
+기존 DB 업그레이드: `db/postgres/002_live_feedback_snapshot.sql`로 스냅샷 열을 먼저 추가한 뒤
+business-mcp를 새 코드로 재배포합니다. 데이터 초기화는 필요 없습니다.
+기존 완료 결과는 유지됩니다. 스냅샷이 없는 이전 대기·생성 중 요청은 새 요청으로 다시 실행합니다.
+`get_messages`와 결과 저장 시 인용 검증은 현재 대화 뷰 대신 요청의 마스킹 스냅샷을 사용합니다.
+
+1. 백엔드가 요청 행(`대기`)을 만들고 큐에 `LIVE_EVALUATE`를 발행합니다. `/internal/live-evaluations`는 `conversation_pairs(work_id)` 중 요청 시각까지 성공한 업무 공간 대화를 완료 시각·ID 기준 최신 5쌍으로 선택합니다. 유형과 현행 기준 버전, 마스킹된 대화 스냅샷도 같이 고정합니다. 백엔드가 직접 INSERT한다면 이 계약을 동일하게 구현해야 합니다.
 2. Worker가 `start_live_evaluation(live_eval_id)` → `get_messages(live_eval_id, work_id, from_seq, to_seq)` → `save_live_evaluation(live_eval_id, status, items, coaching, model, latency_ms, error)` 순서로 부릅니다.
 
 | 항목 | 규칙 |
