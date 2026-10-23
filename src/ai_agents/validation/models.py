@@ -26,7 +26,7 @@ class Dataset(StrictModel):
     schema_version: Literal["1"] = "1"
     dataset_id: NonEmpty
     version: NonEmpty
-    purpose: Literal["feedback", "final", "contract"]
+    purpose: Literal["feedback", "final", "team", "contract"]
     # 결과 파일에는 입력/출력이 포함된다. 현재 실행기는 가상 데이터만 지원한다.
     data_policy: Literal["synthetic"]
     examples: list[Example] = Field(min_length=1)

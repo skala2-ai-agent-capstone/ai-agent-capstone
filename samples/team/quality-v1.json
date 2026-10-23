@@ -1,0 +1,625 @@
+{
+  "schema_version": "1",
+  "dataset_id": "team-quality",
+  "version": "1",
+  "purpose": "team",
+  "data_policy": "synthetic",
+  "examples": [
+    {
+      "case_id": "TEAM-MIXED",
+      "category": "normal",
+      "inputs": {
+        "snapshot": {
+          "schema_version": "1",
+          "purpose": "team",
+          "request_id": "00000000-0000-0000-0000-00000000000a",
+          "team_id": "00000000-0000-0000-0000-000000000002",
+          "snapshot_id": "00000000-0000-0000-0000-000000000064",
+          "period_start": "2026-10-01",
+          "period_end": "2026-11-01",
+          "source_status": "finalized",
+          "deduplication": "latest_final_per_work",
+          "privacy_policy_version": "team-v1-provisional",
+          "min_members": 5,
+          "release_approved": true,
+          "groups": [
+            {
+              "work_type": "proposal",
+              "rubric_version": "1",
+              "rubric_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "members": 8,
+              "finalized_evaluations": 10,
+              "cells": [
+                {
+                  "criterion": "problem_definition",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 18
+                  }
+                },
+                {
+                  "criterion": "instruction_quality",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 12
+                  }
+                },
+                {
+                  "criterion": "verification",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 8
+                  }
+                },
+                {
+                  "criterion": "security",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 20
+                  }
+                },
+                {
+                  "criterion": "output_quality",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 16
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected_description": "강점과 개선을 공개 지표로 설명하고 지시 품질·검증에 맞는 코칭을 선택한다. 개인 역량을 추론하지 않는다.",
+      "evidence_ids": [],
+      "checks": []
+    },
+    {
+      "case_id": "TEAM-STRONG",
+      "category": "normal",
+      "inputs": {
+        "snapshot": {
+          "schema_version": "1",
+          "purpose": "team",
+          "request_id": "00000000-0000-0000-0000-00000000000b",
+          "team_id": "00000000-0000-0000-0000-000000000002",
+          "snapshot_id": "00000000-0000-0000-0000-000000000065",
+          "period_start": "2026-10-01",
+          "period_end": "2026-11-01",
+          "source_status": "finalized",
+          "deduplication": "latest_final_per_work",
+          "privacy_policy_version": "team-v1-provisional",
+          "min_members": 5,
+          "release_approved": true,
+          "groups": [
+            {
+              "work_type": "proposal",
+              "rubric_version": "1",
+              "rubric_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "members": 8,
+              "finalized_evaluations": 10,
+              "cells": [
+                {
+                  "criterion": "problem_definition",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 20
+                  }
+                },
+                {
+                  "criterion": "instruction_quality",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 20
+                  }
+                },
+                {
+                  "criterion": "verification",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 20
+                  }
+                },
+                {
+                  "criterion": "security",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 20
+                  }
+                },
+                {
+                  "criterion": "output_quality",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 20
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected_description": "공개 지표는 모두 강점 후보이며 개선 항목을 지어내지 않는다. 팀 전원의 역량이 높다고 일반화하지 않는다.",
+      "evidence_ids": [],
+      "checks": []
+    },
+    {
+      "case_id": "TEAM-LOW",
+      "category": "normal",
+      "inputs": {
+        "snapshot": {
+          "schema_version": "1",
+          "purpose": "team",
+          "request_id": "00000000-0000-0000-0000-00000000000c",
+          "team_id": "00000000-0000-0000-0000-000000000002",
+          "snapshot_id": "00000000-0000-0000-0000-000000000066",
+          "period_start": "2026-10-01",
+          "period_end": "2026-11-01",
+          "source_status": "finalized",
+          "deduplication": "latest_final_per_work",
+          "privacy_policy_version": "team-v1-provisional",
+          "min_members": 5,
+          "release_approved": true,
+          "groups": [
+            {
+              "work_type": "proposal",
+              "rubric_version": "1",
+              "rubric_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "members": 8,
+              "finalized_evaluations": 10,
+              "cells": [
+                {
+                  "criterion": "problem_definition",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 0
+                  }
+                },
+                {
+                  "criterion": "instruction_quality",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 0
+                  }
+                },
+                {
+                  "criterion": "verification",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 0
+                  }
+                },
+                {
+                  "criterion": "security",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 0
+                  }
+                },
+                {
+                  "criterion": "output_quality",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 0
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected_description": "관측된 0점은 유효한 평균 0으로 남기고 미관측과 구분한다. 업무 절차 개선만 제안한다.",
+      "evidence_ids": [],
+      "checks": []
+    },
+    {
+      "case_id": "TEAM-WITHHELD",
+      "category": "unanswerable",
+      "inputs": {
+        "snapshot": {
+          "schema_version": "1",
+          "purpose": "team",
+          "request_id": "00000000-0000-0000-0000-00000000000d",
+          "team_id": "00000000-0000-0000-0000-000000000002",
+          "snapshot_id": "00000000-0000-0000-0000-000000000067",
+          "period_start": "2026-10-01",
+          "period_end": "2026-11-01",
+          "source_status": "finalized",
+          "deduplication": "latest_final_per_work",
+          "privacy_policy_version": "team-v1-provisional",
+          "min_members": 5,
+          "release_approved": false,
+          "groups": []
+        }
+      },
+      "expected_description": "공개 제한 상태를 유지한다. 모델을 호출하지 않고 팀 점수·코칭을 생성하지 않는다.",
+      "evidence_ids": [],
+      "checks": []
+    },
+    {
+      "case_id": "TEAM-NO-OBSERVATIONS",
+      "category": "unanswerable",
+      "inputs": {
+        "snapshot": {
+          "schema_version": "1",
+          "purpose": "team",
+          "request_id": "00000000-0000-0000-0000-00000000000e",
+          "team_id": "00000000-0000-0000-0000-000000000002",
+          "snapshot_id": "00000000-0000-0000-0000-000000000068",
+          "period_start": "2026-10-01",
+          "period_end": "2026-11-01",
+          "source_status": "finalized",
+          "deduplication": "latest_final_per_work",
+          "privacy_policy_version": "team-v1-provisional",
+          "min_members": 5,
+          "release_approved": true,
+          "groups": [
+            {
+              "work_type": "proposal",
+              "rubric_version": "1",
+              "rubric_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "members": 8,
+              "finalized_evaluations": 10,
+              "cells": [
+                {
+                  "criterion": "problem_definition",
+                  "statistics": null
+                },
+                {
+                  "criterion": "instruction_quality",
+                  "statistics": null
+                },
+                {
+                  "criterion": "verification",
+                  "statistics": null
+                },
+                {
+                  "criterion": "security",
+                  "statistics": null
+                },
+                {
+                  "criterion": "output_quality",
+                  "statistics": null
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected_description": "공개 가능한 관측 항목이 없으므로 LLM 호출 없이 자료 부족 처리한다. 0점 대체 금지.",
+      "evidence_ids": [],
+      "checks": []
+    },
+    {
+      "case_id": "TEAM-PARTIAL",
+      "category": "exception",
+      "inputs": {
+        "snapshot": {
+          "schema_version": "1",
+          "purpose": "team",
+          "request_id": "00000000-0000-0000-0000-00000000000f",
+          "team_id": "00000000-0000-0000-0000-000000000002",
+          "snapshot_id": "00000000-0000-0000-0000-000000000069",
+          "period_start": "2026-10-01",
+          "period_end": "2026-11-01",
+          "source_status": "finalized",
+          "deduplication": "latest_final_per_work",
+          "privacy_policy_version": "team-v1-provisional",
+          "min_members": 5,
+          "release_approved": true,
+          "groups": [
+            {
+              "work_type": "proposal",
+              "rubric_version": "1",
+              "rubric_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "members": 8,
+              "finalized_evaluations": 10,
+              "cells": [
+                {
+                  "criterion": "problem_definition",
+                  "statistics": {
+                    "scored_members": 5,
+                    "scored_evaluations": 5,
+                    "score_sum": 10
+                  }
+                },
+                {
+                  "criterion": "instruction_quality",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 12
+                  }
+                },
+                {
+                  "criterion": "verification",
+                  "statistics": null
+                },
+                {
+                  "criterion": "security",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 20
+                  }
+                },
+                {
+                  "criterion": "output_quality",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 16
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected_description": "누락된 검증 항목을 코칭 근거로 사용하지 않는다. 공개된 5건의 관측 평균과 50% 관측 비율만 사용한다.",
+      "evidence_ids": [],
+      "checks": []
+    },
+    {
+      "case_id": "TEAM-SEPARATE-RUBRICS",
+      "category": "exception",
+      "inputs": {
+        "snapshot": {
+          "schema_version": "1",
+          "purpose": "team",
+          "request_id": "00000000-0000-0000-0000-000000000010",
+          "team_id": "00000000-0000-0000-0000-000000000002",
+          "snapshot_id": "00000000-0000-0000-0000-00000000006a",
+          "period_start": "2026-10-01",
+          "period_end": "2026-11-01",
+          "source_status": "finalized",
+          "deduplication": "latest_final_per_work",
+          "privacy_policy_version": "team-v1-provisional",
+          "min_members": 5,
+          "release_approved": true,
+          "groups": [
+            {
+              "work_type": "proposal",
+              "rubric_version": "1",
+              "rubric_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "members": 8,
+              "finalized_evaluations": 10,
+              "cells": [
+                {
+                  "criterion": "problem_definition",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 18
+                  }
+                },
+                {
+                  "criterion": "instruction_quality",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 12
+                  }
+                },
+                {
+                  "criterion": "verification",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 8
+                  }
+                },
+                {
+                  "criterion": "security",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 20
+                  }
+                },
+                {
+                  "criterion": "output_quality",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 16
+                  }
+                }
+              ]
+            },
+            {
+              "work_type": "proposal",
+              "rubric_version": "2",
+              "rubric_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "members": 8,
+              "finalized_evaluations": 10,
+              "cells": [
+                {
+                  "criterion": "problem_definition",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 2
+                  }
+                },
+                {
+                  "criterion": "instruction_quality",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 2
+                  }
+                },
+                {
+                  "criterion": "verification",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 2
+                  }
+                },
+                {
+                  "criterion": "security",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 2
+                  }
+                },
+                {
+                  "criterion": "output_quality",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 2
+                  }
+                }
+              ]
+            },
+            {
+              "work_type": "quote",
+              "rubric_version": "2",
+              "rubric_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "members": 8,
+              "finalized_evaluations": 10,
+              "cells": [
+                {
+                  "criterion": "problem_definition",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 2
+                  }
+                },
+                {
+                  "criterion": "instruction_quality",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 2
+                  }
+                },
+                {
+                  "criterion": "verification",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 2
+                  }
+                },
+                {
+                  "criterion": "security",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 2
+                  }
+                },
+                {
+                  "criterion": "output_quality",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 2
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected_description": "업무 유형과 기준 버전이 다른 지표를 구분한다. 하나의 팀 총점이나 버전 간 향상 추세를 만들지 않는다.",
+      "evidence_ids": [],
+      "checks": []
+    },
+    {
+      "case_id": "TEAM-STRICT-THRESHOLD",
+      "category": "normal",
+      "inputs": {
+        "snapshot": {
+          "schema_version": "1",
+          "purpose": "team",
+          "request_id": "00000000-0000-0000-0000-000000000011",
+          "team_id": "00000000-0000-0000-0000-000000000002",
+          "snapshot_id": "00000000-0000-0000-0000-00000000006b",
+          "period_start": "2026-10-01",
+          "period_end": "2026-11-01",
+          "source_status": "finalized",
+          "deduplication": "latest_final_per_work",
+          "privacy_policy_version": "team-v1-provisional",
+          "min_members": 8,
+          "release_approved": true,
+          "groups": [
+            {
+              "work_type": "proposal",
+              "rubric_version": "1",
+              "rubric_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "members": 8,
+              "finalized_evaluations": 10,
+              "cells": [
+                {
+                  "criterion": "problem_definition",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 18
+                  }
+                },
+                {
+                  "criterion": "instruction_quality",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 12
+                  }
+                },
+                {
+                  "criterion": "verification",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 8
+                  }
+                },
+                {
+                  "criterion": "security",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 20
+                  }
+                },
+                {
+                  "criterion": "output_quality",
+                  "statistics": {
+                    "scored_members": 8,
+                    "scored_evaluations": 10,
+                    "score_sum": 16
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected_description": "서버가 요구한 8명 공개 기준을 유지하고 해당 지표에 맞는 코칭만 선택한다.",
+      "evidence_ids": [],
+      "checks": []
+    }
+  ]
+}

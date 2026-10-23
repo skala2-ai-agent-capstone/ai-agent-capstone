@@ -1,0 +1,65 @@
+{
+  "schema_version": "1",
+  "purpose": "team",
+  "request_id": "00000000-0000-0000-0000-000000000001",
+  "team_id": "00000000-0000-0000-0000-000000000002",
+  "snapshot_id": "00000000-0000-0000-0000-000000000003",
+  "period_start": "2026-10-01",
+  "period_end": "2026-11-01",
+  "source_status": "finalized",
+  "deduplication": "latest_final_per_work",
+  "privacy_policy_version": "team-v1-provisional",
+  "min_members": 5,
+  "release_approved": true,
+  "groups": [
+    {
+      "work_type": "proposal",
+      "rubric_version": "1",
+      "rubric_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "members": 8,
+      "finalized_evaluations": 10,
+      "cells": [
+        {
+          "criterion": "problem_definition",
+          "statistics": {
+            "scored_members": 8,
+            "scored_evaluations": 10,
+            "score_sum": 18
+          }
+        },
+        {
+          "criterion": "instruction_quality",
+          "statistics": {
+            "scored_members": 8,
+            "scored_evaluations": 10,
+            "score_sum": 12
+          }
+        },
+        {
+          "criterion": "verification",
+          "statistics": {
+            "scored_members": 8,
+            "scored_evaluations": 10,
+            "score_sum": 8
+          }
+        },
+        {
+          "criterion": "security",
+          "statistics": {
+            "scored_members": 8,
+            "scored_evaluations": 10,
+            "score_sum": 20
+          }
+        },
+        {
+          "criterion": "output_quality",
+          "statistics": {
+            "scored_members": 8,
+            "scored_evaluations": 10,
+            "score_sum": 16
+          }
+        }
+      ]
+    }
+  ]
+}

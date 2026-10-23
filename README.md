@@ -15,6 +15,8 @@ JSON 분류의 인자와 동작은 유지하며 import와 실행 경로가 변�
 [실행 계약·추적·검증 기반](docs/execution_contracts_observability.md)을 참고하세요.
 MCP 없이 고정 가상 입력으로 실제 모델을 호출하고 사람 품질 검토·전후 비교를 기록하려면
 [LLM 품질 평가셋·실행기](docs/offline_llm_quality.md)를 사용하세요.
+팀 업무 집계의 강점·보완점·추천 활동은 [팀 평가 Agent](docs/team_evaluation.md)를 참고하세요.
+공개된 집계만 입력받으며, 개인 조회 권한과 서버 집계·저장은 MCP/백엔드 연동이 필요합니다.
 버튼 요청형 최근 질문·응답 5회 피드백 Agent/Worker를 추가했습니다.
 [중간 피드백 구현·서버 계약·검증 가이드](docs/recent_five_feedback.md)를 참고하세요.
 Agent 쪽 MCP 호출·저장 어댑터는 구현했으며, 새 MCP 도구 3개와 백엔드 연동은 필요합니다.

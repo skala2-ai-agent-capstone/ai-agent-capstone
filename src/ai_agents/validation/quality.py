@@ -18,9 +18,13 @@ from ..evaluation_agent.final.agent import OpenAIEvaluator
 from ..evaluation_agent.final.materials import EvaluationMaterials
 from ..evaluation_agent.final.stored_rubric import StoredEvaluationInput
 from ..evaluation_agent.final.validation import validate_criteria, validate_materials
+from ..evaluation_agent.team.agent import SYSTEM_PROMPT as TEAM_PROMPT
+from ..evaluation_agent.team.agent import TeamAgent
+from ..evaluation_agent.team.report import ACTIONS
 from ..shared.evidence_models import EvaluationEvidence
 from ..shared.live_feedback_contracts import LiveEvaluationContext, MessageBatch
 from ..shared.models import NonEmpty, StrictModel
+from ..shared.team_contracts import TeamSnapshot
 from .models import Check, Dataset
 from .runner import digest, run_experiment
 
@@ -53,11 +57,15 @@ class FrozenFinalInput(StrictModel):
 
 
 def check_quality_dataset(dataset: Dataset):
-    if dataset.purpose not in {"feedback", "final"}:
-        raise ValueError("only feedback/final quality datasets supported")
+    if dataset.purpose not in {"feedback", "final", "team"}:
+        raise ValueError("only feedback/final/team quality datasets supported")
     for case in dataset.examples:
         if dataset.purpose == "final":
             FrozenFinalInput.model_validate(case.inputs)
+        elif dataset.purpose == "team":
+            if set(case.inputs) != {"snapshot"}:
+                raise ValueError("team inputs must contain only snapshot")
+            TeamSnapshot.model_validate(case.inputs["snapshot"])
         else:
             if set(case.inputs) != {"context", "batch"}:
                 raise ValueError("feedback inputs must contain only context and batch")
@@ -97,7 +105,7 @@ class MeasuredChat:
             "model_duration_ms": round(sum(a["duration_ms"] for a in self.attempts), 3),
             **{
                 key: (sum(a[key] for a in self.attempts)
-                      if self.attempts and all(a[key] is not None for a in self.attempts) else None)
+                      if all(a[key] is not None for a in self.attempts) else None)
                 for key in ("input_tokens", "output_tokens")
             },
         }
@@ -120,6 +128,9 @@ class QualityTarget:
                 result = await FeedbackAgent(
                     measured, self.config.model, record_work_refs=False,
                 ).generate(context, batch)
+            elif self.purpose == "team":
+                snapshot = TeamSnapshot.model_validate(inputs["snapshot"])
+                result = await TeamAgent(measured, self.config.model).generate(snapshot)
             else:
                 frozen = FrozenFinalInput.model_validate(inputs)
                 agent = OpenAIEvaluator(
@@ -138,12 +149,18 @@ class QualityTarget:
 
 
 def experiment_options(dataset, config, mode):
-    prompt = FEEDBACK_PROMPT if dataset.purpose == "feedback" else FINAL_PROMPT
-    rules = [
-        case.inputs["context"].get("rubric") if dataset.purpose == "feedback"
-        else case.inputs["request"]["stored_rubric"]
-        for case in dataset.examples
+    prompt = {"feedback": FEEDBACK_PROMPT, "final": FINAL_PROMPT, "team": TEAM_PROMPT}[
+        dataset.purpose
     ]
+    if dataset.purpose == "team":
+        rules = [[{k: group[k] for k in ("work_type", "rubric_version", "rubric_sha256")}
+                  for group in case.inputs["snapshot"]["groups"]] for case in dataset.examples]
+    else:
+        rules = [
+            case.inputs["context"].get("rubric") if dataset.purpose == "feedback"
+            else case.inputs["request"]["stored_rubric"]
+            for case in dataset.examples
+        ]
     return {
         "target_name": f"ai_agents.validation.quality:{dataset.purpose}",
         "model": config.model, "prompt_version": digest(prompt),
@@ -151,11 +168,13 @@ def experiment_options(dataset, config, mode):
         "model_settings": {
             "execution_mode": mode, "endpoint_sha256": digest(config.base_url),
             "model_revision": config.model_revision, "temperature": 0,
-            "max_tokens": 1800 if dataset.purpose == "feedback" else 6000,
+            "max_tokens": 6000 if dataset.purpose == "final" else 1800,
             "validation_retries": 1, "sdk_retries": 0,
             "timeout_seconds": config.timeout_seconds,
-            "response_format": "json_object" if dataset.purpose == "feedback" else "json_schema",
+            "response_format": "json_schema" if dataset.purpose == "final" else "json_object",
             "transport": "chat_completions",
+            **({"coaching_catalog_sha256": digest(ACTIONS),
+                "presentation_version": "team-coaching-v1"} if dataset.purpose == "team" else {}),
         },
     }
 
