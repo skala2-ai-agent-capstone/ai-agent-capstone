@@ -38,6 +38,7 @@ python3 -c "import secrets;print(secrets.token_urlsafe(32))"   # 비밀값마다
 | --- | --- |
 | `POSTGRES_PASSWORD` `RUN_TOKEN_SECRET` `INTERNAL_API_KEY` `SEED_USER_PASSWORD` | MCP 기존 값. `INTERNAL_API_KEY`는 백엔드도 같이 씀 |
 | `VLLM_API_KEY` `PROXY_KEYS` | LLM. `PROXY_KEYS`에 `workspace-backend:<WORKSPACE_LLM_API_KEY 값>`과 `feedback-worker:<FEEDBACK_LLM_API_KEY 값>`을 넣는다 |
+| `OPENAI_API_KEY` | 업무 공간 대화 외 단계(`OPENAI_STAGES`: 분류·기준 생성·평가·중간 피드백)를 llm-proxy가 OpenAI로 보낼 때 쓰는 키. 프록시만 안다 |
 | `JWT_SECRET` `RABBITMQ_PASSWORD` `WORKSPACE_LLM_API_KEY` `FEEDBACK_LLM_API_KEY` | 백엔드(업무 공간 대화)·Worker |
 | `FEEDBACK_MCP_TOKEN` | 2단계에서 발급 |
 | `FAULT_MODE=off` | 실사용 서버에서는 장애 주입을 끈다(`case`는 시험용) |
@@ -80,7 +81,7 @@ RabbitMQ 관리 화면은 서버 안에만 열려 있습니다: `ssh -L 15672:lo
 
 ## 운영 메모
 
-- **피드백 Worker LLM**: 기본은 서버 vLLM(llm-proxy 경유, 호출 기록 남음). OpenAI로 돌리려면 서버에서 `bash ~/set_openai_key.sh`(키를 숨김 입력, OpenAI 확인 뒤 `.env`의 `FEEDBACK_LLM_BASE_URL`·`FEEDBACK_LLM_MODEL`·`FEEDBACK_LLM_API_KEY`를 바꾸고 Worker만 재시작). 업무 공간 대화(백엔드)는 계속 vLLM.
+- **LLM 나눠 쓰기**: 업무 공간 대화(백엔드)만 서버 vLLM, 나머지 단계(중간 피드백 Worker 포함)는 llm-proxy가 OpenAI로 보냅니다(`OPENAI_STAGES`, [llm_proxy/README.md](../llm_proxy/README.md)). 모든 호출이 프록시를 거치므로 `llm_exchanges`에 기록됩니다. 피드백도 vLLM으로 돌리려면 `OPENAI_STAGES`에서 `live_evaluate`를 빼고 `FEEDBACK_LLM_MODEL`을 `SERVED_MODEL_NAME`으로 바꾼 뒤 `docker compose up -d --no-deps llm-proxy feedback-worker`.
 - **Worker 토큰**은 회사 1곳 범위이고 기본 30일 뒤 만료됩니다. 만료되거나 `RUN_TOKEN_SECRET`을 바꾸면 2단계 `curl`로 다시 발급하고 `docker compose up -d feedback-worker`.
 - **db-init**은 `up` 때마다 다시 돕니다. 시드 업무의 대화·산출물은 시드로 되돌리고(시드 업무에 쌓인 Agent·팀원 LLM 호출 기록도 지워짐), 앱에서 만든 업무는 건드리지 않습니다. 운영 중인 서버에서 코드만 바꿀 때는 `docker compose up -d --no-deps <서비스>`로 db-init을 건너뜁니다. `--reset`은 백엔드 테이블(아웃박스·DLQ 기록·집계 승인)까지 비우므로 백엔드를 멈추고 RabbitMQ 큐를 비운 뒤 씁니다.
 - **기존 DB**에 올릴 때: `db/postgres/002_live_feedback_snapshot.sql`(중간 피드백 스냅샷)과 `003_frontend_upload.sql`(고객 미지정 업무, 고객 자료 원본 파일)을 적용합니다. db-init이 매번 같이 적용하며, db-init 없이 올릴 때는 `docker exec -i ax-eval-mcp-postgres-1 psql -U axeval -d axeval < db/postgres/003_frontend_upload.sql`. 예전 백엔드의 Flyway V2(역할 제한을 넓히던 임시 파일)가 적용된 DB는 볼륨을 지우고 새로 만듭니다(`docker compose down -v`).

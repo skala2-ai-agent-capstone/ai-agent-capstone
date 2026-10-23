@@ -34,9 +34,11 @@ def settings(**overrides):
     return Settings(**values)
 
 
-def client_for(handler, recorder=None):
+def client_for(handler, recorder=None, **overrides):
     recorder = recorder if recorder is not None else FakeRecorder()
-    app = create_app(settings(), recorder=recorder, transport=httpx.MockTransport(handler))
+    app = create_app(
+        settings(**overrides), recorder=recorder, transport=httpx.MockTransport(handler)
+    )
     return TestClient(app), recorder
 
 
@@ -206,6 +208,82 @@ def test_agent_call_without_user_is_allowed():
                                     "X-Work-Id": "W-1"})
     assert resp.status_code == 200
     assert (recorder.records[0]["work_id"], recorder.records[0]["user_id"]) == ("W-1", None)
+
+
+OPENAI = dict(
+    openai_stages=frozenset({"evaluate", "live_evaluate"}), openai_api_key="openai-secret"
+)
+
+
+def test_openai_stage_goes_to_openai_with_openai_model_and_is_recorded():
+    seen = {}
+
+    def handler(request):
+        seen.update(host=request.url.host, path=request.url.path,
+                    auth=request.headers["authorization"], stage=request.headers.get("x-stage"),
+                    body=json.loads(request.content))
+        return httpx.Response(200, json=CHAT_REPLY)
+
+    client, recorder = client_for(handler, **OPENAI)
+    payload = {"model": "gemma4", "messages": [{"role": "user", "content": "피드백"}]}
+    with client:
+        resp = client.post("/v1/chat/completions", json=payload,
+                           headers={"Authorization": "Bearer bob-key", "X-Stage": "live_evaluate"})
+
+    assert resp.status_code == 200
+    # 로컬 모델 이름으로 불러도 OpenAI 모델·키로 보내고, 기록용 헤더는 넘기지 않는다
+    assert seen == {
+        "host": "api.openai.com", "path": "/v1/chat/completions", "auth": "Bearer openai-secret",
+        "stage": None, "body": {**payload, "model": "gpt-4o-mini"},
+    }
+    [record] = recorder.records
+    assert (record["member"], record["stage"], record["model"]) == (
+        "bob", "live_evaluate", "gpt-4o-mini")
+    assert record["request"]["model"] == "gpt-4o-mini"
+    assert "openai-secret" not in json.dumps(record, ensure_ascii=False)
+
+
+@pytest.mark.parametrize("headers", [
+    {"X-Stage": "workspace_chat", "X-Work-Id": "TASK-2291", "X-User-Id": "U-kang"},
+    {"X-Stage": "classify"},   # OPENAI_STAGES에 없는 단계
+    {},                        # 단계 없는 호출(팀원 개발용)
+])
+def test_workspace_chat_and_other_stages_stay_on_local_vllm(headers):
+    seen = {}
+
+    def handler(request):
+        seen.update(host=request.url.host, auth=request.headers["authorization"],
+                    model=json.loads(request.content)["model"])
+        return httpx.Response(200, json=CHAT_REPLY)
+
+    client, _ = client_for(handler, **OPENAI)
+    with client:
+        resp = client.post("/v1/chat/completions", json={"model": "gemma4", "messages": []},
+                           headers={"Authorization": "Bearer alice-key", **headers})
+    assert resp.status_code == 200
+    assert seen == {"host": "vllm", "auth": "Bearer vllm-secret", "model": "gemma4"}
+
+
+def test_openai_stages_from_env(monkeypatch):
+    base = {"UPSTREAM_API_KEY": "vllm-secret", "PROXY_KEYS": "alice:k1", "DATABASE_URL": "unused"}
+    for k, v in base.items():
+        monkeypatch.setenv(k, v)
+    for k in ("OPENAI_STAGES", "OPENAI_API_KEY", "OPENAI_UPSTREAM_URL", "OPENAI_MODEL"):
+        monkeypatch.delenv(k, raising=False)
+    assert Settings.from_env().openai_stages == frozenset()
+
+    monkeypatch.setenv("OPENAI_STAGES", " classify, evaluate ,")
+    with pytest.raises(ValueError, match="OPENAI_API_KEY"):
+        Settings.from_env()
+    monkeypatch.setenv("OPENAI_API_KEY", "openai-secret")
+    got = Settings.from_env()
+    assert (got.openai_stages, got.openai_url, got.openai_model) == (
+        frozenset({"classify", "evaluate"}), "https://api.openai.com", "gpt-4o-mini")
+
+    for bad, message in [("workspace_chat,evaluate", "로컬 LLM"), ("chat", "모르는 단계")]:
+        monkeypatch.setenv("OPENAI_STAGES", bad)
+        with pytest.raises(ValueError, match=message):
+            Settings.from_env()
 
 
 @pytest.mark.skipif(not os.getenv("LLM_PROXY_TEST_DATABASE_URL"),

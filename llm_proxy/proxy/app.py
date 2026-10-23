@@ -1,6 +1,8 @@
 """OpenAI 호환 요청을 vLLM에 손대지 않고 넘기고, 주고받은 내용을 llm_exchanges에 기록한다.
 
-팀원은 자기 프록시 키로 호출하고, 프록시는 vLLM 키로 바꿔 넘긴다. 키는 기록하지 않는다.
+OPENAI_STAGES에 든 단계(X-Stage)는 vLLM 대신 OpenAI로 보낸다. 이때 모델 이름만 OPENAI_MODEL로
+바꾸므로 호출한 쪽은 단계만 정하면 된다. 업무 공간 대화와 단계가 없는 호출은 언제나 vLLM이다.
+팀원은 자기 프록시 키로 호출하고, 프록시는 vLLM(또는 OpenAI) 키로 바꿔 넘긴다. 키는 기록하지 않는다.
 요청 헤더 X-Stage·X-Work-Id·X-User-Id가 있으면 함께 남긴다(vLLM에는 넘기지 않음).
 llm_exchanges는 업무 DB의 외래 키·CHECK를 따르므로, 저장할 수 없는 헤더는
 vLLM에 넘기기 전에 400으로 거절한다(답은 받았는데 기록만 사라지는 일을 막는다).
@@ -19,14 +21,12 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response, StreamingResponse
 from starlette.background import BackgroundTask
 
-from .settings import Settings
+from .settings import STAGES, Settings
 from .store import PostgresRecorder, Recorder
 
 log = logging.getLogger("llm_proxy")
 
 MAX_TAG_LEN = 128
-# llm_exchanges.stage CHECK와 같은 값
-STAGES = {"workspace_chat", "classify", "rubric", "evaluate", "live_evaluate"}
 # 길이·인코딩은 프록시가 다시 정하므로 업스트림 값을 그대로 돌려주지 않는다
 DROP_RESPONSE_HEADERS = {"content-length", "content-encoding", "transfer-encoding", "connection"}
 
@@ -120,8 +120,10 @@ def create_app(
         timeout = httpx.Timeout(settings.upstream_timeout, connect=10.0)
         async with httpx.AsyncClient(
             base_url=settings.upstream_url, timeout=timeout, transport=transport
-        ) as client:
-            app.state.client = client
+        ) as client, httpx.AsyncClient(
+            base_url=settings.openai_url, timeout=timeout, transport=transport
+        ) as openai_client:
+            app.state.client, app.state.openai_client = client, openai_client
             try:
                 yield
             finally:
@@ -142,23 +144,32 @@ def create_app(
                 error_body("프록시 키가 없거나 올바르지 않습니다.", "invalid_api_key"),
                 status_code=401,
             )
-        client: httpx.AsyncClient = request.app.state.client
         store: Recorder = request.app.state.recorder
+        stage = header_tag(request, "x-stage")
+        external = stage in settings.openai_stages
+        client: httpx.AsyncClient = (
+            request.app.state.openai_client if external else request.app.state.client
+        )
+        api_key = settings.openai_api_key if external else settings.upstream_api_key
 
         url = f"/v1/{path}" + (f"?{request.url.query}" if request.url.query else "")
         headers = {}
-        if settings.upstream_api_key:
-            headers["Authorization"] = f"Bearer {settings.upstream_api_key}"
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
         if content_type := request.headers.get("content-type"):
             headers["Content-Type"] = content_type
         raw = await request.body()
+        body = parse_json(raw) if request.method == "POST" else None
+        if external and isinstance(body, dict) and "model" in body:
+            # 로컬 모델 이름으로 불러도 OpenAI 모델로 보낸다. 기록에는 실제로 보낸 모델이 남는다
+            body = {**body, "model": settings.openai_model}
+            raw = json.dumps(body, ensure_ascii=False).encode()
         upstream = client.build_request(request.method, url, content=raw, headers=headers)
 
-        body = parse_json(raw) if request.method == "POST" else None
         record: dict[str, Any] = {
             "member": member,
             "endpoint": f"/v1/{path}",
-            "stage": header_tag(request, "x-stage"),
+            "stage": stage,
             "work_id": header_tag(request, "x-work-id"),
             "user_id": header_tag(request, "x-user-id"),
             "model": body.get("model") if isinstance(body, dict) else None,

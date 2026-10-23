@@ -64,10 +64,11 @@ services:
       FEEDBACK_MCP_URL: http://business-mcp:8001/mcp
       # business-mcp가 뜬 뒤 /internal/live-worker-token으로 발급한다(회사 범위, 기본 30일). 절차: docs/deploy_server.md
       FEEDBACK_MCP_TOKEN: ${FEEDBACK_MCP_TOKEN:?.env에 FEEDBACK_MCP_TOKEN 필요 (docs/deploy_server.md 3단계)}
-      # 기본은 llm-proxy(서버 vLLM). OpenAI로 돌릴 때는 .env에 FEEDBACK_LLM_BASE_URL=https://api.openai.com/v1,
-      # FEEDBACK_LLM_MODEL=gpt-4o-mini, FEEDBACK_LLM_API_KEY=OpenAI 키. 이때는 호출이 llm_exchanges에 남지 않는다
+      # llm-proxy로 부른다. 프록시가 live_evaluate 단계를 OPENAI_STAGES에 따라 OpenAI로 보낸다.
+      # 모델 이름은 실제로 쓰는 모델과 같게 둔다(결과의 실행 정보에 남는다). OPENAI_STAGES에서
+      # live_evaluate를 빼서 vLLM으로 돌릴 때는 FEEDBACK_LLM_MODEL을 SERVED_MODEL_NAME으로 바꾼다
       FEEDBACK_LLM_BASE_URL: ${FEEDBACK_LLM_BASE_URL:-http://llm-proxy:4000/v1}
-      FEEDBACK_LLM_MODEL: ${FEEDBACK_LLM_MODEL:-${SERVED_MODEL_NAME:-gemma4}}
+      FEEDBACK_LLM_MODEL: ${FEEDBACK_LLM_MODEL:-${OPENAI_MODEL:-gpt-4o-mini}}
       # llm-proxy를 쓸 때는 PROXY_KEYS에 feedback-worker:<이 값>으로 같이 넣는다. 이름이 llm_exchanges.member에 남는다
       FEEDBACK_LLM_API_KEY: ${FEEDBACK_LLM_API_KEY:?.env에 FEEDBACK_LLM_API_KEY 필요}
     volumes:
