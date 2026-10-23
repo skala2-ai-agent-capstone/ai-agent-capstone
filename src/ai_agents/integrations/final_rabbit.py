@@ -3,19 +3,21 @@
 import asyncio
 import json
 
-from ..orchestration.final_worker import DLQ, REQUEST_QUEUE, RESULT_QUEUE, RETRY_QUEUE
+from ..orchestration.final_worker import LifecycleEventRequiresBackend
+from ..shared.final_job_contracts import FINAL_QUEUE_CONTRACTS
 
 
 async def consume_final_evaluations(url, worker):
     from aio_pika import DeliveryMode, Message, connect_robust
     from pamqp.commands import Basic
 
+    queues = getattr(worker, "queues", FINAL_QUEUE_CONTRACTS["agent-v1"])
     connection = await connect_robust(url, timeout=15)
     async with connection:
         channel = await connection.channel(publisher_confirms=True, on_return_raises=True)
         await channel.set_qos(prefetch_count=1)
-        queue = await channel.get_queue(REQUEST_QUEUE, ensure=True)
-        for name in (RETRY_QUEUE, DLQ, RESULT_QUEUE):
+        queue = await channel.get_queue(queues.requests, ensure=True)
+        for name in (queues.retry, queues.dlq, queues.results):
             await channel.get_queue(name, ensure=True)
 
         async def publish(destination, payload, code):
@@ -34,6 +36,11 @@ async def consume_final_evaluations(url, worker):
             async for message in incoming:
                 try:
                     await worker.handle(message.body, publish=publish, ack=message.ack)
+                except LifecycleEventRequiresBackend:
+                    # 업무 실패로 바꾸거나 재평가하지 않는다. 연결 종료 후 원본은 큐에 남는다.
+                    if not message.processed:
+                        await message.nack(requeue=True)
+                    raise
                 except Exception:
                     if not message.processed:
                         await message.nack(requeue=True)

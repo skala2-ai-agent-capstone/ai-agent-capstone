@@ -1,5 +1,10 @@
 # 최종 평가 작업 수신·재시도
 
+2026-10-23 추가: 기존 `agent-v1` 계약을 유지하면서 `--contract backend-v1`로
+`evaluation.*` 큐의 `EVALUATE`를 받을 수 있습니다. `--token-file`도 지원합니다.
+완료 큐 소비자·RESUME 분리 등 서버 선행 작업은
+[백엔드 연동 계약](backend_worker_alignment.md)을 먼저 확인하세요.
+
 브랜치: `feat/final-evaluation-worker`. 기반: `2b14be1`.
 평가 기준 생성 로직을 변경하지 않고 기존 최종 평가 워크플로를 실행한다.
 이벤트/큐 이름은 새 연동 제안이며 백엔드 구현이 완료됐다는 의미는 아니다.

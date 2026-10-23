@@ -24,6 +24,7 @@ from ..integrations.mcp_adapter import collect_evaluation_evidence, read_mcp_res
 from ..integrations.mcp_client import MCPError
 from ..observability import trace_step
 from ..shared.evidence_models import EvaluationEvidence, EvaluationRun
+from ..shared.final_job_contracts import BackendEvaluationScope
 from ..shared.final_page_contracts import FinalEvaluationPage
 from ..shared.live_feedback_contracts import ID
 from ..shared.models import StrictModel, WorkContext
@@ -108,7 +109,7 @@ class FinalEvaluationWorkflow:
         self.code_provenance = code_provenance or {}
 
     @trace_step("final.evaluate_and_save")
-    async def run(self, job: FinalEvaluationJob):
+    async def run(self, job: FinalEvaluationJob, *, expected: BackendEvaluationScope | None = None):
         job = FinalEvaluationJob.model_validate(job.model_dump())
         checkpoint = FinalCheckpoint(self.directory, job)
         with checkpoint.locked():
@@ -121,6 +122,15 @@ class FinalEvaluationWorkflow:
             target = success.data
             if target.get("evaluation_id") != job.evaluation_id:
                 raise EvaluationError("다른 평가 건의 실행 문맥입니다.")
+            if expected is not None:
+                expected = BackendEvaluationScope.model_validate(expected.model_dump())
+                for event_key, server_key in (
+                    ("company_id", "company_id"), ("task_id", "work_id"),
+                    ("deliverable_version", "artifact_version"),
+                    ("rubric_version", "rubric_version"),
+                ):
+                    if getattr(expected, event_key) != target.get(server_key):
+                        raise EvaluationError("큐 요청과 MCP 정본의 평가 범위가 다릅니다.")
             for field in ("draft_revision", "coaching_revision"):
                 if field not in target or (
                     target[field] is not None
