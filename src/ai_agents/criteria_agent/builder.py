@@ -27,7 +27,7 @@ GUIDANCE = json.loads(
 )
 ITEM_NAMES = [item["item"] for item in GUIDANCE["rubric_items"]]
 ITEM_IDS = ["problem_definition", "instruction_quality", "verification", "security", "quality"]
-BUILDER_VERSION = "notebook-v2-adapter-v2-scope-review"
+BUILDER_VERSION = "notebook-v2-adapter-v3-validation"
 ALIASES = {"quote": "quotation", "inquiry_reply": "customer_response"}
 
 
@@ -220,7 +220,11 @@ def rubric_issues(rubric: WorkTypeRubric, work_type: WorkType, policy: PolicyBun
             issues.append(f"{row.item}: 필수 근거 누락 {', '.join(sorted(missing))}")
         if row.item == "보안 준수" and row.score_1 != "해당 없음":
             issues.append("보안 준수의 score_1은 '해당 없음'이어야 합니다.")
-        if len({row.score_0, row.score_1, row.score_2}) != 3:
+        # 중복 비교에서만 연속 공백·탭·줄바꿈을 정리하고 반환할 문구는 보존한다.
+        score_conditions = {" ".join(text.split()) for text in (
+            row.score_0, row.score_1, row.score_2,
+        )}
+        if len(score_conditions) != 3:
             issues.append(f"{row.item}: 점수 조건이 중복되었습니다.")
         def penalizes_unspecified(text):
             compact = re.sub(r"\s+", "", text)
@@ -247,11 +251,8 @@ def rubric_issues(rubric: WorkTypeRubric, work_type: WorkType, policy: PolicyBun
             )
         if row.item == "결과 검증" and "오류가없거나" in re.sub(r"\s+", "", row.unobserved):
             issues.append("결과 검증: 미관측에서 오류 부재와 대조 기록 부재를 OR로 묶지 마세요.")
-        for value in (row.unobserved, row.needs_review):
-            if len(value) <= 30 and any(
-                word in value for word in ["판단할 수 없", "판단이 어렵", "기록이 없", "충돌이 있"]
-            ):
-                issues.append(f"{row.item}: 미관측·검토 필요 조건을 구체적으로 작성하세요.")
+        # 미관측·검토 조건의 구체성은 길이·단어만으로 판정하지 않는다.
+        # 빈 값은 스키마에서, 명확한 내규 위반은 위의 개별 규칙에서 검사한다.
         # 단어 포함은 경고로 보존하고, 명시적인 타 업무 행위 평가만 수정 요청한다.
         hits = list(dict.fromkeys(
             hit for text in (row.criterion, row.score_0, row.score_1, row.score_2)
