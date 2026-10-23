@@ -84,7 +84,7 @@ docker compose --profile test run --rm verify
 | 하고 싶은 일 | 방법 |
 | --- | --- |
 | 데이터 교체 (평가 결과 유지) | `data/`를 바꾼 뒤 `docker compose run --rm db-init`. 업무는 업무 단위로 교체되고 평가 건은 새 `work.completed`만 추가됨 |
-| 전부 비우고 다시 적재 | `docker compose run --rm -e LOAD_ARGS=--reset db-init` |
+| 전부 비우고 다시 적재 | `docker compose run --rm -e LOAD_ARGS=--reset db-init`. 같은 DB의 백엔드 테이블(아웃박스·DLQ 기록·팀 집계 승인)도 비워지므로 백엔드를 멈추고 RabbitMQ 큐를 비운 뒤 실행 |
 | 서버 재시작 없이 반영 | business-mcp는 업무 데이터를 매번 DB에서 읽으므로 바로 반영됨. 기준 데이터(가격·정책 규칙 등)를 바꿨다면 `POST :8001/internal/reload`. rag-mcp는 컬렉션이 다시 만들어진 것을 스스로 감지해 다시 연결하고, `POST :8002/internal/reload`로도 갱신할 수 있음 |
 | zip을 바로 적재 | `python -m db.loader.load_postgres --data e2e_raw_40.zip` (zip 안에서 `seed/`를 찾음) |
 
@@ -107,6 +107,7 @@ docker compose --profile test run --rm verify
   - 산출물은 `artifact_versions`에 본문만 넣으면 됩니다. `artifact_spans` 행이 없으면 business-mcp가 시드와 같은 규칙(빈 줄·표 구분선 제외, 표 키 `REQ-01`·`HEADER`, 나머지 `Lnn`)으로 본문을 나눠 근거 ID를 만듭니다([`business_mcp/spans.py`](business_mcp/spans.py)).
   - 견적서 업무의 `compute_reference_quote`는 `quote_data`(상품·수량·할인 구조화 값)가 있어야 합니다. 없으면 `NOT_FOUND`입니다.
 - **백엔드 테이블**: `outbox_events`·`evaluation_failures`·`aggregation_approvals`는 백엔드(aworko-server)의 Flyway가 같은 DB에 만듭니다. 이 스키마에는 넣지 않았습니다.
+  - 적재기는 `--reset`일 때만 이 셋을 같이 비웁니다(`flyway_backend_history`는 남김). 평가 건 ID(`EVAL-{업무}-{버전}`)는 다시 적재해도 같아서, `outbox_events`가 남으면 이전 메시지가 새로 만든 평가 건으로 발행되기 때문입니다.
 
 ### PostgreSQL에서 볼 만한 테이블
 
