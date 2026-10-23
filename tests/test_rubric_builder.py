@@ -128,6 +128,52 @@ def test_bad_rubrics_fail_instead_of_silent_repair(bad):
         adapt_rubric(rubric, "proposal", policy)
 
 
+@pytest.mark.parametrize("work_type", list(GUIDANCE["work_types"]))
+@pytest.mark.parametrize("field,text", [
+    ("unobserved", "해당 업무의 대화 기록이 없어 관측할 수 없는 경우."),
+    ("needs_review", "고객 요구사항과 업무 등록 내용에 충돌이 있는 경우."),
+])
+def test_short_observation_conditions_are_preserved(work_type, field, text):
+    rubric = fake_rubric(work_type)
+    setattr(rubric.rows[1], field, text)
+
+    draft = adapt_rubric(rubric, work_type, fake_policy(work_type))
+
+    attribute = "unobserved_condition" if field == "unobserved" else "review_condition"
+    assert getattr(draft.items[1], attribute) == text
+    assert not draft.warnings
+
+
+@pytest.mark.parametrize("field", ["unobserved", "needs_review"])
+@pytest.mark.parametrize("text", ["", " \t\n"])
+def test_observation_conditions_still_require_nonempty_text(field, text):
+    from pydantic import ValidationError
+
+    rubric = fake_rubric("rfp_analysis")
+    setattr(rubric.rows[1], field, text)
+
+    with pytest.raises(ValidationError):
+        adapt_rubric(rubric, "rfp_analysis", fake_policy("rfp_analysis"))
+
+
+@pytest.mark.parametrize("row_index,first,second", [
+    (1, "score_0", "score_1"),
+    (1, "score_1", "score_2"),
+    (1, "score_0", "score_2"),
+    (3, "score_0", "score_2"),
+])
+@pytest.mark.parametrize("separator", ["  ", "\t", "\n"])
+def test_score_conditions_with_only_whitespace_differences_are_rejected(
+    row_index, first, second, separator,
+):
+    rubric = fake_rubric("rfp_analysis")
+    row = rubric.rows[row_index]
+    setattr(row, second, getattr(row, first).replace(" ", separator))
+
+    with pytest.raises(RubricError, match="점수 조건이 중복"):
+        adapt_rubric(rubric, "rfp_analysis", fake_policy("rfp_analysis"))
+
+
 def test_paragraph_reference_kept_not_expanded_to_whole_article():
     policy, rubric = fake_policy("rfp_analysis"), fake_rubric("rfp_analysis")
     extra = policy.resolve("ART-11")[0].model_copy(deep=True)
@@ -141,6 +187,35 @@ def test_paragraph_reference_kept_not_expanded_to_whole_article():
 
 def response(rubric):
     return SimpleNamespace(status="completed", output=[], output_parsed=rubric, id="response-test")
+
+
+@pytest.mark.asyncio
+async def test_short_conditions_do_not_trigger_regeneration():
+    rubric = fake_rubric("rfp_analysis")
+    rubric.rows[1].unobserved = "해당 업무의 대화 기록이 없어 관측할 수 없는 경우."
+    rubric.rows[1].needs_review = "고객 요구사항과 업무 등록 내용에 충돌이 있는 경우."
+    parse = AsyncMock(return_value=response(rubric))
+    builder = OpenAIRubricBuilder(SimpleNamespace(responses=SimpleNamespace(parse=parse)), "test")
+
+    draft = await builder.generate("rfp_analysis", fake_policy("rfp_analysis"))
+
+    assert draft.items[1].unobserved_condition == rubric.rows[1].unobserved
+    assert draft.items[1].review_condition == rubric.rows[1].needs_review
+    parse.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_duplicate_score_conditions_trigger_correction_before_returning():
+    invalid = fake_rubric("rfp_analysis")
+    invalid.rows[1].score_1 = invalid.rows[1].score_0.replace(" ", "  ")
+    parse = AsyncMock(side_effect=[response(invalid), response(fake_rubric("rfp_analysis"))])
+    builder = OpenAIRubricBuilder(SimpleNamespace(responses=SimpleNamespace(parse=parse)), "test")
+
+    draft = await builder.generate("rfp_analysis", fake_policy("rfp_analysis"))
+
+    assert parse.await_count == 2
+    assert "점수 조건이 중복" in parse.await_args.kwargs["input"][-1]["content"]
+    assert len({level.condition for level in draft.items[1].levels}) == 3
 
 
 @pytest.mark.asyncio
