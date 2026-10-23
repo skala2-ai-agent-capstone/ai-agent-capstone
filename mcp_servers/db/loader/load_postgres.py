@@ -2,7 +2,7 @@
 
     python -m db.loader.load_postgres --data data            # 폴더
     python -m db.loader.load_postgres --data e2e_raw_40.zip  # 받은 zip 그대로
-    옵션: --reset (백엔드 테이블까지 전체 비우고 다시 적재), --schema db/postgres/001_schema.sql (스키마 먼저 적용)
+    옵션: --reset (백엔드 테이블까지 전체 비우고 다시 적재), --schema db/postgres/001_schema.sql (스키마 먼저 적용, 여러 번 주면 차례로)
 
 - 텍스트는 원문과 마스킹본(policy_rules의 MASK-* 규칙)을 같이 넣는다.
 - 대화는 messages 테이블이 아니라 llm_exchanges에 넣는다. messages는 그것을 펼친 뷰다.
@@ -326,15 +326,15 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", default=os.environ.get("DATA_DIR", "data"))
     ap.add_argument("--dsn", default=os.environ.get("DATABASE_URL"))
-    ap.add_argument("--schema", help="적재 전에 실행할 스키마 SQL 파일")
+    ap.add_argument("--schema", action="append", default=[], help="적재 전에 실행할 스키마 SQL 파일(여러 번 주면 차례로)")
     ap.add_argument("--reset", action="store_true", help="평가 결과·백엔드 테이블까지 전부 비우고 다시 적재")
     a = ap.parse_args()
     if not a.dsn:
         raise SystemExit("DATABASE_URL 환경 변수 또는 --dsn이 필요합니다")
     root = resolve_data(a.data)
     with psycopg.connect(a.dsn) as conn:
-        if a.schema:
-            with open(a.schema, encoding="utf-8") as f:
+        for path in a.schema:
+            with open(path, encoding="utf-8") as f:
                 conn.execute(f.read())
         with conn.transaction():
             out = load(conn, root, a.reset)

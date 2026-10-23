@@ -192,7 +192,7 @@ CREATE TABLE IF NOT EXISTS work_cases (
   team_id              text REFERENCES teams,
   employee_id          text NOT NULL REFERENCES users,
   work_type            text CHECK (work_type IN ('rfp_analysis','proposal','quote','inquiry_reply')),  -- NULL = 아직 분류 전
-  customer_id          text NOT NULL REFERENCES customers,
+  customer_id          text REFERENCES customers,  -- NULL = 고객 미지정(앱에서 고객 없이 만든 업무)
   title                text,                     -- 「새 업무 작성」의 업무명
   status               text NOT NULL,
   created_at           timestamptz NOT NULL,
@@ -235,8 +235,12 @@ CREATE TABLE IF NOT EXISTS source_documents (      -- 고객 제출 원문 첨�
   grade           text,
   uploaded_by     text REFERENCES users,
   uploaded_at     timestamptz NOT NULL,
-  content         text NOT NULL,
-  content_masked  text NOT NULL
+  content         text NOT NULL,                 -- 원본에서 꺼낸 텍스트. 꺼내지 못한 형식(이미지·HWP 등)은 빈 문자열
+  content_masked  text NOT NULL,
+  file_name       text,                          -- 앱에서 올린 원본 파일(시드 자료는 NULL)
+  content_type    text,
+  size_bytes      bigint,
+  file_data       bytea
 );
 
 CREATE TABLE IF NOT EXISTS attached_references (   -- 업무에 지정한 사내 자료 → 스냅샷 reference_refs

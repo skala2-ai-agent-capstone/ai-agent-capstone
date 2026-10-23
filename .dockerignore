@@ -1,0 +1,14 @@
+# 피드백 Worker 이미지(Dockerfile.worker)용. 추적 파일은 빼지 않는다: 빠지면 git이 작업 트리를 변경됨(dirty)으로 기록한다.
+# 비밀값·가상환경·캐시처럼 git이 무시하는 것만 뺀다.
+**/.env
+**/.env.*
+!**/.env.example
+.venv
+**/__pycache__
+**/*.py[cod]
+.pytest_cache
+.ruff_cache
+outputs
+dist
+*.egg-info
+**/.DS_Store

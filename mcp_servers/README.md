@@ -71,8 +71,10 @@ docker compose --profile llm up -d --build       # EC2(GPU). GPU 없는 곳에�
 docker compose --profile test run --rm verify
 # 검사 861건: 통과 861, 실패 0   (명세 대조, tests/verify_spec.py)
 # 검사 42건: 통과 42, 실패 0     (DB 적재·저장, tests/verify_db.py)
-# 검사 59건: 통과 59, 실패 0     (중간 피드백·평가 기준 저장, tests/verify_live_rubric.py)
+# 검사 10건: 통과 10, 실패 0     (앱이 만든 업무: 고객 미지정·원본 파일 첨부, tests/verify_app_work.py)
+# 검사 92건: 통과 92, 실패 0     (중간 피드백·평가 기준 초안·관리자 수정·승인·폐기, tests/verify_live_rubric.py)
 # 검사 60건: 통과 60, 실패 0     (대화→llm-proxy→DB→MCP 종단, tests/verify_e2e.py)
+# 검사 30건: 통과 30, 실패 0     (내규 적재·search_policy 현행 필터, tests/verify_documents.py — 현행 내규를 바꾸므로 마지막)
 ```
 
 `verify_e2e`는 시드에 없는 새 업무를 백엔드처럼 만들고, 대화 6턴(일반·스트리밍, 실패 후 재전송 포함)을 실제 llm-proxy로 보낸 뒤, 그 기록만으로 중간 피드백과 최종 평가 도구를 끝까지 돌립니다. 만든 업무는 끝나면 지웁니다. vLLM이 아직 모델을 올리는 중이면 `E2E_LLM_WAIT_SEC`(기본 900초)까지 기다립니다.
@@ -101,11 +103,14 @@ docker compose --profile test run --rm verify
   - 비밀번호는 모두 `.env`의 `SEED_USER_PASSWORD`입니다. 평문으로 저장되므로 실제 쓰는 비밀번호를 넣지 않습니다. 이미 있는 사용자의 비밀번호는 다시 적재해도 바뀌지 않습니다.
   - 역할은 `member` 또는 `team_lead`입니다. 시드의 `team_lead`·`reviewer`는 `team_lead`가 되고, 나머지는 `member`가 됩니다.
   - 검토 요청(`request_review`)의 검토자는 업무 담당자 팀의 `team_lead`입니다. 영업1팀은 `L-3001`이고, 팀장이 없는 팀은 비워 둡니다.
-- **앱이 저장하는 업무**: 시드에 없는 업무도 같은 테이블로 평가됩니다(`tests/verify_e2e.py`가 확인). 백엔드가 지킬 것은 셋입니다.
+- **앱이 저장하는 업무**: 시드에 없는 업무도 같은 테이블로 평가됩니다(`tests/verify_e2e.py`가 확인). 백엔드가 지킬 것은 다음과 같습니다.
   - 대화는 llm-proxy를 거치면 `llm_exchanges`에 쌓이고 `messages` 뷰로 바로 보입니다. 따로 저장하지 않습니다.
   - `*_masked` 칸(등록 내용·산출물 본문 등)은 `mask_text(원문)`으로 채웁니다. 예: `INSERT … VALUES (…, content, mask_text(content))`.
   - 산출물은 `artifact_versions`에 본문만 넣으면 됩니다. `artifact_spans` 행이 없으면 business-mcp가 시드와 같은 규칙(빈 줄·표 구분선 제외, 표 키 `REQ-01`·`HEADER`, 나머지 `Lnn`)으로 본문을 나눠 근거 ID를 만듭니다([`business_mcp/spans.py`](business_mcp/spans.py)).
   - 견적서 업무의 `compute_reference_quote`는 `quote_data`(상품·수량·할인 구조화 값)가 있어야 합니다. 없으면 `NOT_FOUND`입니다.
+  - 고객 없이 만든 업무는 `work_cases.customer_id`를 NULL로 둡니다. 이때 `get_work_case`의 `customer`는 `{customer_id: null, name: null}`이고, 정책 검사는 어느 고객사가 '다른' 고객사인지 정할 수 없어 `V-OTHER-CUSTOMER`만 건너뛰고 `scope.note`에 그렇게 적습니다.
+  - 앱에서 올린 고객 자료 원본은 `source_documents.file_name`·`content_type`(MIME)·`size_bytes`·`file_data`에 둡니다. business-mcp는 꺼낸 텍스트(`content`·`content_masked`)만 읽고 원본 칸은 응답에 넣지 않습니다(응답의 `content_type: "data"`는 데이터 표시로, MIME 칸과 이름만 같습니다). `tests/verify_app_work.py`가 확인합니다.
+  - 기존 DB는 `db/postgres/003_frontend_upload.sql`(비파괴, 여러 번 실행해도 같음)을 먼저 적용한 뒤 백엔드를 올립니다. 새 DB는 `001_schema.sql`에 포함돼 있습니다.
 - **백엔드 테이블**: `outbox_events`·`evaluation_failures`·`aggregation_approvals`는 백엔드(aworko-server)의 Flyway가 같은 DB에 만듭니다. 이 스키마에는 넣지 않았습니다.
   - 적재기는 `--reset`일 때만 이 셋을 같이 비웁니다(`flyway_backend_history`는 남김). 평가 건 ID(`EVAL-{업무}-{버전}`)는 다시 적재해도 같아서, `outbox_events`가 남으면 이전 메시지가 새로 만든 평가 건으로 발행되기 때문입니다.
 
@@ -176,6 +181,11 @@ def mcp_client(run_token: str) -> MultiServerMCPClient:
 | `GET :8001/internal/live-evaluations/{id}` | 중간 피드백 상태·결과(화면 폴링) |
 | `POST :8001/internal/live-worker-token` | 피드백 Worker 토큰 발급(kind=live, 회사 범위, 기본 30일). Worker의 `FEEDBACK_MCP_TOKEN`에 넣음 |
 | `POST :8001/internal/rubric-runs` | 평가 기준 작성 실행 토큰 발급(kind=rubric, `company_id`) |
+| `POST :8001/internal/rubrics/drafts` | 관리자 「수정 초안 만들기」: 현행 기준을 복사한 초안 생성(AI 없이) |
+| `POST :8001/internal/rubrics/drafts/items` | 관리자 「항목 저장」: 초안 기준 항목 하나의 칸 일부 수정 |
+| `POST :8001/internal/rubrics/approve` | 관리자 승인: 평가 기준 초안 → 현행, 이전 현행 → 폐기. 아래 「평가 기준(규칙) 저장 흐름」 참고 |
+| `POST :8001/internal/rubrics/discard` | 관리자 초안 폐기: 평가 기준 초안 삭제(현행 그대로) |
+| `POST :8001/internal/documents` | 내규 적재(관리자 업로드). 아래 「내규 적재」 참고 |
 | `GET/POST :8001/internal/evaluations` | 평가 건 목록 / `work.completed` 이벤트로 평가 건 생성 (같은 키는 `created:false`) |
 | `GET :8001/internal/evaluations/{id}` | 저장된 초안·코칭·검토 요청·진행 이력 |
 | `POST :8001/internal/evaluations/{id}/status` | 서버 전용 상태 전환 (`확인 대기`·`확정`·`처리 실패`·`자료 보류`) |
@@ -197,7 +207,7 @@ def mcp_client(run_token: str) -> MultiServerMCPClient:
 **중간 피드백(최근 질문·응답 5쌍 코칭)**. 계약 정본은 Agent 쪽 [docs/recent_five_feedback.md](../docs/recent_five_feedback.md)이고, 응답 칸은 Agent 계약 모델(모르는 칸 거부)과 같습니다.
 
 기존 DB 업그레이드: `db/postgres/002_live_feedback_snapshot.sql`로 스냅샷 열을 먼저 추가한 뒤
-business-mcp를 새 코드로 재배포합니다. 데이터 초기화는 필요 없습니다.
+business-mcp를 새 코드로 재배포합니다. compose의 `db-init`은 002·003(고객 미지정 업무, 고객 자료 원본 파일 칸)을 매번 같이 적용합니다. 데이터 초기화는 필요 없습니다.
 기존 완료 결과는 유지됩니다. 스냅샷이 없는 이전 대기·생성 중 요청은 새 요청으로 다시 실행합니다.
 `get_messages`와 결과 저장 시 인용 검증은 현재 대화 뷰 대신 요청의 마스킹 스냅샷을 사용합니다.
 
@@ -214,7 +224,11 @@ business-mcp를 새 코드로 재배포합니다. 데이터 초기화는 필요 
 | `save` (실패) | `error`는 코드만(예 `MODEL_TIMEOUT`) |
 | 중복 | 키 없이 상태로 처리. 이미 `완료·실패`면 덮어쓰지 않고 `{status: 현재, duplicate: true}` |
 
-**평가 기준(규칙) 저장 흐름**: `save_rubric`이 새 버전을 만들어 바로 `현행`으로 바꾸고, 이전 `현행`은 `폐기`로 바꿉니다(관리자 승인 없음).
+**평가 기준(규칙) 저장 흐름**: 관리자 화면(운영 설정 > 평가 기준 관리)과 같은 초안 → 승인 순서입니다.
+1. 평가 기준 생성 Agent가 `save_rubric`으로 **초안**(`status='초안'`)을 저장합니다. 관리자가 AI 없이 고치려면 「수정 초안 만들기」(`POST :8001/internal/rubrics/drafts`)로 현행을 복사한 초안을 만듭니다. 현행은 바뀌지 않고, 초안은 승인 전까지 어떤 평가에도 쓰이지 않습니다(현행을 고르는 rag `get_current_rubric`·중간 피드백·백엔드 평가 건 생성은 `현행`만 봄). 초안 내용은 `search_rubric(work_type, 초안 버전)`으로 볼 수 있습니다.
+2. 관리자는 「항목 저장」(`POST :8001/internal/rubrics/drafts/items`)으로 초안의 항목 하나씩 고칩니다. 보낸 칸만 바뀌고, 고친 항목은 `save_rubric`과 같은 검사를 거칩니다. 「이전 기준으로 되돌리기」는 이전 버전 항목 값을 같은 API로 보내면 됩니다.
+3. 관리자가 「승인 후 적용」을 누르면 백엔드가 `POST :8001/internal/rubrics/approve`를 부릅니다. 초안이 `현행`(시행일 = 승인일)이 되고 같은 기준의 이전 `현행`은 `폐기`가 됩니다.
+4. 「초안 폐기」는 `POST :8001/internal/rubrics/discard`입니다. 초안을 지우고 현행은 그대로 둡니다.
 
 **저장된 기준으로 최종 평가**: Agent의 `cli.final_evaluation`은 evaluation 토큰으로
 `get_evaluation_context(evaluation_id)`를 먼저 호출합니다. 이 읽기 도구는 토큰에 귀속된
@@ -226,10 +240,35 @@ Agent는 해당 버전의 `search_rubric`을 조회하고 검증 후 `save_evalu
 | --- | --- |
 | 항목 | 5개, 순서 고정(문제 정의·지시 품질·결과 검증·보안 준수·결과물 품질). `item_id`는 서버가 `{work_type}.{순번}`으로 붙임 |
 | 필수 칸 | `criterion`, `score_2`, `score_1`, `score_0`, `evidence_sources[]`, `related_clauses[]`. 보안 준수의 `score_1`은 `해당 없음` |
-| 조항 | `related_clauses`는 현행 내규(`policies`)에 있는 조항만 |
-| 동시 수정 | `based_on_version`이 이미 현행이 아니면 `VERSION_CONFLICT` |
+| 조항 | `related_clauses`는 현행 내규(`policies`)에 있는 조항만. 승인할 때도 다시 확인(초안 뒤 내규가 바뀌어 조항이 없어졌으면 400) |
+| 초안 개수 | 회사·업무 유형마다 하나. 초안이 있으면 `save_rubric`이 같은 버전으로 덮어씀(`replaced_draft:true`, 관리자 수정도 덮어씀), 없으면 새 버전. 「수정 초안 만들기」는 초안이 있으면 `VERSION_CONFLICT` |
+| 항목 저장 | body `{company_id, work_type, item(항목 이름), fields{criterion·score_2·score_1·score_0·unobserved·needs_review·evidence_sources[]·related_clauses[] 중 일부}, edited_by?}`. `item_id`·순서는 못 바꿈. 응답에 `changed_fields[]` |
+| 동시 수정 | `based_on_version`이 이미 현행이 아니면 `VERSION_CONFLICT`. 같은 회사의 저장·승인·폐기는 한 줄로 처리 |
+| 승인·폐기 범위 | body `{company_id, work_types?, approved_by?}`. `work_types`를 빼면 회사의 모든 초안(화면 버튼 하나 = 호출 하나). 대상 초안이 없으면 404 |
 | 저장 위치 | Postgres `documents`·`rubric_items`와 Chroma `rubrics`(rag-mcp가 읽음)를 함께 바꿈. Chroma 반영이 실패하면 Postgres도 되돌리고 `TEMPORARY_FAILURE` |
 | 기존 평가 | 평가 건은 자기 `rubric_version`을 그대로 쓰므로 영향 없음 |
+
+`save_rubric` 응답은 `{doc_id, version, work_type, status:'초안', based_on_version(저장 때 현행), replaced_draft, items_saved}`, 수정 초안 만들기는 `{created[{work_type, doc_id, version, based_on_version}]}`, 항목 저장은 `{work_type, doc_id, version, item{...}, changed_fields[]}`, 승인은 `{approved[{work_type, doc_id, version, retired_versions[]}]}`, 폐기는 `{discarded[{work_type, doc_id, version}]}`입니다. 폐기한 초안의 버전 번호는 다음 초안이 다시 씁니다(어떤 평가 건도 초안을 가리키지 않음).
+
+**내규 적재 (백엔드 → `POST :8001/internal/documents`)**: 관리자가 「운영 설정」에서 올린 내규 파일을 새 버전으로 저장하고 바로 `현행`으로 바꿉니다. 이전 `현행`은 `폐기`로 바꾸고 구간은 남깁니다(지난 평가의 근거 ID가 가리킴). 백엔드는 파일을 받아 이 API에 넘기기만 하고, 저장은 business-mcp가 합니다.
+
+```json
+{"company_id": "C-LGCNS-SALES", "version": "v1.1", "source_file": "영업_AI활용지침_v1.1.pdf",
+ "content_base64": "<파일 base64>", "uploaded_by": "AD-4001",
+ "doc_id": "생략하면 현행 내규", "title": "생략하면 현행 내규", "grade": "사내|대외비", "effective_from": "YYYY-MM-DD(생략하면 오늘)"}
+```
+
+| 항목 | 규칙 |
+| --- | --- |
+| 파일 | PDF(30MB·100쪽 이하, 텍스트 추출 가능) 또는 UTF-8 TXT. 그 밖의 형식은 400 |
+| 구간 | `제N조 (제목)`·`①`·`별표 N.`·`부칙`으로 나눔. 평가 기준 생성 Agent(`criteria_agent/policy.py`)와 같은 규칙이고 `common/policy_doc.py`에 복사돼 있음(루트 `tests/test_policy_ingest_parity.py`가 대조) |
+| 필수 조항 | Agent가 읽는 조항(`AGENT_REQUIRED_CLAUSES`)과 회사의 현행 평가 기준이 인용하는 조항이 모두 있어야 함. 빠지면 400과 빠진 조항 목록 |
+| 저장 위치 | Postgres `documents`·`document_chunks`와 Chroma `policies`(마스킹본, 이전 버전은 메타데이터만 `폐기`)를 함께 바꿈. Chroma가 실패하면 Postgres도 되돌리고 `TEMPORARY_FAILURE` |
+| 재시도 | 같은 `(doc_id, version)`에 같은 내용이면 `duplicate:true`로 성공, 다른 내용이면 `VERSION_CONFLICT` |
+| 검색 반영 | 저장 뒤 `RAG_MCP_URL`의 rag-mcp `/internal/reload`를 부름. 실패하면 저장은 유지하고 `rag_reloaded:false`(rag-mcp reload만 다시 부르면 됨) |
+| 응답 | `{doc_id, version, status, title, chunks, clauses, retired_docs[], diff{base, added[], removed[], changed[]}\|null, duplicate, rag_reloaded}`. `diff`는 직전 현행과 구간 단위 대조(공백·줄바꿈 무시) |
+
+rag-mcp `search_policy`는 `현행` 버전 구간만 돌려줍니다. Agent는 한 내규의 한 버전만 받으므로(`PolicyBundle`), 이전 버전이 섞이면 기준 생성이 멈추기 때문입니다. 이전 버전 구간은 `get_reference(doc_id, version)`로 그대로 열립니다.
 
 최종 평가·평가 기준 저장 도구는 `idempotency_key`가 필수이고, 같은 키는 기존 결과를 돌려줍니다(`meta.duplicate`). 키는 평가 건(평가 기준은 회사) 범위이고 권한을 확인한 뒤에 찾으므로, 다른 평가 건에서 같은 키를 써도 남의 결과가 나가지 않습니다. 중간 피드백은 키 없이 상태로 중복을 처리합니다. 호출은 감사 기록(`audit_log`)에 남습니다.
 
@@ -258,6 +297,8 @@ Agent는 해당 버전의 `search_rubric`을 조회하고 검증 후 `save_evalu
 - **적재기 재실행:** 평가 결과가 유지됩니다.
 - **DB 직접 수정:** Postgres를 직접 고친 내용이 재시작 없이 다음 호출에 반영됩니다.
 - **EC2와 같은 조건 (2026-10-22):** 저장소를 새로 복사하고 `.env.example`로 `.env`를 만든 뒤, EC2와 같은 x86_64(`linux/amd64`) 이미지로 전체 스택을 올렸습니다(`--profile mockllm`, vLLM 자리에 `tests/mock_llm.py`). `verify` 4종 1,004건이 모두 통과했습니다. GPU에서 실제 vLLM·Gemma를 띄우는 부분은 이 환경에서 확인하지 못했고, 설정은 `check_deploy.py`로만 확인했습니다.
+- **내규 적재 (verify_documents 30건, 2026-10-23):** 시드 내규 구간으로 만든 PDF·TXT를 새 버전으로 올려 거절 경우(키·형식·필수 조항 누락), 현행·폐기 전환, 구간 diff, `search_policy`가 현행 한 버전만 돌려주는지, 이전 버전 `get_reference`, 재전송·충돌, 초안이 인용한 조항이 빠진 내규를 올린 뒤의 승인 거절을 확인했습니다. 로컬 `postgres:16-alpine`·`chromadb/chroma:0.6.3`과 venv의 두 서버로 돌렸고, 같은 스택에서 기존 `verify_spec`·`verify_db`·`verify_live_rubric`도 그대로 통과했습니다. Chroma를 멈춘 채 올리면 `TEMPORARY_FAILURE`이고 Postgres에 아무것도 남지 않는 것도 손으로 확인했습니다.
+- **평가 기준 초안·승인 (verify_live_rubric 중 기준 부분, 2026-10-23):** 초안 저장 뒤에도 현행 유지, 초안 덮어쓰기, 승인(현행·폐기 전환), 승인 대상 없음 404, 초안 폐기(Postgres·Chroma 모두 삭제), 관리자 수정 초안 만들기(현행 복사·초안 중복 거절)와 항목 저장(바꾼 칸만 반영, 잘못된 칸·빈 칸·없는 조항 거절) 뒤 승인까지 확인했습니다. 모든 기준 행의 Postgres 상태와 Chroma 메타데이터가 일치했고, Chroma를 멈춘 채 승인하면 `TEMPORARY_FAILURE`로 초안·현행이 그대로인 것도 손으로 확인했습니다.
 - **앱 경로만으로 평가 (verify_e2e 60건):** 프록시 기록 → `messages` 뷰(실패 뒤 재전송 질문 중복 없음, 마스킹) → 중간 피드백(최근 완료 5쌍·Worker 토큰·재전송 질문의 쌍 처리·담당자 확인·5분 제한) → 산출물 본문만 저장 → 평가 건 생성 → 조회·정책 검사·diff·초안 저장까지 통과합니다. 산출물 구간을 본문에서 나누는 처리가 없으면 이 중 6건이 실패합니다(정책 위반 위치를 근거로 인용할 수 없어 초안 저장이 거부됨).
 
 ## 6. Docker 없이 실행 (로컬 개발)
@@ -268,25 +309,27 @@ Python 3.10~3.12가 필요합니다(`mcp` 2.3.0은 3.10 이상, numpy 1.26.x는 
 pip install -r requirements.txt
 export DATABASE_URL=postgresql://user:pw@localhost:5432/axeval RUN_TOKEN_SECRET=... INTERNAL_API_KEY=... SEED_USER_PASSWORD=...
 export CHROMA_HOST=localhost CHROMA_PORT=8000          # 또는 Chroma 없이: export CHROMA_FAKE_PATH=./chroma.json
-python -m db.loader.load_postgres --data data --schema db/postgres/001_schema.sql --reset
+python -m db.loader.load_postgres --data data --schema db/postgres/001_schema.sql \
+  --schema db/postgres/002_live_feedback_snapshot.sql --schema db/postgres/003_frontend_upload.sql --reset
 python -m db.loader.load_chroma
 python -m business_mcp.server &   # :8001
 python -m rag_mcp.server &        # :8002
-python tests/verify_spec.py && python tests/verify_db.py
+python tests/verify_spec.py && python tests/verify_db.py && python tests/verify_app_work.py
 ```
 
 ## 7. 구성
 
 ```
-common/          실행 토큰, 응답 봉투·오류, 마스킹, 장애 주입, 감사, 임베딩, Chroma 연결
+common/          실행 토큰, 응답 봉투·오류, 마스킹, 장애 주입, 감사, 임베딩, Chroma 연결, policy_doc.py(내규 조·항 분할)
 business_mcp/    pg.py(DB 접근) store.py(조회·근거 ID 풀·diff) spans.py(산출물 구간 나누기) policy.py(정책 검사) quote.py(기준 견적)
-                 writes.py(최종 평가 저장) live.py(중간 피드백) rubrics.py(평가 기준 저장)
+                 writes.py(최종 평가 저장) live.py(중간 피드백) rubrics.py(평가 기준 저장) documents.py(내규 적재)
                  checks.py(평가 항목·코칭 검증, 공용) idempotency.py(중복 키, 공용) server.py(도구·내부 API)
 rag_mcp/         index.py(BM25) server.py(Chroma 하이브리드 검색)
 db/postgres/     001_schema.sql
 db/loader/       load_postgres.py, load_chroma.py
 data/            seed/ + all_cases.jsonl
 tests/           harness.py, verify_spec.py, verify_db.py, verify_live_rubric.py, verify_e2e.py(대화→프록시→DB→MCP),
+                 verify_documents.py(내규 적재), policy_pdf.py(검증용 내규 PDF), verify_app_work.py(앱이 만든 업무 모양),
                  check_deploy.py(배포 설정 점검), mock_llm.py(vLLM 대역), fake_chroma.py
 ```
 

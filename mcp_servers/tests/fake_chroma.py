@@ -70,6 +70,14 @@ class FakeCollection:
 
     add = upsert
 
+    def delete(self, ids=None, where=None):
+        with _lock:
+            st = self._client._state()
+            rows = st["collections"][self.name]["rows"]
+            for k in [k for k, r in rows.items() if (ids is None or k in ids) and _match(r["metadata"], where)]:
+                del rows[k]
+            self._client._save(st)
+
     def get(self, ids=None, where=None, limit=None, include=("documents", "metadatas")):
         items = [(k, r) for k, r in self._rows.items() if (ids is None or k in ids) and _match(r["metadata"], where)]
         if limit:
