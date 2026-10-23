@@ -95,6 +95,29 @@ async def test_sdk_http_workflow_auth_and_save(monkeypatch):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("code,retryable", [("LLM_UNAVAILABLE", True), ("INVALID_FEEDBACK", False)])
+async def test_error_inside_gateway_keeps_code_and_retryable(monkeypatch, code, retryable):
+    # MCP 클라이언트(task group)가 블록 안 예외를 ExceptionGroup으로 감싼다.
+    # Worker는 원래 코드·재시도 여부를 받아야 한다.
+    app = MCPServer("feedback-error-test").streamable_http_app(
+        json_response=True,
+        stateless_http=True,
+        transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
+    )
+    monkeypatch.setattr(
+        "ai_agents.integrations.live_mcp.create_mcp_http_client",
+        lambda headers: httpx2.AsyncClient(
+            transport=httpx2.ASGITransport(app=app), headers=headers
+        ),
+    )
+    async with app.router.lifespan_context(app):
+        with pytest.raises(FeedbackError, match=code) as raised:
+            async with LiveMCPGateway("test-secret", "http://testserver/mcp"):
+                raise FeedbackError(code, retryable=retryable)
+    assert raised.value.retryable is retryable
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("retryable,expected", [(True, "MCP_UNAVAILABLE"), (False, "MCP_REJECTED")])
 async def test_gateway_classifies_server_error(retryable, expected):
     gateway = LiveMCPGateway("test-secret", "http://testserver/mcp")

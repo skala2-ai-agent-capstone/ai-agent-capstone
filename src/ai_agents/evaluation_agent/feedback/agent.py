@@ -9,6 +9,7 @@ from ...observability import trace_step
 from ...observability.tracing import trace_span
 from ...shared.live_feedback_contracts import GeneratedFeedback
 from .errors import FeedbackError
+from .normalize import normalize_feedback
 from .prompts import PROMPT_VERSION, SYSTEM_PROMPT
 from .validation import SENSITIVE, validate_feedback, validate_messages
 
@@ -70,10 +71,14 @@ class FeedbackAgent:
                 raw = reply.choices[0].message.content
                 if not isinstance(raw, str) or len(raw) > 30000:
                     raise FeedbackError("INVALID_FEEDBACK")
-                result = GeneratedFeedback.model_validate_json(raw)
+                # 근거 연결(인용 위치·코칭 대상)만 바로잡고, 검증은 그대로 엄격하게 한다
+                result, repairs = normalize_feedback(
+                    GeneratedFeedback.model_validate_json(raw), batch
+                )
                 with trace_span("feedback.validate") as span:
                     validate_feedback(result, context, batch)
                     span.result({"valid": True})
+                    span.outputs["repairs"] = repairs
                 return result
             except (APIConnectionError, APITimeoutError):
                 raise FeedbackError("LLM_UNAVAILABLE", retryable=True) from None
@@ -87,11 +92,18 @@ class FeedbackAgent:
                 if attempt or code == "LLM_REJECTED":
                     raise FeedbackError(code) from None
                 # 잘못된 모델 원문/예외를 프롬프트·로그에 되넣지 않는다.
+                # 허용되는 ID만 다시 알려 준다.
+                user_ids = ", ".join(m.message_id for m in batch.messages if m.role == "user")
                 messages.append(
                     {
                         "role": "user",
                         "content": "이전 결과의 형식 또는 인용 검증에 실패했습니다. "
-                        "제공된 ID와 정확한 원문 인용만 사용해 다시 작성하세요.",
+                        "다시 작성하세요.\n"
+                        f"- coaching.target_message_id는 사용자 메시지 ID 중 하나만: {user_ids}\n"
+                        "- coaching.item_id는 items의 item_id를 그대로 쓰고, "
+                        "improvement마다 코칭을 하나씩 둡니다.\n"
+                        "- quote는 message_id가 가리키는 메시지에서 "
+                        "글자 그대로 복사한 짧은 구간입니다.",
                     }
                 )
         raise AssertionError("unreachable")

@@ -40,7 +40,18 @@ class LiveMCPGateway:
         return self
 
     async def __aexit__(self, *exc):
-        return await self._stack.__aexit__(*exc)
+        try:
+            return await self._stack.__aexit__(*exc)
+        except BaseExceptionGroup as group:
+            # MCP 클라이언트의 task group이 블록 안 예외를 ExceptionGroup으로 감싼다.
+            # 그대로 내보내면 Worker가 오류 코드·재시도 여부를 잃고 UNEXPECTED_ERROR로
+            # DLQ에 보내므로 안쪽 FeedbackError를 꺼내 올린다.
+            inner = group.subgroup(FeedbackError)
+            if inner is None:
+                raise
+            while isinstance(inner, BaseExceptionGroup):
+                inner = inner.exceptions[0]
+            raise inner from None
 
     async def call(self, tool: str, arguments: dict) -> dict:
         if tool not in LIVE_TOOLS or self._client is None:
