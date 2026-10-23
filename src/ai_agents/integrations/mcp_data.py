@@ -4,9 +4,10 @@ import json
 
 from pydantic import Field
 
-from ..criteria_agent.builder import check_policy, required_sections
+from ..criteria_agent.builder import canonical_work_type, required_sections
 from ..criteria_agent.policy import PolicyBundle, PolicyChunk
-from ..shared.models import Artifact, Message, NonEmpty, StrictModel, WorkContext, WorkType
+from ..shared.execution_contracts import DocumentRef
+from ..shared.models import Artifact, Message, NonEmpty, StrictModel, WorkContext
 from .mcp_client import MCPError, ToolGateway
 
 
@@ -208,22 +209,37 @@ def classification_context(packet: BusinessPacket) -> tuple[WorkContext, dict[st
     ), mapping
 
 
-async def fetch_policy(gateway: ToolGateway, work_type: WorkType) -> PolicyBundle:
+async def fetch_policy(
+    gateway: ToolGateway, work_type: str, *, expected_policy: DocumentRef | None = None,
+) -> PolicyBundle:
+    """MCP 내규를 생성 입력으로 변환한다. 기대 버전은 조회 인자가 아닌 응답 대조용이다."""
+    work_type = canonical_work_type(work_type)
+    if expected_policy is not None:
+        expected_policy = DocumentRef.model_validate(expected_policy)
     sections = sorted(required_sections(work_type) | {"APX-4", "ART-04", "ART-14"})
     reply = await gateway.call("rag", "search_policy", {"clause_ids": sections, "top_k": 5})
     data = reply["data"]
-    if data.get("no_evidence") or data.get("missing_clause_ids"):
+    if data.get("no_evidence") or data.get("missing_clause_ids") or not data["chunks"]:
         raise MCPError("POLICY_INCOMPLETE", "search_policy")
     chunks = []
     for chunk in data["chunks"]:
         expected_ref = f"{chunk['doc_id']}@{chunk['version']}#{chunk['chunk_id']}"
         if chunk["ref"] != expected_ref:
             raise MCPError("REFERENCE_MISMATCH", "search_policy")
+        if expected_policy is not None:
+            if chunk["doc_id"] != expected_policy.doc_id:
+                raise MCPError("REFERENCE_MISMATCH", "search_policy")
+            if chunk["version"] != expected_policy.version:
+                raise MCPError("VERSION_CONFLICT", "search_policy")
         chunks.append(PolicyChunk(
             doc_id=chunk["doc_id"], version=chunk["version"], chunk_id=chunk["chunk_id"],
             clause_id=chunk["clause_id"], label=chunk["label"], text=chunk["text"],
             chapter=None, page=None,
         ))
+    if len({(chunk.doc_id, chunk.version) for chunk in chunks}) != 1:
+        raise MCPError("VERSION_CONFLICT", "search_policy")
     policy = PolicyBundle(chunks=chunks)
-    check_policy(work_type, policy)
+    # 서버의 누락 표시만 신뢰하지 않고 요청한 조항이 실제로 있는지 확인한다.
+    if any(not policy.resolve(section) for section in sections):
+        raise MCPError("POLICY_INCOMPLETE", "search_policy")
     return policy
