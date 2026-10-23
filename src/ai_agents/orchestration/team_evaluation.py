@@ -1,4 +1,4 @@
-"""팀 집계 조회 → 코칭 생성 → 검증된 결과 저장. MCP 도구 계약은 서버 구현 전 제안이다."""
+"""팀 집계 조회 → 코칭 생성 → 검증된 결과 저장. MCP 도구는 business-mcp team.py가 구현한다."""
 
 from hashlib import sha256
 from uuid import UUID

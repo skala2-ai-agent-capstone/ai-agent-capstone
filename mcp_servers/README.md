@@ -75,6 +75,7 @@ docker compose --profile test run --rm verify
 # 검사 92건: 통과 92, 실패 0     (중간 피드백·평가 기준 초안·관리자 수정·승인·폐기, tests/verify_live_rubric.py)
 # 검사 60건: 통과 60, 실패 0     (대화→llm-proxy→DB→MCP 종단, tests/verify_e2e.py)
 # 검사 30건: 통과 30, 실패 0     (내규 적재·search_policy 현행 필터, tests/verify_documents.py — 현행 내규를 바꾸므로 마지막)
+# 검사 39건: 통과 39, 실패 0     (팀 평가 집계·저장, tests/verify_team.py — 바꾼 평가 상태·초안은 끝나면 되돌림)
 ```
 
 `verify_e2e`는 시드에 없는 새 업무를 백엔드처럼 만들고, 대화 6턴(일반·스트리밍, 실패 후 재전송 포함)을 실제 llm-proxy로 보낸 뒤, 그 기록만으로 중간 피드백과 최종 평가 도구를 끝까지 돌립니다. 만든 업무는 끝나면 지웁니다. vLLM이 아직 모델을 올리는 중이면 `E2E_LLM_WAIT_SEC`(기본 900초)까지 기다립니다.
@@ -181,6 +182,9 @@ def mcp_client(run_token: str) -> MultiServerMCPClient:
 | `GET :8001/internal/live-evaluations/{id}` | 중간 피드백 상태·결과(화면 폴링) |
 | `POST :8001/internal/live-worker-token` | 피드백 Worker 토큰 발급(kind=live, 회사 범위, 기본 30일). Worker의 `FEEDBACK_MCP_TOKEN`에 넣음 |
 | `POST :8001/internal/rubric-runs` | 평가 기준 작성 실행 토큰 발급(kind=rubric, `company_id`) |
+| `POST :8001/internal/team-evaluations` | 팀 평가 요청 행 생성. 이때 확정 평가를 집계해 스냅샷으로 고정. 아래 「팀 평가」 참고 |
+| `GET :8001/internal/team-evaluations/{request_id}` | 팀 평가 요청 상태·스냅샷·저장된 리포트(관리자 화면) |
+| `POST :8001/internal/team-runs` | 팀 평가 실행 토큰 발급(kind=team, `request_id`) |
 | `POST :8001/internal/rubrics/drafts` | 관리자 「수정 초안 만들기」: 현행 기준을 복사한 초안 생성(AI 없이) |
 | `POST :8001/internal/rubrics/drafts/items` | 관리자 「항목 저장」: 초안 기준 항목 하나의 칸 일부 수정 |
 | `POST :8001/internal/rubrics/approve` | 관리자 승인: 평가 기준 초안 → 현행, 이전 현행 → 폐기. 아래 「평가 기준(규칙) 저장 흐름」 참고 |
@@ -203,6 +207,7 @@ def mcp_client(run_token: str) -> MultiServerMCPClient:
 | `evaluation` | `/internal/runs` | 평가 건 1개(스냅샷) | 조회 14개 · 저장 4개, rag 6개 |
 | `live` | `/internal/live-worker-token` | 회사(피드백 Worker에 한 번 발급) | `start_live_evaluation`, `get_messages`, `save_live_evaluation`, rag `get_current_rubric`·`search_rubric`·`search_policy`·`search_examples` |
 | `rubric` | `/internal/rubric-runs` | 회사 | `save_rubric`, rag `get_current_rubric`·`search_rubric`·`search_policy`·`search_examples` |
+| `team` | `/internal/team-runs` | 팀 평가 요청 1개 | `get_team_evaluation_snapshot`, `save_team_evaluation_report` (rag 도구 없음) |
 
 **중간 피드백(최근 질문·응답 5쌍 코칭)**. 계약 정본은 Agent 쪽 [docs/recent_five_feedback.md](../docs/recent_five_feedback.md)이고, 응답 칸은 Agent 계약 모델(모르는 칸 거부)과 같습니다.
 
@@ -249,6 +254,24 @@ Agent는 해당 버전의 `search_rubric`을 조회하고 검증 후 `save_evalu
 | 기존 평가 | 평가 건은 자기 `rubric_version`을 그대로 쓰므로 영향 없음 |
 
 `save_rubric` 응답은 `{doc_id, version, work_type, status:'초안', based_on_version(저장 때 현행), replaced_draft, items_saved}`, 수정 초안 만들기는 `{created[{work_type, doc_id, version, based_on_version}]}`, 항목 저장은 `{work_type, doc_id, version, item{...}, changed_fields[]}`, 승인은 `{approved[{work_type, doc_id, version, retired_versions[]}]}`, 폐기는 `{discarded[{work_type, doc_id, version}]}`입니다. 폐기한 초안의 버전 번호는 다음 초안이 다시 씁니다(어떤 평가 건도 초안을 가리키지 않음).
+
+**팀 평가(팀 집계 코칭)**. 계약 정본은 Agent 쪽 [docs/team_evaluation.md](../docs/team_evaluation.md)이고, 응답 칸은 Agent 계약 모델(`TeamSnapshot`·`TeamSaveReceipt`, 모르는 칸 거부)과 같습니다. 기존 DB는 `db/postgres/004_team_evaluation.sql`(비파괴, 여러 번 실행해도 같음)을 적용한 뒤 business-mcp를 재시작합니다.
+
+1. 백엔드가 관리자 권한과 공개 정책을 확인한 뒤 `POST :8001/internal/team-evaluations`를 부릅니다. body `{company_id, team_id, period_start, period_end(미포함), release_approved, request_id?, requested_by?, min_members?}`. business-mcp가 이때 집계를 한 번 계산해 `team_evaluations.snapshot`으로 고정합니다.
+2. `POST :8001/internal/team-runs {request_id}`로 받은 team 토큰으로 팀 Agent가 `get_team_evaluation_snapshot(request_id)` → `save_team_evaluation_report(request_id, snapshot_id, idempotency_key, report_sha256, report)`를 부릅니다.
+3. 관리자 화면은 `GET :8001/internal/team-evaluations/{request_id}`로 상태(`대기`·`완료`)와 리포트를 읽습니다.
+
+| 항목 | 규칙 |
+| --- | --- |
+| 대상 | 팀 업무 중 `work_cases.completed_at`이 `[period_start, period_end)`(KST)인 업무마다 최신 `확정` 평가 하나. 확정 전·기간 밖·다른 팀은 세지 않음 |
+| 그룹 | 업무 유형·평가 기준 버전·기준 내용 해시(`rubric_sha256`)별. 기준 항목은 이름으로 공통 5개 항목에 맞추고, 맞지 않는 기준·초안이 섞이면 요청 생성이 400 |
+| 집계 | 최신 초안에서 `채점`이고 점수가 유효한 항목만 `score_sum`·`scored_evaluations`에 넣음(미관측·검토 필요 제외). 구성원 수는 서로 다른 담당자 수 |
+| 공개 | `min_members` = max(5, 회사 `min_aggregation_size`, 요청 값). 구성원이 그보다 적은 그룹은 빼고, 항목 관측 구성원이 적으면 `statistics: null`. `release_approved:false`면 `groups: []` |
+| 식별자 | Agent에는 팀 코드 대신 회사·팀으로 만든 고정 UUID(`team_id`). 이름·평가 건 ID·개별 점수는 스냅샷에 없음(쓴 평가 건 ID는 `source_evaluation_ids`에만) |
+| 저장 검증 | `report_sha256` = report의 키 정렬 JSON SHA-256. 요청·스냅샷 ID·`snapshot_sha256`·기간이 고정값과 같고, `metrics`는 스냅샷으로 다시 계산한 값과 같아야 함. 강점/개선 지표의 band, 개선 활동과 항목의 짝, 문장의 민감정보 패턴도 확인 |
+| 중복 | 요청 하나에 리포트 하나. 같은 키·같은 내용은 처음 영수증(`meta.duplicate`), 다른 내용은 `VERSION_CONFLICT`. 다시 만들려면 새 요청 |
+
+문장(observation·summary 등)은 형식·길이·민감정보만 확인하고 문구는 대조하지 않습니다. Agent가 코드로 만든 문장이며 수치는 `metrics`로 검증합니다.
 
 **내규 적재 (백엔드 → `POST :8001/internal/documents`)**: 관리자가 「운영 설정」에서 올린 내규 파일을 새 버전으로 저장하고 바로 `현행`으로 바꿉니다. 이전 `현행`은 `폐기`로 바꾸고 구간은 남깁니다(지난 평가의 근거 ID가 가리킴). 백엔드는 파일을 받아 이 API에 넘기기만 하고, 저장은 business-mcp가 합니다.
 
@@ -310,7 +333,8 @@ pip install -r requirements.txt
 export DATABASE_URL=postgresql://user:pw@localhost:5432/axeval RUN_TOKEN_SECRET=... INTERNAL_API_KEY=... SEED_USER_PASSWORD=...
 export CHROMA_HOST=localhost CHROMA_PORT=8000          # 또는 Chroma 없이: export CHROMA_FAKE_PATH=./chroma.json
 python -m db.loader.load_postgres --data data --schema db/postgres/001_schema.sql \
-  --schema db/postgres/002_live_feedback_snapshot.sql --schema db/postgres/003_frontend_upload.sql --reset
+  --schema db/postgres/002_live_feedback_snapshot.sql --schema db/postgres/003_frontend_upload.sql \
+  --schema db/postgres/004_team_evaluation.sql --reset
 python -m db.loader.load_chroma
 python -m business_mcp.server &   # :8001
 python -m rag_mcp.server &        # :8002
@@ -322,14 +346,14 @@ python tests/verify_spec.py && python tests/verify_db.py && python tests/verify_
 ```
 common/          실행 토큰, 응답 봉투·오류, 마스킹, 장애 주입, 감사, 임베딩, Chroma 연결, policy_doc.py(내규 조·항 분할)
 business_mcp/    pg.py(DB 접근) store.py(조회·근거 ID 풀·diff) spans.py(산출물 구간 나누기) policy.py(정책 검사) quote.py(기준 견적)
-                 writes.py(최종 평가 저장) live.py(중간 피드백) rubrics.py(평가 기준 저장) documents.py(내규 적재)
+                 writes.py(최종 평가 저장) live.py(중간 피드백) rubrics.py(평가 기준 저장) documents.py(내규 적재) team.py(팀 평가)
                  checks.py(평가 항목·코칭 검증, 공용) idempotency.py(중복 키, 공용) server.py(도구·내부 API)
 rag_mcp/         index.py(BM25) server.py(Chroma 하이브리드 검색)
 db/postgres/     001_schema.sql
 db/loader/       load_postgres.py, load_chroma.py
 data/            seed/ + all_cases.jsonl
 tests/           harness.py, verify_spec.py, verify_db.py, verify_live_rubric.py, verify_e2e.py(대화→프록시→DB→MCP),
-                 verify_documents.py(내규 적재), policy_pdf.py(검증용 내규 PDF), verify_app_work.py(앱이 만든 업무 모양),
+                 verify_documents.py(내규 적재), verify_team.py(팀 평가), policy_pdf.py(검증용 내규 PDF), verify_app_work.py(앱이 만든 업무 모양),
                  check_deploy.py(배포 설정 점검), mock_llm.py(vLLM 대역), fake_chroma.py
 ```
 
