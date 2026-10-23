@@ -1,6 +1,6 @@
 from typing import Literal, Self
 
-from pydantic import Field, JsonValue, model_validator
+from pydantic import ConfigDict, Field, JsonValue, model_validator
 
 from ..shared.models import NonEmpty, StrictModel
 
@@ -12,6 +12,8 @@ class Check(StrictModel):
 
 
 class Example(StrictModel):
+    # 근거 원문의 공백/줄바꿈을 지우면 고정 스냅샷 해시와 인용 검증이 깨진다.
+    model_config = ConfigDict(str_strip_whitespace=False)
     case_id: NonEmpty
     category: Literal["normal", "exception", "error", "answerable", "unanswerable", "adversarial"]
     inputs: dict[str, JsonValue]
@@ -38,6 +40,7 @@ class Dataset(StrictModel):
 
 
 class CaseResult(StrictModel):
+    model_config = ConfigDict(str_strip_whitespace=False)
     case_id: NonEmpty
     category: str
     verdict: Literal["passed", "failed", "unreviewed"]

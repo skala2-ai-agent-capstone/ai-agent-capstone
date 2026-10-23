@@ -13,6 +13,8 @@ JSON 분류의 인자와 동작은 유지하며 import와 실행 경로가 변�
 
 중간·최종 요청 계약, 로컬/LangSmith 추적, 고정 평가셋 실행과 커밋별 결과 비교는
 [실행 계약·추적·검증 기반](docs/execution_contracts_observability.md)을 참고하세요.
+MCP 없이 고정 가상 입력으로 실제 모델을 호출하고 사람 품질 검토·전후 비교를 기록하려면
+[LLM 품질 평가셋·실행기](docs/offline_llm_quality.md)를 사용하세요.
 버튼 요청형 최근 질문·응답 5회 피드백 Agent/Worker를 추가했습니다.
 [중간 피드백 구현·서버 계약·검증 가이드](docs/recent_five_feedback.md)를 참고하세요.
 Agent 쪽 MCP 호출·저장 어댑터는 구현했으며, 새 MCP 도구 3개와 백엔드 연동은 필요합니다.

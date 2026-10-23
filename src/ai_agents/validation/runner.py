@@ -125,12 +125,14 @@ async def run_experiment(
         "rubric_version": rubric_version,
         "data_version": data_version,
         "started_at": datetime.now(timezone.utc).isoformat(),
+        "langsmith_requested": langsmith,
         "runtime": runtime_provenance(),
         **provenance,
     }
     write_json(output_dir / "manifest.json", manifest)
     write_json(output_dir / "dataset.json", dataset.model_dump(mode="json"))
     cases = []
+    export_failed = False
     with (output_dir / "results.jsonl").open("x", encoding="utf-8") as partial:
         for example in dataset.examples:
             started = perf_counter()
@@ -161,6 +163,7 @@ async def run_experiment(
                         span.result(actual)
                 except Exception as exc:
                     actual = {"status": "error", "error_type": type(exc).__name__}
+            export_failed = export_failed or session.telemetry_failed
             checked = check_output(actual, example.checks)
             verdict = (
                 "unreviewed"
@@ -184,6 +187,7 @@ async def run_experiment(
             partial.write(result.model_dump_json() + "\n")
             partial.flush()
     manifest["completed_at"] = datetime.now(timezone.utc).isoformat()
+    manifest["langsmith_export_failed"] = export_failed
     result = ExperimentResult(manifest=manifest, cases=cases)
     write_json(output_dir / "experiment.json", result.model_dump(mode="json"))
     with (output_dir / "report.csv").open("x", encoding="utf-8-sig", newline="") as stream:
