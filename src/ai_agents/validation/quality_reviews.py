@@ -26,7 +26,7 @@ class QualityRatings(StrictModel):
 class CaseReview(StrictModel):
     case_id: NonEmpty
     output_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-    status: Literal["pending", "reviewed"] = "pending"
+    status: Literal["pending", "reviewed", "not_applicable"] = "pending"
     reviewer: NonEmpty | None = None
     reviewed_at: AwareDatetime | None = None
     ratings: QualityRatings | None = None
@@ -39,7 +39,7 @@ class CaseReview(StrictModel):
                     or self.ratings is None or not self.notes):
                 raise ValueError("reviewed rows require reviewer, timestamp, ratings and notes")
         elif self.ratings is not None or self.reviewer is not None or self.reviewed_at is not None:
-            raise ValueError("pending rows cannot contain completed review fields")
+            raise ValueError("unreviewed rows cannot contain completed review fields")
         return self
 
 
@@ -67,7 +67,8 @@ def review_template(experiment):
         experiment_id=experiment.manifest["experiment_id"],
         dataset_sha256=experiment.manifest["dataset_sha256"],
         experiment_sha256=digest(experiment.model_dump(mode="json")),
-        cases=[CaseReview(case_id=case.case_id, output_sha256=digest(case.actual))
+        cases=[CaseReview(case_id=case.case_id, output_sha256=digest(case.actual),
+                          status="not_applicable" if no_model_needed(case) else "pending")
                for case in experiment.cases],
     )
 
@@ -75,6 +76,11 @@ def review_template(experiment):
 def generated(case):
     return (case.actual.get("status") == "ok"
             and case.actual.get("output", {}).get("status") == "generated")
+
+
+def no_model_needed(case):
+    return (generated(case)
+            and case.actual["output"].get("metrics", {}).get("model_calls") == 0)
 
 
 def checked_reviews(experiment, sheet=None):
@@ -94,6 +100,8 @@ def checked_reviews(experiment, sheet=None):
         case = by_id[row.case_id]
         if row.output_sha256 != digest(case.actual):
             raise ValueError("reviewed output changed")
+        if (row.status == "not_applicable") != no_model_needed(case):
+            raise ValueError("call-free results are not model quality review subjects")
         if row.status == "reviewed" and not generated(case):
             raise ValueError("failed generations cannot receive semantic quality ratings")
     return sheet
@@ -103,6 +111,7 @@ def quality_summary(experiment, sheet=None):
     sheet = checked_reviews(experiment, sheet)
     reviewed = [row for row in sheet.cases if row.status == "reviewed"]
     successful = sum(generated(case) for case in experiment.cases)
+    not_applicable = sum(no_model_needed(case) for case in experiment.cases)
     outputs = [case.actual.get("output", {}) for case in experiment.cases]
     metrics = [output.get("metrics", {}) for output in outputs]
     return {
@@ -113,8 +122,10 @@ def quality_summary(experiment, sheet=None):
         "total": len(experiment.cases), "generated": successful,
         "failed": len(experiment.cases) - successful,
         "generation_success_rate": successful / len(experiment.cases),
-        "reviewed": len(reviewed), "pending": len(sheet.cases) - len(reviewed),
-        "review_coverage": len(reviewed) / successful if successful else None,
+        "reviewed": len(reviewed), "pending": len(sheet.cases) - len(reviewed) - not_applicable,
+        "not_applicable": not_applicable,
+        "review_coverage": len(reviewed) / (successful - not_applicable)
+        if successful > not_applicable else None,
         "quality_mean": {
             key: mean(getattr(row.ratings, key) for row in reviewed) if reviewed else None
             for key in DIMENSIONS
@@ -172,7 +183,8 @@ def export_quality_report(experiment, sheet, output_dir):
         lines.append(f"| {key} | {cell(summary[key])} |")
     lines += ["", f"- 전체 {summary['total']}건 / 생성·검증 성공 {summary['generated']}건 / "
               f"실패 {summary['failed']}건", f"- 사람 검토 {summary['reviewed']}건 / "
-              f"미검토 {summary['pending']}건", f"- 사례 처리 시간 중앙값: "
+              f"미검토 {summary['pending']}건 / 모델 미호출 {summary['not_applicable']}건",
+              f"- 사례 처리 시간 중앙값: "
               f"{summary['median_case_ms']:.3f} ms (검증 재시도 포함)",
               f"- 모델 호출 수: {summary['model_calls']}",
               f"- 토큰 사용량 확인 가능 사례: {summary['token_usage_cases']}/{summary['total']}",
