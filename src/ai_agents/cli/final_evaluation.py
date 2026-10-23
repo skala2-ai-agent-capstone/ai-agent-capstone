@@ -44,7 +44,7 @@ async def run(args):
         metadata={
             "purpose": "final",
             "model": model,
-            "code": code,
+            "git_commit": code["git_commit"],
         },
     ):
         async with FinalMCPGateway(
