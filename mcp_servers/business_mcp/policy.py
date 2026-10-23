@@ -74,7 +74,8 @@ class PolicyChecker:
 
         if av["author"] == "employee":
             own = raw["work_case"]["customer_id"]
-            others = [
+            # 고객 미지정 업무는 어느 고객이 "타 고객"인지 알 수 없어 타 고객 노출 검사를 하지 않는다
+            others = [] if own is None else [
                 (c["customer_id"], re.sub(r"\(가상\)$", "", c["name"]).strip())
                 for c in s.customers.values()
                 if c["customer_id"] != own and not c.get("approved_reference")

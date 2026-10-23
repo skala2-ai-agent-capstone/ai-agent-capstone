@@ -197,7 +197,7 @@ def mcp_client(run_token: str) -> MultiServerMCPClient:
 **중간 피드백(최근 질문·응답 5쌍 코칭)**. 계약 정본은 Agent 쪽 [docs/recent_five_feedback.md](../docs/recent_five_feedback.md)이고, 응답 칸은 Agent 계약 모델(모르는 칸 거부)과 같습니다.
 
 기존 DB 업그레이드: `db/postgres/002_live_feedback_snapshot.sql`로 스냅샷 열을 먼저 추가한 뒤
-business-mcp를 새 코드로 재배포합니다. 데이터 초기화는 필요 없습니다.
+business-mcp를 새 코드로 재배포합니다. compose의 `db-init`은 002·003(고객 미지정 업무, 고객 자료 원본 파일 칸)을 매번 같이 적용합니다. 데이터 초기화는 필요 없습니다.
 기존 완료 결과는 유지됩니다. 스냅샷이 없는 이전 대기·생성 중 요청은 새 요청으로 다시 실행합니다.
 `get_messages`와 결과 저장 시 인용 검증은 현재 대화 뷰 대신 요청의 마스킹 스냅샷을 사용합니다.
 
@@ -268,7 +268,8 @@ Python 3.10~3.12가 필요합니다(`mcp` 2.3.0은 3.10 이상, numpy 1.26.x는 
 pip install -r requirements.txt
 export DATABASE_URL=postgresql://user:pw@localhost:5432/axeval RUN_TOKEN_SECRET=... INTERNAL_API_KEY=... SEED_USER_PASSWORD=...
 export CHROMA_HOST=localhost CHROMA_PORT=8000          # 또는 Chroma 없이: export CHROMA_FAKE_PATH=./chroma.json
-python -m db.loader.load_postgres --data data --schema db/postgres/001_schema.sql --reset
+python -m db.loader.load_postgres --data data --schema db/postgres/001_schema.sql \
+  --schema db/postgres/002_live_feedback_snapshot.sql --schema db/postgres/003_frontend_upload.sql --reset
 python -m db.loader.load_chroma
 python -m business_mcp.server &   # :8001
 python -m rag_mcp.server &        # :8002
