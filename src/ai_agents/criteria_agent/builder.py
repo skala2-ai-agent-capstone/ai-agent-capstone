@@ -8,6 +8,7 @@ from typing import Literal
 from openai import APIConnectionError, APIStatusError, APITimeoutError, AsyncOpenAI
 from pydantic import Field, TypeAdapter, ValidationError
 
+from ..shared.llm_trace import trace_headers
 from ..shared.models import ClassificationResult, NonEmpty, StrictModel, WorkContext, WorkType
 from ..shared.workflow_models import (
     CriteriaDraft,
@@ -362,7 +363,7 @@ class OpenAIRubricBuilder:
             try:
                 response = await self.client.responses.parse(
                     model=self.model, input=messages, text_format=GenerationRubric,
-                    max_output_tokens=6000, store=False,
+                    max_output_tokens=6000, store=False, extra_headers=trace_headers("rubric"),
                 )
             except (APITimeoutError, APIConnectionError) as exc:
                 raise RubricError("기준 생성 API 연결 또는 시간 초과 오류입니다.") from exc

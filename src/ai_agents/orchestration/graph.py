@@ -18,6 +18,7 @@ from ..integrations.mcp_data import (
     fetch_policy,
 )
 from ..observability import trace_step
+from ..shared.llm_trace import work_scope
 from ..shared.models import ClassificationReport, StrictModel, WorkType
 from ..shared.work_selection import UserSelectedWorkType, UserSelectionReport, selected_work_type
 from ..shared.workflow_models import (
@@ -107,7 +108,9 @@ def build_agent_graph(
 
     async def classify(state):
         context, _ = classification_context(BusinessPacket.model_validate(state["business"]))
-        report = await classify_work(context, classifier)
+        # MCP에서 확인한 업무만 기록 프록시에 X-Work-Id로 남긴다 (llm_trace)
+        with work_scope(state["work_id"]):
+            report = await classify_work(context, classifier)
         return {
             "classification": report.model_dump(mode="json"),
             "status": "classified" if report.classification.status == "classified"
@@ -146,9 +149,10 @@ def build_agent_graph(
             old_versions = {(r.document_id, r.version) for r in previous.references}
             if old_versions != {(c.doc_id, c.version) for c in policy.chunks}:
                 raise WorkflowError("내규 버전이 바뀌었습니다. 새 실행으로 다시 확인하세요.")
-        draft = await builder.generate(
-            work_type, policy, previous=previous, feedback=state.get("feedback"),
-        )
+        with work_scope(state["work_id"]):
+            draft = await builder.generate(
+                work_type, policy, previous=previous, feedback=state.get("feedback"),
+            )
         draft = CriteriaDraft.model_validate(draft.model_dump())
         policy_sources = {(c.doc_id, c.version, c.chunk_id): c.text for c in policy.chunks}
         if draft.work_type != work_type or any(
@@ -218,7 +222,8 @@ def build_agent_graph(
         if evaluator is None:
             return {"status": "ready_for_evaluation"}
         handoff = MCPHandoff.model_validate(state["handoff"])
-        result = await evaluator.evaluate(handoff.model_copy(deep=True))
+        with work_scope(state["work_id"]):
+            result = await evaluator.evaluate(handoff.model_copy(deep=True))
         result = EvaluationOutput.model_validate(result.model_dump())
         validate_report(result, handoff.evaluation_input,
                         additional_sources=handoff.business.evidence_sources())

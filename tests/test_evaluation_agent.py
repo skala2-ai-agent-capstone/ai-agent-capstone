@@ -14,6 +14,7 @@ from ai_agents.evaluation_agent.final.materials import collect_evaluation_materi
 from ai_agents.evaluation_agent.final.models import AgentEvaluationOutput
 from ai_agents.evaluation_agent.final.validation import EvaluationError, validate_evaluation_result
 from ai_agents.integrations.mcp_adapter import collect_evaluation_evidence
+from ai_agents.shared.llm_trace import work_scope
 from ai_agents.shared.workflow_models import content_hash
 
 
@@ -476,9 +477,17 @@ async def test_invalid_evidence_selection_gets_one_bounded_retry():
         business_call=fixture.business,
         rag_call=fixture.rag,
     )
-    result = await agent.evaluate_collected(fixture.request, evidence=evidence, materials=materials)
+    work_id = fixture.request.work_record.work_id
+    with work_scope(work_id):
+        result = await agent.evaluate_collected(
+            fixture.request, evidence=evidence, materials=materials,
+        )
     assert parse.await_count == 2
     assert result.run_id == fixture.context.run_id
+    # 재요청까지 같은 업무로 기록되도록 매 호출에 기록 프록시용 헤더를 붙인다
+    assert [call.kwargs["extra_headers"] for call in parse.await_args_list] == [
+        {"X-Stage": "evaluate", "X-Work-Id": work_id},
+    ] * 2
 
 
 @pytest.mark.asyncio
