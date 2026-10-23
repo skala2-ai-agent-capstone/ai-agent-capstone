@@ -43,6 +43,10 @@ services:
       LLM_PROXY_KEY: ${WORKSPACE_LLM_API_KEY:?.env에 WORKSPACE_LLM_API_KEY 필요}
       LLM_MODEL: ${SERVED_MODEL_NAME:-gemma4}
       SWAGGER_ENABLED: ${SWAGGER_ENABLED:-true}
+      # 최종 평가 Worker가 읽는 평가별 실행 토큰 파일. 백엔드가 /internal/runs로 발급해 몇 초마다 갱신한다
+      FINAL_TOKEN_FILE: /app/run-tokens/final-tokens.json
+    volumes:
+      - run-tokens:/app/run-tokens
     ports:
       - "${BACKEND_BIND:-0.0.0.0}:8080:8080"
     depends_on:
@@ -80,6 +84,38 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # 최종 평가 Worker(backend-v1): evaluation.requests의 EVALUATE를 받아 초안·코칭을 MCP에 저장하고
+  # evaluation.results로 완료를 알린다(백엔드가 '확인 대기'로 바꿈). 실행 토큰은 백엔드가 쓰는 파일을 읽기만 한다.
+  # 기본으로는 뜨지 않는다: --profile final. 띄우기 전 확인할 것은 ../docs/backend_worker_alignment.md 5절
+  final-worker:
+    image: ax-eval/feedback-worker:${WORKER_TAG:-local}   # feedback-worker와 같은 이미지(Dockerfile.worker)
+    profiles: ["final"]
+    command: ["python", "-m", "ai_agents.cli.final_worker", "worker", "--contract", "backend-v1",
+              "--token-file", "outputs/run-tokens/final-tokens.json",
+              "--checkpoint-dir", "outputs/final-checkpoints", "--trace-dir", "outputs/final-worker-traces"]
+    environment:
+      FINAL_AMQP_URL: amqp://${RABBITMQ_USERNAME:-axeval}:${RABBITMQ_PASSWORD:?.env에 RABBITMQ_PASSWORD 필요}@rabbitmq:5672/
+      FINAL_BUSINESS_MCP_URL: http://business-mcp:8001/mcp
+      FINAL_RAG_MCP_URL: http://rag-mcp:8002/mcp
+      # llm-proxy가 evaluate 단계를 OPENAI_STAGES에 따라 OpenAI로 보낸다. 모델 이름은 실제 모델과 같게 둔다
+      FINAL_LLM_BASE_URL: ${FINAL_LLM_BASE_URL:-http://llm-proxy:4000/v1}
+      FINAL_LLM_MODEL: ${FINAL_LLM_MODEL:-${OPENAI_MODEL:-gpt-4o-mini}}
+      # PROXY_KEYS에 final-worker:<이 값>으로 같이 넣는다. profile을 안 쓸 때도 compose가 읽으므로 필수 표시는 하지 않는다
+      FINAL_LLM_API_KEY: ${FINAL_LLM_API_KEY:-}
+    volumes:
+      - run-tokens:/app/outputs/run-tokens:ro
+      - final-checkpoints:/app/outputs/final-checkpoints   # 재시도가 같은 체크포인트를 이어 쓴다. 지우면 처음부터 다시 평가
+      - final-worker-traces:/app/outputs/final-worker-traces
+    depends_on:
+      backend:   # 큐(완료 큐 포함)와 토큰 파일은 백엔드가 만든다
+        condition: service_healthy
+      business-mcp:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
   rabbitmq-data:
   feedback-traces:
+  run-tokens:
+  final-checkpoints:
+  final-worker-traces:

@@ -189,6 +189,12 @@ async def test_file_token_refresh_expiry_and_sanitized_errors(tmp_path):
     write("PRIVATE", evaluation_id="another-evaluation")
     with pytest.raises(FinalTokenError, match="TOKEN_NOT_READY"):
         await provider(event_for().normalized())
+    # 처리 중인 평가가 없을 때 백엔드가 쓰는 빈 목록: 시작 검사는 통과하고 조회는 재시도 대상
+    path.write_text('{"tokens":{}}')
+    assert provider.read().tokens == {}
+    with pytest.raises(FinalTokenError, match="TOKEN_NOT_READY") as exc:
+        await provider(event_for().normalized())
+    assert failure_code(exc.value)[1] is True
     path.unlink()
     with pytest.raises(FinalTokenError, match="TOKEN_FILE_UNAVAILABLE"):
         provider.read()

@@ -29,7 +29,8 @@ class TokenEntry(StrictModel):
 
 
 class TokenFile(StrictModel):
-    tokens: dict[ID, TokenEntry] = Field(min_length=1, max_length=1000)
+    # 백엔드는 처리 중인 평가가 없으면 빈 목록을 쓴다. 빈 파일도 정상이며 조회는 TOKEN_NOT_READY다.
+    tokens: dict[ID, TokenEntry] = Field(max_length=1000)
 
 
 class FileFinalTokenProvider:
