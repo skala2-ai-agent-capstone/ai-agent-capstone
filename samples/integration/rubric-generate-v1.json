@@ -1,0 +1,11 @@
+{
+  "message_id": "OUTBOX-RUBRIC-EXAMPLE",
+  "type": "RUBRIC_GENERATE",
+  "generation_id": "RG-EXAMPLE",
+  "company_id": "COMPANY-EXAMPLE",
+  "policy_doc_id": "POLICY-EXAMPLE",
+  "policy_version": "v1.2",
+  "work_types": ["rfp_analysis", "proposal", "quote", "inquiry_reply"],
+  "requested_by": "USER-EXAMPLE",
+  "attempt": 0
+}
