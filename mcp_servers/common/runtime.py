@@ -185,7 +185,7 @@ class Audit:
 # ── 도구 실행 골격 ─────────────────────────────────────────────────────
 # 실행 토큰 종류(claims.kind). 예전 토큰에는 kind가 없어 EVALUATION으로 본다
 EVALUATION = "evaluation"   # 최종 평가
-LIVE = "live"               # 중간 점검 (최근 메시지 5개)
+LIVE = "live"               # 중간 피드백 Worker (회사 범위. 요청은 live_eval_id로 확인)
 RUBRIC = "rubric"           # 평가 기준 작성
 ALL_KINDS = (EVALUATION, LIVE, RUBRIC)
 

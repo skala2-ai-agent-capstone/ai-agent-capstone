@@ -1,4 +1,4 @@
-"""중간 점검(live)·평가 기준 저장(rubric) 도구 검증. 실행 중인 두 MCP와 DB가 필요하다.
+"""중간 피드백(live, 계약 docs/recent_five_feedback.md)·평가 기준 저장(rubric) 도구 검증. 실행 중인 두 MCP와 DB가 필요하다.
 
 현행 평가 기준을 바꾸므로 verify_spec·verify_db 뒤에, 깨끗한 DB에서 돌린다.
     python tests/verify_live_rubric.py
@@ -18,110 +18,164 @@ from harness import Session, call_retry, check, internal, issue_run, report  # n
 from harness import error_code as code  # noqa: E402
 from harness import new_key as key  # noqa: E402
 
-WORK, OWNER = "W-E2E-RFP-01", "E-1021"     # 메시지 6개 → 최근 5개는 2~6
+WORK, OWNER = "W-E2E-RFP-01", "E-1021"     # u a u a u a → 완료 3쌍, 범위 1~6
+GAP_WORK, GAP_OWNER = "W-E2E-QT-01", "E-1047"   # u a u a u u a u → 답 없는 5·8은 빠지고 쌍은 1-2·3-4·6-7
+COMPANY = "C-LGCNS-SALES"
+# Agent 계약 모델(docs/recent_five_feedback.md, extra 금지)과 같은 칸
+CONTEXT_KEYS = {"live_eval_id", "company_id", "work_id", "requested_by", "requested_at", "from_seq", "to_seq", "status",
+                "work_type", "rubric_doc_id", "rubric_version", "rubric"}
+BATCH_KEYS = {"live_eval_id", "work_id", "from_seq", "to_seq", "masking_applied", "masking_version", "complete", "messages"}
+MESSAGE_KEYS = {"message_id", "exchange_id", "seq", "role", "content", "created_at"}
+RECEIPT_KEYS = {"live_eval_id", "status", "duplicate"}
 
 
-def live_items(rubric: dict, *, quality_status: str = "미관측", evidence: str = f"{WORK}-M02") -> list[dict]:
-    by_name = {i["item"]: i["item_id"] for i in rubric["items"]}
-    return [
-        {"item_id": by_name["문제 정의"], "item": "문제 정의", "status": "채점", "score": 2, "reason": "요구사항 범위를 명확히 지시",
-         "evidence_ids": [evidence]},
-        {"item_id": by_name["지시 품질"], "item": "지시 품질", "status": "채점", "score": 1, "reason": "출력 형식은 있으나 근거 기준 일부 누락",
-         "evidence_ids": [f"{WORK}-M03"]},
-        {"item_id": by_name["결과 검증"], "item": "결과 검증", "status": "검토 필요", "score": None, "reason": "원문 대조 여부가 대화에 드러나지 않음",
-         "evidence_ids": []},
-        {"item_id": by_name["보안 준수"], "item": "보안 준수", "status": "미관측", "score": None, "reason": None, "evidence_ids": []},
-        {"item_id": by_name["결과물 품질"], "item": "결과물 품질", "status": quality_status,
-         "score": 2 if quality_status == "채점" else None, "reason": None,
-         "evidence_ids": [f"{WORK}-M04"] if quality_status == "채점" else []},
+def feedback(lid: str, batch: dict, criterion_id: str | None) -> dict:
+    """Agent가 save_live_evaluation에 보내는 모양(개선 1 + 강점 1, 추천 1)."""
+    q = next(m for m in batch["messages"] if m["role"] == "user")
+    a = next(m for m in batch["messages"] if m["role"] == "assistant")
+    items = [
+        {"item_id": "F-1", "criterion_id": criterion_id, "kind": "improvement", "diagnosis": "요청에 근거로 쓸 자료와 출력 형식이 빠져 있습니다.",
+         "evidence": [{"message_id": q["message_id"], "quote": q["content"][:20]}]},
+        {"item_id": "F-2", "criterion_id": None, "kind": "strength", "diagnosis": "AI 답변을 바로 이어서 활용했습니다.",
+         "evidence": [{"message_id": a["message_id"], "quote": a["content"][:15]}]},
     ]
+    coaching = {"schema_version": "1", "provenance": {"trace_id": "trace-verify", "prompt_version": "recent-five-feedback-v1"},
+                "suggestions": [{"item_id": "F-1", "target_message_id": q["message_id"], "next_action": "근거 자료와 표 형식을 함께 지정하세요.",
+                                 "suggested_prompt": "[자료명] 기준으로 요구사항을 표로 정리해 줘. 열은 번호·요구사항·근거 위치야."}]}
+    return {"live_eval_id": lid, "status": "완료", "items": items, "coaching": coaching, "model": "gemma4", "latency_ms": 1234,
+            "error": None}
 
 
 async def live_checks() -> None:
     lid = f"LIVE-TEST-{uuid.uuid4().hex[:6]}"
     r = internal("POST", "/internal/live-evaluations", {"work_id": WORK, "requested_by": OWNER, "live_eval_id": lid})
-    check("live 요청 생성: 대기, 최근 메시지 5개(2~6)",
-          r["ok"] and r["data"]["status"] == "대기" and (r["data"]["from_seq"], r["data"]["to_seq"]) == (2, 6), str(r)[:300])
+    d = r.get("data") or {}
+    check("요청 생성: 대기, 완료 3쌍 → 범위 1~6, 업무 유형·현행 기준 고정",
+          r["ok"] and d["status"] == "대기" and (d["from_seq"], d["to_seq"]) == (1, 6) and d["work_type"] == "rfp_analysis"
+          and (d["rubric_doc_id"], d["rubric_version"]) == ("RUB-rfp_analysis", "v2"), str(r)[:300])
     again = internal("POST", "/internal/live-evaluations", {"work_id": WORK, "requested_by": OWNER, "live_eval_id": lid})
     check("같은 live_eval_id → 기존 행(created=false)", again["ok"] and again["data"]["created"] is False, str(again)[:200])
     rl = internal("POST", "/internal/live-evaluations", {"work_id": WORK, "requested_by": OWNER})
     check("같은 사용자 5분 안 재요청 → RATE_LIMITED", code(rl) == "RATE_LIMITED", str(rl)[:200])
     other = internal("POST", "/internal/live-evaluations", {"work_id": WORK, "requested_by": "E-1034"})
     check("업무 담당자가 아닌 요청 → FORBIDDEN", code(other) == "FORBIDDEN", str(other)[:200])
+    bad_type = internal("POST", "/internal/live-evaluations", {"work_id": GAP_WORK, "requested_by": GAP_OWNER, "work_type": "memo"})
+    check("모르는 work_type → VALIDATION_ERROR", code(bad_type) == "VALIDATION_ERROR", str(bad_type)[:200])
 
-    run = internal("POST", "/internal/live-runs", {"live_eval_id": lid})
-    check("live 실행 토큰 발급(kind=live)", run["ok"] and run["data"]["kind"] == "live", str(run)[:200])
-    async with Session(run["data"]["run_token"]) as s:
-        conv = await call_retry(s, "business", "get_conversation", {"work_id": WORK})
-        check("live: get_conversation 기본 범위 = 2~6",
-              conv["ok"] and [m["seq"] for m in conv["data"]["messages"]] == [2, 3, 4, 5, 6], str(conv)[:200])
-        out = await s.call("business", "get_conversation", {"work_id": WORK, "from_seq": 1, "to_seq": 6})
-        check("live: 범위 밖 대화 → VERSION_CONFLICT", code(out) == "VERSION_CONFLICT")
-        wc = await s.call("business", "get_work_case", {"work_id": WORK})
-        check("live 토큰으로 get_work_case → FORBIDDEN", code(wc) == "FORBIDDEN", str(wc)[:200])
-        draft = await s.call("business", "save_evaluation_draft",
-                             {"evaluation_id": "EVAL-E2E-RFP-01-v2", "rubric_version": "v2", "items": [], "idempotency_key": key()})
-        check("live 토큰으로 최종 평가 저장 → FORBIDDEN", code(draft) == "FORBIDDEN")
-        rub = await s.call("rag", "get_current_rubric", {"work_type": "rfp_analysis"})
-        check("live: rag get_current_rubric(rfp_analysis) = v2", rub["ok"] and rub["data"]["version"] == "v2", str(rub)[:200])
-        rubric = rub["data"]
+    tok = internal("POST", "/internal/live-worker-token", {"company_id": COMPANY})
+    check("Worker 토큰 발급(kind=live, 회사 범위, 요청 ID 없음)",
+          tok["ok"] and tok["data"]["kind"] == "live" and tok["data"]["company_id"] == COMPANY and "live_eval_id" not in tok["data"],
+          str(tok)[:200])
+    check("없는 회사 Worker 토큰 → NOT_FOUND", code(internal("POST", "/internal/live-worker-token", {"company_id": "NOPE"})) == "NOT_FOUND")
+    async with Session(tok["data"]["run_token"]) as s:
+        for tool, args in (("get_conversation", {"work_id": WORK}), ("get_work_case", {"work_id": WORK}),
+                           ("save_evaluation_draft", {"evaluation_id": "EVAL-E2E-RFP-01-v2", "rubric_version": "v2", "items": [],
+                                                      "idempotency_key": key()})):
+            r = await s.call("business", tool, args)
+            check(f"Worker 토큰으로 최종 평가 도구 {tool} → FORBIDDEN", code(r) == "FORBIDDEN", str(r)[:160])
+        early = await s.call("business", "get_messages", {"live_eval_id": lid, "work_id": WORK, "from_seq": 1, "to_seq": 6})
+        check("start 전 get_messages → VALIDATION_ERROR", code(early) == "VALIDATION_ERROR", str(early)[:200])
 
-        st = await s.call("business", "start_live_evaluation", {"live_eval_id": lid, "idempotency_key": key()})
+        st = await call_retry(s, "business", "start_live_evaluation", {"live_eval_id": lid})
+        ctx = st.get("data") or {}
+        check("start: 계약 칸 그대로(모르는 칸 없음)", st["ok"] and set(ctx) == CONTEXT_KEYS, str(sorted(ctx))[:200])
+        check("start: 생성 중, 요청자·회사·범위·고정 기준(5항목 {item_id, item, criterion})",
+              st["ok"] and ctx["status"] == "생성 중" and ctx["company_id"] == COMPANY and ctx["requested_by"] == OWNER
+              and (ctx["from_seq"], ctx["to_seq"]) == (1, 6) and ctx["rubric"]["version"] == ctx["rubric_version"] == "v2"
+              and len(ctx["rubric"]["items"]) == 5 and all(set(i) == {"item_id", "item", "criterion"} for i in ctx["rubric"]["items"]),
+              json.dumps(ctx, ensure_ascii=False)[:300])
         polled = internal("GET", f"/internal/live-evaluations/{lid}")
-        check("start_live_evaluation → 생성 중(폴링)", st["ok"] and polled["data"]["status"] == "생성 중", str(st)[:200])
+        check("start → 폴링 상태 생성 중", polled["data"]["status"] == "생성 중")
+        resume = await call_retry(s, "business", "start_live_evaluation", {"live_eval_id": lid})
+        check("생성 중 재전달 → 같은 문맥", resume["ok"] and resume["data"] == ctx)
 
-        base = {"live_eval_id": lid, "work_type": "rfp_analysis", "rubric_version": "v2", "coaching": []}
-        bad1 = await s.call("business", "save_live_evaluation",
-                            {**base, "items": live_items(rubric, evidence=f"{WORK}-M01"), "idempotency_key": key()})
-        check("범위 밖 근거(M01) → VALIDATION_ERROR", code(bad1) == "VALIDATION_ERROR", str(bad1)[:200])
-        bad2 = await s.call("business", "save_live_evaluation",
-                            {**base, "items": live_items(rubric, quality_status="채점"), "idempotency_key": key()})
-        check("결과물 품질 채점 → VALIDATION_ERROR(산출물 없음)", code(bad2) == "VALIDATION_ERROR", str(bad2)[:200])
-        bad3 = await s.call("business", "save_live_evaluation",
-                            {**base, "rubric_version": "v9", "items": live_items(rubric), "idempotency_key": key()})
-        check("없는 기준 버전 → NOT_FOUND", code(bad3) == "NOT_FOUND", str(bad3)[:200])
-        bad4 = await s.call("business", "save_live_evaluation",
-                            {**base, "items": live_items(rubric)[:4], "idempotency_key": key()})
-        check("항목 4개 → VALIDATION_ERROR", code(bad4) == "VALIDATION_ERROR")
+        wrong = await s.call("business", "get_messages", {"live_eval_id": lid, "work_id": WORK, "from_seq": 2, "to_seq": 6})
+        check("고정 범위와 다른 get_messages → VALIDATION_ERROR", code(wrong) == "VALIDATION_ERROR", str(wrong)[:200])
+        gm = await call_retry(s, "business", "get_messages", {"live_eval_id": lid, "work_id": WORK, "from_seq": 1, "to_seq": 6})
+        b = gm.get("data") or {}
+        msgs = b.get("messages") or []
+        check("get_messages: 계약 칸 그대로", gm["ok"] and set(b) == BATCH_KEYS and all(set(m) == MESSAGE_KEYS for m in msgs),
+              str(sorted(b))[:200])
+        check("get_messages: 6개, 질문·답변 짝(같은 exchange_id), 완료·마스킹 표시",
+              [m["role"] for m in msgs] == ["user", "assistant"] * 3 and b["complete"] is True and b["masking_applied"] is True
+              and b["masking_version"].startswith("mask-")
+              and all(msgs[i]["exchange_id"] == msgs[i + 1]["exchange_id"] for i in range(0, 6, 2)), json.dumps(msgs, ensure_ascii=False)[:300])
 
-        k = key()
-        coaching = [{"item_id": rubric["items"][1]["item_id"], "kind": "보완점", "target_span_id": f"{WORK}-M03",
-                     "text": "대응 근거로 쓸 설명서 조항 번호를 지시에 함께 적어 보세요."}]
-        ok = await s.call("business", "save_live_evaluation",
-                          {**base, "items": live_items(rubric), "coaching": coaching, "idempotency_key": k, "model": "gemma4",
-                           "latency_ms": 1234})
-        check("save_live_evaluation 정상 → 완료", ok["ok"] and ok["data"]["status"] == "완료" and ok["data"]["items_saved"] == 5,
-              str(ok)[:300])
-        dup = await s.call("business", "save_live_evaluation",
-                           {**base, "items": live_items(rubric), "coaching": coaching, "idempotency_key": k})
-        check("같은 idempotency_key → 기존 결과(duplicate)", dup["ok"] and dup["meta"].get("duplicate") and dup["data"] == ok["data"])
-        later = await s.call("business", "save_live_evaluation", {**base, "items": live_items(rubric), "idempotency_key": key()})
-        check("완료 뒤 다시 저장 → VALIDATION_ERROR", code(later) == "VALIDATION_ERROR")
-        late_fail = await s.call("business", "fail_live_evaluation", {"live_eval_id": lid, "error": "x", "idempotency_key": key()})
-        check("완료 뒤 실패 처리 → VALIDATION_ERROR", code(late_fail) == "VALIDATION_ERROR")
-        alien = await s.call("business", "start_live_evaluation", {"live_eval_id": "LIVE-NOT-MINE", "idempotency_key": key()})
-        check("다른 중간 점검 ID → FORBIDDEN", code(alien) == "FORBIDDEN")
+        crit = ctx["rubric"]["items"][1]["item_id"]
+        good = feedback(lid, b, crit)
+        q_id = good["items"][0]["evidence"][0]["message_id"]
+        a_id = good["items"][1]["evidence"][0]["message_id"]
+        cases = [
+            ("기존 5항목 점수 형식 → VALIDATION_ERROR",
+             {**good, "items": [{"item_id": crit, "item": "지시 품질", "status": "채점", "score": 1, "reason": "x", "evidence_ids": [q_id]}]}),
+            ("범위 밖 메시지 인용 → VALIDATION_ERROR",
+             {**good, "items": [dict(good["items"][0], evidence=[{"message_id": f"{WORK}-M99", "quote": "x"}]), good["items"][1]]}),
+            ("메시지에 없는 문장 인용 → VALIDATION_ERROR",
+             {**good, "items": [dict(good["items"][0], evidence=[{"message_id": q_id, "quote": "대화에 없는 문장"}]), good["items"][1]]}),
+            ("고정 기준(rfp_analysis)이 아닌 항목(quote.1) → VALIDATION_ERROR",
+             {**good, "items": [dict(good["items"][0], criterion_id="quote.1"), good["items"][1]]}),
+            ("개선 항목에 추천 없음 → VALIDATION_ERROR",
+             {**good, "coaching": {**good["coaching"], "suggestions": [dict(good["coaching"]["suggestions"][0], item_id="F-2")]}}),
+            ("추천 대상이 AI 답변 → VALIDATION_ERROR",
+             {**good, "coaching": {**good["coaching"], "suggestions": [dict(good["coaching"]["suggestions"][0], target_message_id=a_id)]}}),
+            ("항목에 모르는 칸 → VALIDATION_ERROR", {**good, "items": [dict(good["items"][0], score=1), good["items"][1]]}),
+            ("완료에 error → VALIDATION_ERROR", {**good, "error": "MODEL_TIMEOUT"}),
+        ]
+        for name, payload in cases:
+            r = await s.call("business", "save_live_evaluation", payload)
+            check(name, code(r) == "VALIDATION_ERROR", str(r)[:200])
+
+        ok = await call_retry(s, "business", "save_live_evaluation", good)
+        check("save: 완료 → {live_eval_id, status, duplicate:false}",
+              ok["ok"] and ok["data"] == {"live_eval_id": lid, "status": "완료", "duplicate": False}, str(ok)[:300])
+        dup = await call_retry(s, "business", "save_live_evaluation", good)
+        check("같은 저장 재전달 → duplicate:true, 완료", dup["ok"] and dup["data"] == {"live_eval_id": lid, "status": "완료", "duplicate": True},
+              str(dup)[:200])
+        late_fail = await call_retry(s, "business", "save_live_evaluation",
+                                     {"live_eval_id": lid, "status": "실패", "error": "MODEL_TIMEOUT"})
+        check("완료 뒤 실패 저장 → 덮어쓰지 않고 완료·duplicate", late_fail["ok"] and late_fail["data"]["status"] == "완료"
+              and late_fail["data"]["duplicate"] is True, str(late_fail)[:200])
+        restart = await call_retry(s, "business", "start_live_evaluation", {"live_eval_id": lid})
+        check("완료 뒤 start 재전달 → 오류 없이 현재 상태(완료) 문맥", restart["ok"] and restart["data"]["status"] == "완료", str(restart)[:200])
+        missing = await s.call("business", "start_live_evaluation", {"live_eval_id": "LIVE-NO-SUCH"})
+        check("없는 요청 → NOT_FOUND", code(missing) == "NOT_FOUND")
+        for k in ("start_live_evaluation", "save_live_evaluation"):
+            r = await s.call("business", k, {"live_eval_id": lid, **({"status": "완료"} if k == "save_live_evaluation" else {})})
+            check(f"{k} 응답에 meta.duplicate·DUPLICATE 키 없음(상태로 판단)", r["ok"] and "duplicate" not in r.get("meta", {}), str(r)[:160])
+
+    other_tok = internal("POST", "/internal/live-worker-token", {"company_id": "C-OTHER-01"})["data"]["run_token"]
+    async with Session(other_tok) as s:
+        r = await s.call("business", "start_live_evaluation", {"live_eval_id": lid})
+        check("다른 회사 Worker 토큰 → FORBIDDEN", code(r) == "FORBIDDEN", str(r)[:200])
 
     det = internal("GET", f"/internal/live-evaluations/{lid}")["data"]
-    check("저장 결과: 완료·기준 RUB-rfp_analysis v2·항목 5·코칭 1",
-          det["status"] == "완료" and det["rubric_doc_id"] == "RUB-rfp_analysis" and det["rubric_version"] == "v2"
-          and len(det["items"]) == 5 and len(det["coaching"]) == 1 and det["model"] == "gemma4", json.dumps(det, ensure_ascii=False)[:300])
-    again_run = internal("POST", "/internal/live-runs", {"live_eval_id": lid})
-    check("완료된 중간 점검은 토큰 재발급 안 됨", code(again_run) == "VALIDATION_ERROR")
+    check("저장 결과: 완료·기준 고정 유지·진단 2·추천 1·provenance 보존",
+          det["status"] == "완료" and det["rubric_version"] == "v2" and len(det["items"]) == 2
+          and len(det["coaching"]["suggestions"]) == 1 and det["coaching"]["provenance"]["trace_id"] == "trace-verify"
+          and det["model"] == "gemma4" and det["error"] is None, json.dumps(det, ensure_ascii=False)[:300])
 
-    # 실패 경로: 다른 직원의 업무
-    with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
-        wid2, owner2 = conn.execute(
-            "SELECT w.work_id, w.employee_id FROM work_cases w WHERE w.employee_id <> %s AND EXISTS "
-            "(SELECT 1 FROM messages m WHERE m.work_id = w.work_id) ORDER BY w.work_id LIMIT 1", (OWNER,)).fetchone()
-    r2 = internal("POST", "/internal/live-evaluations", {"work_id": wid2, "requested_by": owner2})
-    run2 = internal("POST", "/internal/live-runs", {"live_eval_id": r2["data"]["live_eval_id"]})["data"]
-    async with Session(run2["run_token"]) as s:
-        f = await s.call("business", "fail_live_evaluation",
-                         {"live_eval_id": r2["data"]["live_eval_id"], "error": "LLM 서버 응답 시간 초과", "idempotency_key": key()})
-    det2 = internal("GET", f"/internal/live-evaluations/{r2['data']['live_eval_id']}")["data"]
-    check("fail_live_evaluation → 실패·사유 저장", f["ok"] and det2["status"] == "실패" and det2["error"] == "LLM 서버 응답 시간 초과",
-          str(det2)[:200])
+    # 답 없는 질문이 섞인 업무 + 유형 직접 지정 + 실패 저장
+    r2 = internal("POST", "/internal/live-evaluations", {"work_id": GAP_WORK, "requested_by": GAP_OWNER, "work_type": "proposal"})
+    d2 = r2.get("data") or {}
+    check("유형을 직접 고르면 그 유형의 현행 기준을 고정(proposal)",
+          r2["ok"] and d2["work_type"] == "proposal" and d2["rubric_doc_id"] == "RUB-proposal", str(r2)[:300])
+    check("답 없는 질문은 쌍이 아님 → 범위 1~7", (d2.get("from_seq"), d2.get("to_seq")) == (1, 7), str(d2)[:200])
+    async with Session(tok["data"]["run_token"]) as s:
+        await call_retry(s, "business", "start_live_evaluation", {"live_eval_id": d2["live_eval_id"]})
+        gm2 = await call_retry(s, "business", "get_messages",
+                               {"live_eval_id": d2["live_eval_id"], "work_id": GAP_WORK, "from_seq": 1, "to_seq": 7})
+        seqs = [m["seq"] for m in (gm2.get("data") or {}).get("messages", [])]
+        check("get_messages: 답 없는 질문(seq 5) 빼고 1·2·3·4·6·7, complete", seqs == [1, 2, 3, 4, 6, 7]
+              and gm2["data"]["complete"] is True, str(seqs))
+        bad = await s.call("business", "save_live_evaluation",
+                           {"live_eval_id": d2["live_eval_id"], "status": "실패", "error": "LLM 서버 응답 시간 초과"})
+        check("실패 error는 코드만(문장 거부) → VALIDATION_ERROR", code(bad) == "VALIDATION_ERROR", str(bad)[:200])
+        f = await call_retry(s, "business", "save_live_evaluation",
+                             {"live_eval_id": d2["live_eval_id"], "status": "실패", "error": "MODEL_TIMEOUT", "latency_ms": 60000})
+        check("실패 저장 → {status:실패, duplicate:false}", f["ok"] and f["data"] == {"live_eval_id": d2["live_eval_id"],
+                                                                                "status": "실패", "duplicate": False}, str(f)[:200])
+    det2 = internal("GET", f"/internal/live-evaluations/{d2['live_eval_id']}")["data"]
+    check("실패 상태·코드 저장", det2["status"] == "실패" and det2["error"] == "MODEL_TIMEOUT", str(det2)[:200])
 
 
 def rubric_payload(rubric: dict, criterion_suffix: str = "") -> list[dict]:

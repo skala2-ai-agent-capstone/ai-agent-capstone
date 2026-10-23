@@ -8,11 +8,19 @@
 
 BEGIN;
 
--- 이전 스키마(users.test_token 등)로 만든 DB에는 덮어 올리지 않는다. 볼륨을 지우고 새로 만든다.
+-- 이전 스키마로 만든 DB에는 덮어 올리지 않는다(CREATE IF NOT EXISTS는 바뀐 칸을 넣지 않음). 볼륨을 지우고 새로 만든다.
+--  · users.test_token이 있음: db-schema.json 반영 전
+--  · live_evaluations.work_type·idempotency_keys.scope가 없음: 중간 피드백 계약(docs/recent_five_feedback.md) 반영 전
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.columns
-             WHERE table_schema = current_schema() AND table_name = 'users' AND column_name = 'test_token') THEN
+             WHERE table_schema = current_schema() AND table_name = 'users' AND column_name = 'test_token')
+     OR (to_regclass('live_evaluations') IS NOT NULL AND NOT EXISTS (
+           SELECT 1 FROM information_schema.columns
+           WHERE table_schema = current_schema() AND table_name = 'live_evaluations' AND column_name = 'work_type'))
+     OR (to_regclass('idempotency_keys') IS NOT NULL AND NOT EXISTS (
+           SELECT 1 FROM information_schema.columns
+           WHERE table_schema = current_schema() AND table_name = 'idempotency_keys' AND column_name = 'scope')) THEN
     RAISE EXCEPTION '이전 스키마로 만든 DB입니다. docker compose down -v 로 볼륨을 지운 뒤 다시 올리세요';
   END IF;
 END $$;
@@ -422,21 +430,25 @@ CREATE TABLE IF NOT EXISTS review_requests (
 
 -- 중간 점검·실시간 피드백. 백엔드가 요청 행(대기)을 만들어 큐에 발행하고, Agent가 MCP로 결과를 저장한다.
 -- 최종 평가·이의 제기·팀 집계와는 별개다.
+-- 중간 피드백(최근 질문·응답 5쌍 코칭). 백엔드가 요청 행을 만들 때 범위·유형·기준을 고정하고,
+-- 피드백 Worker가 MCP로 결과를 저장한다. 계약: docs/recent_five_feedback.md
 CREATE TABLE IF NOT EXISTS live_evaluations (
   live_eval_id    text PRIMARY KEY,              -- 큐 메시지 중복 방지 키
   work_id         text NOT NULL REFERENCES work_cases ON DELETE CASCADE,
   requested_by    text NOT NULL REFERENCES users,
   requested_at    timestamptz NOT NULL DEFAULT now(),  -- 사용자별 5분 1회 제한 판단에 사용
-  from_seq        int  NOT NULL,                 -- messages.seq 범위 시작(최근 5개)
-  to_seq          int  NOT NULL,                 -- messages.seq 범위 끝
-  rubric_doc_id   text,
+  work_type       text CHECK (work_type IN ('rfp_analysis','proposal','quote','inquiry_reply')),  -- 사용자가 고른 유형. NULL = 일반 코칭
+  from_seq        int  NOT NULL,                 -- 최근 완료 질문·응답 최대 5쌍(conversation_pairs)의 첫 질문 seq
+  to_seq          int  NOT NULL,                 -- 마지막 답변 seq
+  rubric_doc_id   text,                          -- 요청 때 고정한 현행 기준. 유형이 없거나 기준이 없으면 NULL
   rubric_version  text,
   status          text NOT NULL DEFAULT '대기' CHECK (status IN ('대기','생성 중','완료','실패')),  -- 폴링용
-  items           jsonb,
-  coaching        jsonb,
+  items           jsonb,                         -- 진단 최대 3개 [{item_id, criterion_id, kind, diagnosis, evidence[]}]
+  coaching        jsonb,                         -- {schema_version, provenance, suggestions[{item_id, target_message_id, next_action, suggested_prompt}]}
   model           text,
   latency_ms      int,
-  error           text
+  error           text,                          -- 실패 코드(안전한 코드만)
+  CHECK ((rubric_doc_id IS NULL) = (rubric_version IS NULL))
 );
 
 CREATE TABLE IF NOT EXISTS progress_log (
@@ -447,13 +459,14 @@ CREATE TABLE IF NOT EXISTS progress_log (
   run_id         text
 );
 
-CREATE TABLE IF NOT EXISTS idempotency_keys (
+CREATE TABLE IF NOT EXISTS idempotency_keys (    -- 저장 도구의 같은 키 재호출 → 처음 결과
   tool           text NOT NULL,
+  scope          text NOT NULL,                  -- 키가 유효한 범위(평가 건 ID, 회사 ID). 다른 범위의 결과는 돌려주지 않는다
   key            text NOT NULL,
   evaluation_id  text,
   result         jsonb NOT NULL,
   created_at     timestamptz NOT NULL DEFAULT now(),
-  PRIMARY KEY (tool, key)
+  PRIMARY KEY (tool, scope, key)
 );
 
 CREATE TABLE IF NOT EXISTS audit_log (             -- 민감정보 원문 없이 요약만 (명세 2장 감사)
@@ -569,6 +582,23 @@ ordered AS (
 SELECT work_id || '-M' || lpad(seq::text, greatest(2, length(seq::text)), '0') AS message_id,
        work_id, seq, role, content, mask_text(content) AS content_masked, created_at, exchange_id
 FROM ordered;
+
+-- 완료된 질문·응답 쌍 = user 메시지 바로 다음 seq가 assistant인 것. 답이 없는 질문(끊김·실패)과
+-- 한 호출에 몰아 보낸 앞쪽 질문은 쌍이 아니다. exchange_id는 그 쌍에 답한 호출(실패 뒤 재전송이면 재전송 호출).
+-- 중간 피드백 요청은 최근 5쌍으로 범위를 정하고(백엔드·business-mcp 공용), Worker는 그 범위의 쌍만 받는다.
+--   SELECT min(q_seq), max(a_seq), count(*) FROM (SELECT * FROM conversation_pairs('W-…') ORDER BY q_seq DESC LIMIT 5) t;
+CREATE OR REPLACE FUNCTION conversation_pairs(p_work_id text)
+RETURNS TABLE (q_message_id text, q_seq int, a_message_id text, a_seq int, exchange_id bigint)
+LANGUAGE sql STABLE AS $$
+  SELECT message_id, seq, next_id, next_seq, next_exchange
+  FROM (SELECT message_id, seq, role,
+               lead(message_id) OVER w AS next_id, lead(seq) OVER w AS next_seq,
+               lead(role) OVER w AS next_role, lead(exchange_id) OVER w AS next_exchange
+        FROM messages WHERE work_id = p_work_id
+        WINDOW w AS (ORDER BY seq)) m
+  WHERE role = 'user' AND next_role = 'assistant' AND next_seq = seq + 1
+  ORDER BY seq
+$$;
 
 -- ─────────────────────────── 인덱스 ───────────────────────────
 CREATE INDEX IF NOT EXISTS ix_llm_exchanges_work   ON llm_exchanges (work_id, stage, id);

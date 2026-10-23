@@ -2,7 +2,7 @@
 
     python -m db.loader.load_postgres --data data            # 폴더
     python -m db.loader.load_postgres --data e2e_raw_40.zip  # 받은 zip 그대로
-    옵션: --reset (전체 비우고 다시 적재), --schema db/postgres/001_schema.sql (스키마 먼저 적용)
+    옵션: --reset (백엔드 테이블까지 전체 비우고 다시 적재), --schema db/postgres/001_schema.sql (스키마 먼저 적용)
 
 - 텍스트는 원문과 마스킹본(policy_rules의 MASK-* 규칙)을 같이 넣는다.
 - 대화는 messages 테이블이 아니라 llm_exchanges에 넣는다. messages는 그것을 펼친 뷰다.
@@ -10,6 +10,8 @@
 - 시드 사용자는 사번(user_id의 숫자)·역할(member/team_lead)로 바꿔 넣는다. 비밀번호는 SEED_USER_PASSWORD 값.
 - work.completed 이벤트를 중복 키로 묶어 평가 건(evaluations)을 만든다 (백엔드가 하는 일의 테스트용 재현).
 - 다시 실행해도 같은 결과가 나오도록 업무 단위로 지우고 넣는다. 평가 결과 테이블은 --reset일 때만 비운다.
+- --reset은 같은 DB의 백엔드 테이블(outbox_events·evaluation_failures·aggregation_approvals)도 비운다.
+  백엔드를 멈추고 RabbitMQ 큐를 비운 뒤 실행한다.
 """
 from __future__ import annotations
 
@@ -42,6 +44,8 @@ EXCHANGE_COLUMNS = ["created_at", "member", "endpoint", "stage", "work_id", "use
 SEED_TABLES = ["historical_works", "rubric_items", "document_chunks", "documents", "policy_meta", "policy_rules", "pricing_policy",
                "exception_rules", "approval_tiers", "discount_components", "price_table_items", "price_tables", "products",
                "customers", "users", "teams", "companies"]
+# 백엔드(aworko-server Flyway)가 같은 DB에 만드는 테이블. --reset일 때만 같이 비운다(flyway_backend_history는 남긴다)
+BACKEND_TABLES = ["outbox_events", "evaluation_failures", "aggregation_approvals"]
 
 
 def resolve_data(path: str) -> str:
@@ -119,8 +123,12 @@ def load(conn: psycopg.Connection, root: str, reset: bool) -> dict:
     cur = conn.cursor()
     ex = cur.execute
 
+    backend_cleared: list[str] = []
     if reset:
-        ex("TRUNCATE " + ", ".join(RESULT_TABLES + WORK_TABLES + SEED_TABLES) + " CASCADE")
+        # CASCADE만 믿으면 FK가 있는 evaluation_failures·aggregation_approvals만 비고 outbox_events는 남아,
+        # 다시 만든 같은 ID의 평가 건으로 이전 메시지가 발행된다. 백엔드를 아직 안 띄운 DB에는 테이블이 없다
+        backend_cleared = [t for t in BACKEND_TABLES if conn.execute("SELECT to_regclass(%s)", (t,)).fetchone()[0]]
+        ex("TRUNCATE " + ", ".join(RESULT_TABLES + WORK_TABLES + SEED_TABLES + backend_cleared) + " CASCADE")
 
     # ── 기준 데이터: upsert ──
     for c in org["companies"]:
@@ -311,7 +319,7 @@ def load(conn: psycopg.Connection, root: str, reset: bool) -> dict:
     for t in ["users", "work_cases", "llm_exchanges", "messages", "artifact_versions", "artifact_spans", "source_documents", "documents",
               "document_chunks", "rubric_items", "evaluations"]:
         counts[t] = conn.execute(f"SELECT count(*) FROM {t}").fetchone()[0]
-    return {"counts": counts, "evaluations_created": created, "warnings": warnings}
+    return {"counts": counts, "evaluations_created": created, "backend_cleared": backend_cleared, "warnings": warnings}
 
 
 def main() -> None:
@@ -319,7 +327,7 @@ def main() -> None:
     ap.add_argument("--data", default=os.environ.get("DATA_DIR", "data"))
     ap.add_argument("--dsn", default=os.environ.get("DATABASE_URL"))
     ap.add_argument("--schema", help="적재 전에 실행할 스키마 SQL 파일")
-    ap.add_argument("--reset", action="store_true", help="평가 결과까지 전부 비우고 다시 적재")
+    ap.add_argument("--reset", action="store_true", help="평가 결과·백엔드 테이블까지 전부 비우고 다시 적재")
     a = ap.parse_args()
     if not a.dsn:
         raise SystemExit("DATABASE_URL 환경 변수 또는 --dsn이 필요합니다")

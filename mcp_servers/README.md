@@ -18,9 +18,9 @@
 
 | 구성 | 역할 |
 | --- | --- |
-| PostgreSQL (`db/postgres/001_schema.sql`, 43개 테이블 + `messages` 뷰) | 조직·사용자(로그인 계정)·고객·가격·정책 규칙, 사내 문서 원본, 업무 데이터(LLM 호출 기록 `llm_exchanges`·산출물·구간·첨부·이벤트…), 평가 결과(초안·코칭·검토 요청·중간 점검·진행·중복 키), 감사 기록. 기준 문서: 팀 `db-schema.json`(2026-10-22) |
+| PostgreSQL (`db/postgres/001_schema.sql`, 43개 테이블 + `messages` 뷰) | 조직·사용자(로그인 계정)·고객·가격·정책 규칙, 사내 문서 원본, 업무 데이터(LLM 호출 기록 `llm_exchanges`·산출물·구간·첨부·이벤트…), 평가 결과(초안·코칭·검토 요청·중간 피드백·진행·중복 키), 감사 기록. 기준 문서: 팀 `db-schema.json`(2026-10-22) |
 | ChromaDB | rag-mcp 검색 색인. 컬렉션 `axeval_references`(34)·`axeval_policies`(77)·`axeval_rubrics`(20)·`axeval_coaching_examples`(10). 기밀 문서는 넣지 않음 |
-| business-mcp | 조회 13 + 저장 8(최종 평가 4 · 중간 점검 3 · 평가 기준 1). 업무 데이터는 도구 호출마다 Postgres에서 읽고, 저장 도구는 Postgres에 트랜잭션으로 씀 |
+| business-mcp | 최종 평가 조회 13 + 저장 4, 중간 피드백 3(시작·대화 조회·저장), 평가 기준 저장 1. 업무 데이터는 도구 호출마다 Postgres에서 읽고, 저장 도구는 Postgres에 트랜잭션으로 씀 |
 | rag-mcp | 읽기 6(현행 기준 조회 `get_current_rubric` 포함). Chroma 벡터 질의 + BM25 키워드 점수 |
 | db-init | 적재기 2개를 순서대로 실행 (멱등) |
 
@@ -71,11 +71,11 @@ docker compose --profile llm up -d --build       # EC2(GPU). GPU 없는 곳에�
 docker compose --profile test run --rm verify
 # 검사 861건: 통과 861, 실패 0   (명세 대조, tests/verify_spec.py)
 # 검사 42건: 통과 42, 실패 0     (DB 적재·저장, tests/verify_db.py)
-# 검사 41건: 통과 41, 실패 0     (중간 점검·평가 기준 저장, tests/verify_live_rubric.py)
+# 검사 59건: 통과 59, 실패 0     (중간 피드백·평가 기준 저장, tests/verify_live_rubric.py)
 # 검사 60건: 통과 60, 실패 0     (대화→llm-proxy→DB→MCP 종단, tests/verify_e2e.py)
 ```
 
-`verify_e2e`는 시드에 없는 새 업무를 백엔드처럼 만들고, 대화 6턴(일반·스트리밍, 실패 후 재전송 포함)을 실제 llm-proxy로 보낸 뒤, 그 기록만으로 중간 점검과 최종 평가 도구를 끝까지 돌립니다. 만든 업무는 끝나면 지웁니다. vLLM이 아직 모델을 올리는 중이면 `E2E_LLM_WAIT_SEC`(기본 900초)까지 기다립니다.
+`verify_e2e`는 시드에 없는 새 업무를 백엔드처럼 만들고, 대화 6턴(일반·스트리밍, 실패 후 재전송 포함)을 실제 llm-proxy로 보낸 뒤, 그 기록만으로 중간 피드백과 최종 평가 도구를 끝까지 돌립니다. 만든 업무는 끝나면 지웁니다. vLLM이 아직 모델을 올리는 중이면 `E2E_LLM_WAIT_SEC`(기본 900초)까지 기다립니다.
 
 ## 2. 데이터 적재
 
@@ -84,7 +84,7 @@ docker compose --profile test run --rm verify
 | 하고 싶은 일 | 방법 |
 | --- | --- |
 | 데이터 교체 (평가 결과 유지) | `data/`를 바꾼 뒤 `docker compose run --rm db-init`. 업무는 업무 단위로 교체되고 평가 건은 새 `work.completed`만 추가됨 |
-| 전부 비우고 다시 적재 | `docker compose run --rm -e LOAD_ARGS=--reset db-init` |
+| 전부 비우고 다시 적재 | `docker compose run --rm -e LOAD_ARGS=--reset db-init`. 같은 DB의 백엔드 테이블(아웃박스·DLQ 기록·팀 집계 승인)도 비워지므로 백엔드를 멈추고 RabbitMQ 큐를 비운 뒤 실행 |
 | 서버 재시작 없이 반영 | business-mcp는 업무 데이터를 매번 DB에서 읽으므로 바로 반영됨. 기준 데이터(가격·정책 규칙 등)를 바꿨다면 `POST :8001/internal/reload`. rag-mcp는 컬렉션이 다시 만들어진 것을 스스로 감지해 다시 연결하고, `POST :8002/internal/reload`로도 갱신할 수 있음 |
 | zip을 바로 적재 | `python -m db.loader.load_postgres --data e2e_raw_40.zip` (zip 안에서 `seed/`를 찾음) |
 
@@ -107,6 +107,7 @@ docker compose --profile test run --rm verify
   - 산출물은 `artifact_versions`에 본문만 넣으면 됩니다. `artifact_spans` 행이 없으면 business-mcp가 시드와 같은 규칙(빈 줄·표 구분선 제외, 표 키 `REQ-01`·`HEADER`, 나머지 `Lnn`)으로 본문을 나눠 근거 ID를 만듭니다([`business_mcp/spans.py`](business_mcp/spans.py)).
   - 견적서 업무의 `compute_reference_quote`는 `quote_data`(상품·수량·할인 구조화 값)가 있어야 합니다. 없으면 `NOT_FOUND`입니다.
 - **백엔드 테이블**: `outbox_events`·`evaluation_failures`·`aggregation_approvals`는 백엔드(aworko-server)의 Flyway가 같은 DB에 만듭니다. 이 스키마에는 넣지 않았습니다.
+  - 적재기는 `--reset`일 때만 이 셋을 같이 비웁니다(`flyway_backend_history`는 남김). 평가 건 ID(`EVAL-{업무}-{버전}`)는 다시 적재해도 같아서, `outbox_events`가 남으면 이전 메시지가 새로 만든 평가 건으로 발행되기 때문입니다.
 
 ### PostgreSQL에서 볼 만한 테이블
 
@@ -171,9 +172,9 @@ def mcp_client(run_token: str) -> MultiServerMCPClient:
 | 경로 | 용도 |
 | --- | --- |
 | `POST :8001/internal/runs` | 최종 평가 실행 토큰 발급(kind=evaluation) |
-| `POST :8001/internal/live-evaluations` | 중간 점검 요청 행 생성(대기). 범위는 최근 메시지 5개, 업무 담당자만, 사용자별 5분 1회(`429 RATE_LIMITED`) |
-| `GET :8001/internal/live-evaluations/{id}` | 중간 점검 상태·결과(화면 폴링) |
-| `POST :8001/internal/live-runs` | 중간 점검 실행 토큰 발급(kind=live) |
+| `POST :8001/internal/live-evaluations` | 중간 피드백 요청 행 생성(대기). 최근 완료 질문·응답 5쌍 범위와 유형·현행 기준을 고정. 업무 담당자만, 사용자별 5분 1회(`429 RATE_LIMITED`), 완료 쌍이 없으면 400 |
+| `GET :8001/internal/live-evaluations/{id}` | 중간 피드백 상태·결과(화면 폴링) |
+| `POST :8001/internal/live-worker-token` | 피드백 Worker 토큰 발급(kind=live, 회사 범위, 기본 30일). Worker의 `FEEDBACK_MCP_TOKEN`에 넣음 |
 | `POST :8001/internal/rubric-runs` | 평가 기준 작성 실행 토큰 발급(kind=rubric, `company_id`) |
 | `GET/POST :8001/internal/evaluations` | 평가 건 목록 / `work.completed` 이벤트로 평가 건 생성 (같은 키는 `created:false`) |
 | `GET :8001/internal/evaluations/{id}` | 저장된 초안·코칭·검토 요청·진행 이력 |
@@ -183,28 +184,29 @@ def mcp_client(run_token: str) -> MultiServerMCPClient:
 
 응답은 도구와 같은 봉투입니다(`{ok, data}` / `{ok:false, error}`). 오류의 HTTP 상태는 `NOT_FOUND` 404, `FORBIDDEN` 403(키 없음 포함), `RATE_LIMITED` 429, 나머지는 400입니다.
 
-### ④ 중간 점검·평가 기준 저장 (Agent → MCP → DB)
+### ④ 중간 피드백·평가 기준 저장 (Agent → MCP → DB)
 
 실행 토큰에 종류(`kind`)가 있고, 종류마다 부를 수 있는 도구가 정해져 있습니다(다른 도구는 `FORBIDDEN`).
 
-| 토큰 | 발급 | 쓸 수 있는 도구 |
-| --- | --- | --- |
-| `evaluation` | `/internal/runs` | 기존 조회 13개 · 저장 4개, rag 6개 |
-| `live` | `/internal/live-runs` | `get_conversation`(최근 메시지 5개 범위만), `start_live_evaluation`, `save_live_evaluation`, `fail_live_evaluation`, rag `get_current_rubric`·`search_rubric`·`search_policy`·`search_examples` |
-| `rubric` | `/internal/rubric-runs` | `save_rubric`, rag `get_current_rubric`·`search_rubric`·`search_policy`·`search_examples` |
+| 토큰 | 발급 | 범위 | 쓸 수 있는 도구 |
+| --- | --- | --- | --- |
+| `evaluation` | `/internal/runs` | 평가 건 1개(스냅샷) | 조회 13개 · 저장 4개, rag 6개 |
+| `live` | `/internal/live-worker-token` | 회사(피드백 Worker에 한 번 발급) | `start_live_evaluation`, `get_messages`, `save_live_evaluation`, rag `get_current_rubric`·`search_rubric`·`search_policy`·`search_examples` |
+| `rubric` | `/internal/rubric-runs` | 회사 | `save_rubric`, rag `get_current_rubric`·`search_rubric`·`search_policy`·`search_examples` |
 
-**중간 점검(실시간 피드백) 흐름**
-1. 백엔드가 `live_evaluations`에 요청 행(`대기`)을 만들고 큐에 발행합니다. 테스트에서는 `/internal/live-evaluations`가 이 역할을 합니다.
-2. Agent가 live 토큰을 받아 `start_live_evaluation`(→ `생성 중`), `get_conversation`, rag `get_current_rubric` 순서로 부릅니다.
-3. Agent가 `save_live_evaluation`(→ `완료`)으로 결과를 저장하고, 실패하면 `fail_live_evaluation`(→ `실패`)을 부릅니다.
+**중간 피드백(최근 질문·응답 5쌍 코칭)**. 계약 정본은 Agent 쪽 [docs/recent_five_feedback.md](../docs/recent_five_feedback.md)이고, 응답 칸은 Agent 계약 모델(모르는 칸 거부)과 같습니다.
+1. 백엔드가 요청 행(`대기`)을 만들고 큐에 `LIVE_EVALUATE`를 발행합니다. 범위는 DB 함수 `conversation_pairs(work_id)`의 최근 5쌍으로 정하고, 유형(사용자 선택, 없으면 업무 분류)과 그 유형의 현행 기준 버전을 같이 고정합니다. 테스트에서는 `/internal/live-evaluations`가 이 역할을 합니다.
+2. Worker가 `start_live_evaluation(live_eval_id)` → `get_messages(live_eval_id, work_id, from_seq, to_seq)` → `save_live_evaluation(live_eval_id, status, items, coaching, model, latency_ms, error)` 순서로 부릅니다.
 
-| 검증 | 규칙 |
+| 항목 | 규칙 |
 | --- | --- |
-| 항목 | 루브릭 5개 전부. 형식은 최종 평가 초안과 같음(`{item_id, item, status, score, reason, evidence_ids[]}`) |
-| 근거 | 점검 범위(최근 메시지 5개) 안의 메시지 ID만 |
-| 결과물 품질 | 산출물이 없으므로 `미관측`만 |
-| 코칭 | `{item_id, kind, target_span_id(범위 안 메시지), text}`. 민감정보 패턴 거부 |
-| 상태 | `대기 → 생성 중 → 완료 \| 실패`. 완료·실패 뒤에는 바꿀 수 없고 토큰도 다시 발급되지 않음 |
+| 권한 | Worker 토큰은 회사 범위. 도구마다 `live_eval_id`로 요청 행을 찾아 토큰의 회사와 같은지 확인(다르면 `FORBIDDEN`) |
+| 범위 | 완료 쌍 = 직원 질문 바로 다음 seq가 AI 답변. 답이 없는 질문(끊김·실패)은 빠짐. `exchange_id`는 그 쌍에 답한 호출(실패 뒤 재전송이면 재전송 호출) |
+| `start` | `대기 → 생성 중`. 재전달된 `생성 중`은 같은 문맥, `완료·실패`는 바꾸지 않고 그 상태로 돌려줌(오류 아님). 고정 기준이 있으면 `rubric{doc_id, version, items[{item_id, item, criterion}]}` 포함 |
+| `get_messages` | `work_id·from_seq·to_seq`가 고정 범위와 같아야 함. `생성 중`일 때만. 마스킹본, `masking_version`, `complete` |
+| `save` (완료) | 진단 1~3개 `{item_id, criterion_id(고정 기준 항목\|null), kind(strength·improvement·needs_check), diagnosis, evidence[{message_id, quote}]}` — 인용은 범위 안 메시지의 실제 문장. `coaching{schema_version:'1', provenance, suggestions[{item_id, target_message_id(직원 질문), next_action, suggested_prompt}]}` — 개선 항목엔 추천 필수 |
+| `save` (실패) | `error`는 코드만(예 `MODEL_TIMEOUT`) |
+| 중복 | 키 없이 상태로 처리. 이미 `완료·실패`면 덮어쓰지 않고 `{status: 현재, duplicate: true}` |
 
 **평가 기준(규칙) 저장 흐름**: `save_rubric`이 새 버전을 만들어 바로 `현행`으로 바꾸고, 이전 `현행`은 `폐기`로 바꿉니다(관리자 승인 없음).
 
@@ -217,7 +219,7 @@ def mcp_client(run_token: str) -> MultiServerMCPClient:
 | 저장 위치 | Postgres `documents`·`rubric_items`와 Chroma `rubrics`(rag-mcp가 읽음)를 함께 바꿈. Chroma 반영이 실패하면 Postgres도 되돌리고 `TEMPORARY_FAILURE` |
 | 기존 평가 | 평가 건은 자기 `rubric_version`을 그대로 쓰므로 영향 없음 |
 
-모든 저장 도구는 `idempotency_key`가 필수이고, 같은 키는 기존 결과를 돌려줍니다(`meta.duplicate`). 호출은 감사 기록(`audit_log`)에 남습니다.
+최종 평가·평가 기준 저장 도구는 `idempotency_key`가 필수이고, 같은 키는 기존 결과를 돌려줍니다(`meta.duplicate`). 키는 평가 건(평가 기준은 회사) 범위이고 권한을 확인한 뒤에 찾으므로, 다른 평가 건에서 같은 키를 써도 남의 결과가 나가지 않습니다. 중간 피드백은 키 없이 상태로 중복을 처리합니다. 호출은 감사 기록(`audit_log`)에 남습니다.
 
 ## 4. 명세를 구현하면서 정한 것
 
@@ -244,7 +246,7 @@ def mcp_client(run_token: str) -> MultiServerMCPClient:
 - **적재기 재실행:** 평가 결과가 유지됩니다.
 - **DB 직접 수정:** Postgres를 직접 고친 내용이 재시작 없이 다음 호출에 반영됩니다.
 - **EC2와 같은 조건 (2026-10-22):** 저장소를 새로 복사하고 `.env.example`로 `.env`를 만든 뒤, EC2와 같은 x86_64(`linux/amd64`) 이미지로 전체 스택을 올렸습니다(`--profile mockllm`, vLLM 자리에 `tests/mock_llm.py`). `verify` 4종 1,004건이 모두 통과했습니다. GPU에서 실제 vLLM·Gemma를 띄우는 부분은 이 환경에서 확인하지 못했고, 설정은 `check_deploy.py`로만 확인했습니다.
-- **앱 경로만으로 평가 (verify_e2e 60건):** 프록시 기록 → `messages` 뷰(실패 뒤 재전송 질문 중복 없음, 마스킹) → 중간 점검(최근 5개 범위·담당자 확인·5분 제한) → 산출물 본문만 저장 → 평가 건 생성 → 조회·정책 검사·diff·초안 저장까지 통과합니다. 산출물 구간을 본문에서 나누는 처리가 없으면 이 중 6건이 실패합니다(정책 위반 위치를 근거로 인용할 수 없어 초안 저장이 거부됨).
+- **앱 경로만으로 평가 (verify_e2e 60건):** 프록시 기록 → `messages` 뷰(실패 뒤 재전송 질문 중복 없음, 마스킹) → 중간 피드백(최근 완료 5쌍·Worker 토큰·재전송 질문의 쌍 처리·담당자 확인·5분 제한) → 산출물 본문만 저장 → 평가 건 생성 → 조회·정책 검사·diff·초안 저장까지 통과합니다. 산출물 구간을 본문에서 나누는 처리가 없으면 이 중 6건이 실패합니다(정책 위반 위치를 근거로 인용할 수 없어 초안 저장이 거부됨).
 
 ## 6. Docker 없이 실행 (로컬 개발)
 
@@ -266,7 +268,7 @@ python tests/verify_spec.py && python tests/verify_db.py
 ```
 common/          실행 토큰, 응답 봉투·오류, 마스킹, 장애 주입, 감사, 임베딩, Chroma 연결
 business_mcp/    pg.py(DB 접근) store.py(조회·근거 ID 풀·diff) spans.py(산출물 구간 나누기) policy.py(정책 검사) quote.py(기준 견적)
-                 writes.py(최종 평가 저장) live.py(중간 점검) rubrics.py(평가 기준 저장)
+                 writes.py(최종 평가 저장) live.py(중간 피드백) rubrics.py(평가 기준 저장)
                  checks.py(평가 항목·코칭 검증, 공용) idempotency.py(중복 키, 공용) server.py(도구·내부 API)
 rag_mcp/         index.py(BM25) server.py(Chroma 하이브리드 검색)
 db/postgres/     001_schema.sql

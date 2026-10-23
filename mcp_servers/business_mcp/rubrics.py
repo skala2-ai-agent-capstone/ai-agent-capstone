@@ -92,7 +92,7 @@ class RubricWriter:
         if note is not None and (not isinstance(note, str) or self.store.masker.has_sensitive(note)):
             raise validation("note는 민감정보가 없는 문자열이어야 합니다")
         with self.db.tx() as c:
-            if (dup := replay(c, "save_rubric", idempotency_key)) is not None:
+            if (dup := replay(c, "save_rubric", company, idempotency_key)) is not None:
                 return dup
             # 같은 회사·유형의 기준 행을 잠가 동시 저장을 한 줄로 세운다
             rows = c.execute("SELECT doc_id, version, status FROM documents WHERE company_id=%s AND collection='rubrics' AND work_type=%s "
@@ -127,7 +127,7 @@ class RubricWriter:
                 raise MCPFail("TEMPORARY_FAILURE", f"검색 색인(Chroma) 반영에 실패해 저장하지 않았습니다 ({type(e).__name__})") from e
             result = {"doc_id": doc_id, "version": version, "work_type": work_type, "status": "현행",
                       "retired_versions": retired, "items_saved": len(clean_items)}
-            remember(c, "save_rubric", idempotency_key, result)
+            remember(c, "save_rubric", company, idempotency_key, result)
         self.store.reload()   # 최종 평가 초안 검증(save_evaluation_draft)이 새 버전을 알도록
         return result
 

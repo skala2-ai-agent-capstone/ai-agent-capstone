@@ -94,7 +94,7 @@ def main():
     check("PG evaluation_coaching 저장됨", cnt("evaluation_coaching") >= 1)
     check("PG review_requests 저장·검토자 배정(담당 팀장)", one("SELECT count(*) AS n FROM review_requests WHERE reviewer_id='L-3001'")["n"] >= 1)
     check("PG progress_log 기록", cnt("progress_log") >= 1)
-    dup = one("SELECT count(*) AS n FROM (SELECT tool, key FROM idempotency_keys GROUP BY 1,2 HAVING count(*)>1) x")["n"]
+    dup = one("SELECT count(*) AS n FROM (SELECT tool, scope, key FROM idempotency_keys GROUP BY 1,2,3 HAVING count(*)>1) x")["n"]
     check("PG idempotency_keys 중복 없음", dup == 0 and cnt("idempotency_keys") >= 1)
     audit_bad = [r["input"] for r in conn.execute("SELECT input::text AS input FROM audit_log") if PII.search(r["input"])]
     check("PG audit_log 기록 + 민감정보 없음", cnt("audit_log") > 0 and not audit_bad, str(audit_bad[:1]))
