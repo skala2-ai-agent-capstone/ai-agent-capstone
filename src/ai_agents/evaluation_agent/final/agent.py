@@ -22,7 +22,7 @@ from .contract import MISSING_WORK_MESSAGES
 from .materials import EvaluationMaterials, collect_evaluation_materials
 from .models import AgentEvaluationOutput
 from .payload import build_evaluation_payload, compact_evaluation_payload
-from .prompts import SYSTEM_PROMPT
+from .prompts import QUALITY_REVIEW_PROMPT, SYSTEM_PROMPT
 from .selection import (
     SELECTION_VERSION,
     build_choices,
@@ -229,6 +229,43 @@ class OpenAIEvaluator:
                     result = resolve_selection(
                         response.output_parsed.model_dump(mode="json"), choices, request
                     )
+                    # 만점 품질은 대화의 작성 요청을 저장본의 완성도로 오인하기 쉬워
+                    # 실제 저장본과 해당 기준만으로 한 번 더 판단한다.
+                    quality = next(item for item in result.items
+                                   if item.criterion_id.endswith(".quality"))
+                    if quality.score == 2:
+                        compact = compact_evaluation_payload(payload)
+                        focused = {
+                            "criteria": [item for item in compact["criteria"]
+                                         if item["id"] == quality.criterion_id],
+                            "criterion_requirements": {
+                                quality.criterion_id: payload["criterion_requirements"][
+                                    quality.criterion_id
+                                ],
+                            },
+                            "saved_artifact": next(
+                                artifact.model_dump(mode="json") for artifact in evidence.artifacts
+                                if artifact.is_evaluation_target
+                            ),
+                            "work_evidence_catalog": [row for row in choices.work
+                                                      if row["kind"] == "target_artifact"],
+                            "reference_catalog": choices.rules,
+                            "missing_sources": payload["missing_sources"],
+                        }
+                        audit = await self.generate([
+                            {"role": "system", "content": QUALITY_REVIEW_PROMPT},
+                            {"role": "user", "content": json.dumps(focused, ensure_ascii=False)},
+                        ], selection_model(choices, request, criterion_id=quality.criterion_id))
+                        if audit.status != "completed" or audit.output_parsed is None:
+                            raise EvaluationError("결과물 품질 재검증 응답이 완료되지 않았습니다.")
+                        revised = response.output_parsed.model_dump(mode="json")
+                        audited = audit.output_parsed.model_dump(mode="json")
+                        for group in ("items", "coaching"):
+                            revised[group] = [
+                                audited[group][0] if item["criterion_id"] == quality.criterion_id
+                                else item for item in revised[group]
+                            ]
+                        result = resolve_selection(revised, choices, request)
                     return validate_evaluation_result(
                         request,
                         result,
@@ -239,6 +276,10 @@ class OpenAIEvaluator:
                     issue = validation_feedback(exc)
                 except EvaluationError as exc:
                     issue = str(exc)
+                except (APITimeoutError, APIConnectionError) as exc:
+                    raise EvaluationError("평가 API 연결 또는 시간 초과 오류입니다.") from exc
+                except APIStatusError as exc:
+                    raise EvaluationError(f"평가 API 오류(HTTP {exc.status_code}).") from exc
                 if attempt < self.max_validation_retries:
                     messages.append({
                         "role": "assistant", "content": response.output_parsed.model_dump_json(),

@@ -227,9 +227,11 @@ def _item_diagnostic(row, choices, requirements):
     }
 
 
-def selection_model(choices: EvidenceChoices, request) -> type[StrictModel]:
+def selection_model(choices: EvidenceChoices, request, *, criterion_id=None) -> type[StrictModel]:
     """각 항목의 필수 업무·승인 기준 근거를 API 출력 스키마에도 반영한다."""
     requirements = choice_requirements(choices, request)
+    if criterion_id is not None:
+        requirements = {criterion_id: requirements[criterion_id]}
     criteria = Enum(
         "EvaluationCriterionId", {f"C{i}": key for i, key in enumerate(requirements)}, type=str,
     )
@@ -318,8 +320,10 @@ def selection_model(choices: EvidenceChoices, request) -> type[StrictModel]:
     )
     return create_model(
         "SelectedEvaluation", __base__=StrictModel,
-        items=(Annotated[list[item], Field(min_length=5, max_length=5)], ...),
-        coaching=(Annotated[list[coaching], Field(min_length=5, max_length=5)], ...),
+        items=(Annotated[list[item], Field(min_length=len(requirements),
+                                          max_length=len(requirements))], ...),
+        coaching=(Annotated[list[coaching], Field(min_length=len(requirements),
+                                                max_length=len(requirements))], ...),
     )
 
 

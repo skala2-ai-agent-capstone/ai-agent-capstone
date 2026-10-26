@@ -1,5 +1,6 @@
 import json
 from copy import deepcopy
+from types import SimpleNamespace
 
 import pytest
 from jsonschema import Draft202012Validator
@@ -7,6 +8,7 @@ from pydantic import ValidationError
 from test_evaluation_agent import ToolFixture, collect, selected_result, valid_result
 from test_mcp_adapter import CASES
 
+from ai_agents.evaluation_agent.final.agent import OpenAIEvaluator
 from ai_agents.evaluation_agent.final.selection import (
     build_choices,
     choice_requirements,
@@ -414,6 +416,51 @@ async def test_restored_quote_does_not_hide_copied_review_condition():
         validate_evaluation_result(
             fixture.request, result, evidence=evidence, materials=materials,
         )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("audit_score", [0, 2, None])
+async def test_quality_full_marks_are_rechecked_against_saved_artifact(audit_score):
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    calls = []
+    initial = None
+
+    async def generate(messages, response_format):
+        nonlocal initial
+        payload = json.loads(messages[1]["content"])
+        calls.append(payload)
+        if len(calls) == 1:
+            initial = selected_result(valid_result(fixture, evidence, materials), payload)
+            initial["items"][4]["score"] = 2
+            raw = initial
+        else:
+            assert len(payload["criteria"]) == 1
+            assert payload["criteria"][0]["id"].endswith(".quality")
+            assert all(row["kind"] == "target_artifact"
+                       for row in payload["work_evidence_catalog"])
+            target = next(a for a in evidence.artifacts if a.is_evaluation_target)
+            assert payload["saved_artifact"]["content"] == target.content
+            item = {**initial["items"][4], "score": audit_score,
+                    "observation": "observed" if audit_score is not None else "insufficient_data",
+                    "reason": "저장본과 승인 기준을 비교한 재검증 결과입니다."}
+            raw = {"items": [item], "coaching": [initial["coaching"][4]]}
+        return SimpleNamespace(
+            status="completed", output=[], output_parsed=response_format.model_validate(raw),
+        )
+
+    agent = OpenAIEvaluator(
+        None, context=fixture.context, business_call=fixture.business, rag_call=fixture.rag,
+    )
+    agent.generate = generate
+    result = await agent.evaluate_collected(fixture.request, evidence=evidence, materials=materials)
+    assert len(calls) == 2
+    assert result.items[4].score == audit_score
+    assert "재검증 결과" in result.items[4].reason
+    assert len(result.items) == 5
+    assert [item.score for item in result.items[:4]] == [
+        item["score"] for item in initial["items"][:4]
+    ]
 
 
 @pytest.mark.asyncio
