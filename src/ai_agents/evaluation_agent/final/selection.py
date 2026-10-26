@@ -13,7 +13,7 @@ from .contract import MISSING_WORK_MESSAGES, eligible_work_sources, score_issue
 from .models import AgentEvaluationOutput
 from .validation import EvaluationError
 
-SELECTION_VERSION = "evaluation-evidence-selection-v5-grounded-reasons"
+SELECTION_VERSION = "evaluation-evidence-selection-v6-unscored-evidence"
 MAX_CHOICES = 900
 PIECE_LENGTH = 500
 
@@ -179,6 +179,14 @@ def _item_problem(row, requirements):
         return "미관측·자료 부족 항목에는 점수를 부여할 수 없습니다."
     if state == "needs_review" and row.get("review_required") is not True:
         return "검토 필요 항목은 review_required가 true여야 합니다."
+    if state == "needs_review" and not row.get("required_work_evidence_id"):
+        return "검토 필요 판단에는 실제 업무 근거가 필요합니다."
+    key = criterion.rsplit(".", 1)[1]
+    eligible = requirement["required_work_choice_ids"]
+    if (state != "observed" and eligible
+            and (state in {"needs_review", "insufficient_data"} or key in {"quality", "security"})
+            and row.get("required_work_evidence_id") not in eligible):
+        return MISSING_WORK_MESSAGES[key]
     if row.get("required_rule_evidence_id") not in requirement["required_rule_choice_ids"]:
         return "해당 항목의 승인된 기준 근거를 선택해야 합니다."
     return "선택 ID·필수 필드·자료형이 평가 응답 형식과 맞지 않습니다."
@@ -263,11 +271,13 @@ def selection_model(choices: EvidenceChoices, request) -> type[StrictModel]:
                 review_required=(review, ...),
             )
 
-        if requirement["can_score"] and requirement["allowed_scores"]:
+        required_work = unscored_work
+        if requirement["required_work_choice_ids"]:
             required_work = Enum(
                 f"RequiredWorkChoice{number}",
                 {key: key for key in requirement["required_work_choice_ids"]}, type=str,
             )
+        if requirement["can_score"] and requirement["allowed_scores"]:
             score_values = tuple(requirement["allowed_scores"])
             variants.append(variant(
                 f"ScoredEvaluationItem{number}", Literal["observed"],
@@ -275,11 +285,18 @@ def selection_model(choices: EvidenceChoices, request) -> type[StrictModel]:
                 Annotated[bool, Field(strict=True)],
             ))
         variants.extend([
-            variant(f"UnscoredEvaluationItem{number}", Literal["unobserved", "insufficient_data"],
-                    type(None), unscored_work, Annotated[bool, Field(strict=True)]),
-            variant(f"ReviewEvaluationItem{number}", Literal["needs_review"], type(None),
-                    unscored_work, Annotated[Literal[True], BeforeValidator(_strict_review)]),
+            variant(f"UnobservedEvaluationItem{number}", Literal["unobserved"], type(None),
+                    required_work if criterion_id.rsplit(".", 1)[1] in {"quality", "security"}
+                    else unscored_work, Annotated[bool, Field(strict=True)]),
+            variant(f"InsufficientEvaluationItem{number}", Literal["insufficient_data"],
+                    type(None), required_work, Annotated[bool, Field(strict=True)]),
         ])
+        if choices.work:
+            variants.append(variant(
+                f"ReviewEvaluationItem{number}", Literal["needs_review"], type(None),
+                required_work if requirement["required_work_choice_ids"] else work,
+                Annotated[Literal[True], BeforeValidator(_strict_review)],
+            ))
 
     def check_item(row, handler):
         try:

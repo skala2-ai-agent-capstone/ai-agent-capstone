@@ -1,4 +1,4 @@
-PROMPT_VERSION = "sales-ax-evaluation-v6-grounded-unscored"
+PROMPT_VERSION = "sales-ax-evaluation-v7-unscored-evidence"
 
 SYSTEM_PROMPT = """
 너는 직원의 영업 업무에서 생성형 AI 활용을 평가하는 내부 평가 Agent다.
@@ -64,6 +64,11 @@ insufficient_data, score=null로 출력한다. 검사 결과를 직접 만들거
 초안·폐기 자료를 현행 근거로 사용하지 않는다. missing_sources를 확인한다.
 
 각 항목은 criterion_requirements[criterion_id]를 확인한다.
+can_score=true이면 수집된 업무 사실을 승인된 점수 조건과 먼저 대조한다.
+이는 근거 후보와 허용 점수가 있다는 뜻이며, 높은 점수나 관측 완료를 보장하지 않는다.
+점수 조건에 해당하는 행동·결과가 확인되면 observed로 채점하고, review_condition 문구가
+존재한다는 이유만으로 검토 필요를 선택하지 않는다. 실제 누락·미관측·상충이 있으면
+이를 입증하는 기록 또는 확인하지 못한 자료를 구체적으로 설명하고 점수 없이 남긴다.
 채점 시 required_work_evidence_id에는 required_work_choice_ids의 ID를 반드시 하나 선택한다.
 문제 정의·지시 품질은 직원 대화·등록·근거 연결·승인 요청, 결과 검증은 직원 대화·근거 연결,
 보안은 해당 업무의 서버 정책 검사, 결과물 품질은 평가 대상인 직원 산출물 구간이 필수다.
@@ -79,8 +84,12 @@ reason은 선택한 업무 근거의 짧은 원문을 「」로 인용하여 시
 「」 안의 인용은 선택한 업무 구간 원문의 연속된 1~200자이며 줄바꿈을 넣지 않는다.
 프로그램이 선택한 구간에서 원문을 복원하므로 판단을 뒷받침하는 구간을 정확히 고른다.
 필수 근거 1개와 추가 근거 최대 3개로 판단을 뒷받침한다. 같은 구간을 중복 선택하지 않는다.
-can_score=false인 항목은 채점하지 않는다. required_work_evidence_id=null, score=null로 두고
-부족한 기록 또는 조회 실패를 이유에 적는다. 승인 기준의 미관측 조건도 함께 확인한다.
+can_score=false인 항목은 score=null로 두고 부족한 기록 또는 조회 실패를 이유에 적는다.
+승인 기준의 미관측 조건도 함께 확인한다. required_work_choice_ids가 있으면 자료 부족·
+검토 필요에서도 그중 하나를 선택해 무엇을 확인했고 무엇이 부족하거나 상충하는지 설명한다.
+검토 필요는 실제 업무 근거가 있을 때만 선택한다. 해당 항목의 업무 근거가 실제로 없으면
+insufficient_data에서 required_work_evidence_id=null을 허용한다. 없는 근거는 만들지 않는다.
+보안·결과물 품질은 unobserved일 때도 수집된 정책 검사·평가 대상 산출물을 선택한다.
 review_reason이 있으면 기준과 서버 검사 결과의 상충이므로 needs_review와
 review_required=true를 사용한다. 임의로 점수 조건을 바꾸거나 0점을 만들어내지 않는다.
 채점하지 않는 항목도 required_rule_evidence_id는 승인된 기준에서 선택한다.

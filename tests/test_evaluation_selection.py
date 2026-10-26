@@ -15,7 +15,11 @@ from ai_agents.evaluation_agent.final.selection import (
     security_choice_ids,
     selection_model,
 )
-from ai_agents.evaluation_agent.final.validation import evidence_catalog, validate_evaluation_result
+from ai_agents.evaluation_agent.final.validation import (
+    EvaluationError,
+    evidence_catalog,
+    validate_evaluation_result,
+)
 
 
 def catalogs(fixture, evidence, materials):
@@ -210,6 +214,81 @@ async def test_unscored_states_remain_valid_with_null_score(state):
     )
     assert checked.items[3].score is None
     assert checked.items[3].observation == state
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("state", ["needs_review", "insufficient_data"])
+@pytest.mark.parametrize("index", range(5))
+@pytest.mark.parametrize("primary", ["missing", "unrelated"])
+async def test_unscored_schema_requires_available_criterion_evidence(state, index, primary):
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    choices, payload, _, _ = catalogs(fixture, evidence, materials)
+    wire = selected_result(valid_result(fixture, evidence, materials), payload)
+    assistant = next(row["id"] for row in choices.work if row["kind"] == "message:assistant")
+    wire["items"][index].update(
+        observation=state, score=None, review_required=True,
+        required_work_evidence_id=None if primary == "missing" else assistant,
+        work_evidence_ids=[],
+    )
+    model = selection_model(choices, fixture.request)
+    assert not Draft202012Validator(model.model_json_schema()).is_valid(wire)
+    with pytest.raises(ValidationError, match="근거"):
+        model.model_validate(wire)
+
+
+@pytest.mark.asyncio
+async def test_insufficient_data_can_omit_evidence_when_criterion_sources_are_absent():
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    choices, payload, _, _ = catalogs(fixture, evidence, materials)
+    wire = selected_result(valid_result(fixture, evidence, materials), payload)
+    choices.work = [row for row in choices.work if row["kind"] != "policy_check"]
+    choices.policy_available = False
+    wire["items"][3].update(
+        observation="insufficient_data", score=None, review_required=False,
+        required_work_evidence_id=None, work_evidence_ids=[],
+        reason="[근거 없음] 서버 정책 검사 결과를 조회하지 못했습니다.",
+    )
+    model = selection_model(choices, fixture.request)
+    assert Draft202012Validator(model.model_json_schema()).is_valid(wire)
+    model.model_validate(wire)
+
+
+@pytest.mark.asyncio
+async def test_no_work_choices_cannot_claim_an_evidenced_conflict():
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    choices, payload, _, _ = catalogs(fixture, evidence, materials)
+    wire = selected_result(valid_result(fixture, evidence, materials), payload)
+    choices.work = []
+    for item in wire["items"]:
+        item.update(
+            observation="needs_review", score=None, review_required=True,
+            required_work_evidence_id=None, work_evidence_ids=[],
+            reason="[근거 없음] 업무 근거 없이 충돌이 있다고 주장합니다.",
+        )
+    model = selection_model(choices, fixture.request)
+    assert not Draft202012Validator(model.model_json_schema()).is_valid(wire)
+    with pytest.raises(ValidationError, match="근거"):
+        model.model_validate(wire)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("state", ["needs_review", "insufficient_data"])
+@pytest.mark.parametrize("index", range(5))
+async def test_public_validation_rejects_unscored_items_ignoring_available_evidence(state, index):
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    result = valid_result(fixture, evidence, materials)
+    item = result.items[index]
+    item.observation, item.score, item.review_required = state, None, True
+    item.work_evidence = []
+    item.reason = "[근거 없음] 존재하는 업무 근거를 무시한 판단입니다."
+    with pytest.raises(EvaluationError, match="근거"):
+        validate_evaluation_result(
+            fixture.request, result, evidence=evidence, materials=materials,
+        )
 
 
 @pytest.mark.asyncio

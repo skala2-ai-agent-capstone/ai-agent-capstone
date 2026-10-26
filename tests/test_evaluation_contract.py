@@ -76,10 +76,15 @@ async def test_missing_required_kind_disables_scoring_instead_of_substituting_ot
     assert requirements[criterion_id]["required_work_choice_ids"] == []
     model = selection_model(choices, fixture.request)
     validator = Draft202012Validator(model.model_json_schema())
+    available = {row["id"]: row["text"] for row in choices.work}
     for row in wire["items"]:
+        eligible = requirements[row["criterion_id"]]["required_work_choice_ids"]
+        primary = eligible[0] if eligible else None
         row.update(
-            observation="insufficient_data", score=None, required_work_evidence_id=None,
+            observation="insufficient_data", score=None, required_work_evidence_id=primary,
             work_evidence_ids=[],
+            reason=f"「{available[primary][:80]}」 추가 자료가 필요합니다." if primary
+            else "[근거 없음] 해당 항목의 업무 자료가 없습니다.",
         )
     assert validator.is_valid(wire)
     model.model_validate(wire)

@@ -201,9 +201,11 @@ def validate_evaluation_result(
                     f"{item.criterion_id}: 검토 필요 판단에는 실제 업무의 상충·모호함 근거가 "
                     "필요합니다. 조회하지 못한 자료는 insufficient_data로 구분하세요."
                 )
-            if key in {"quality", "security"} and eligible and not work_ids & eligible:
+            if (eligible and not work_ids & eligible
+                    and (item.observation in {"needs_review", "insufficient_data"}
+                         or key in {"quality", "security"})):
                 raise EvaluationError(
-                    f"{item.criterion_id}: 수집된 평가 대상 산출물 또는 정책 검사 근거를 "
+                    f"{item.criterion_id}: 수집된 해당 항목의 업무 근거를 "
                     "확인하고 인용해야 합니다. 점수 없음도 해당 자료를 무시할 수 없습니다."
                 )
             continue

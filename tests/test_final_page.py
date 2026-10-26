@@ -108,8 +108,8 @@ async def test_partial_positive_scores_and_shuffled_items_keep_display_order(tmp
 async def test_missing_data_always_shows_review_in_summary(tmp_path):
     prepared, *_ = await prepared_result(tmp_path)
     item = prepared.report.items[0]
-    item.observation, item.score, item.work_evidence = "insufficient_data", None, []
-    item.reason = "[근거 없음] 필요한 자료가 수집되지 않았습니다."
+    item.observation, item.score = "insufficient_data", None
+    item.reason = "업무 기록은 있으나 대조에 필요한 자료가 수집되지 않았습니다."
     item.review_required = False  # 이전 평가 결과가 이 플래그를 생략한 경우도 상태로 판단한다.
     page = build_final_page(prepared)
     assert page.review_required and "검토 필요 1개" in page.summary
