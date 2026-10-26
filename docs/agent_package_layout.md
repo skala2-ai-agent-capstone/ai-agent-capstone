@@ -1,5 +1,9 @@
 # Agent 폴더 구조 변경 안내
 
+> 아래는 패키지 이동 당시의 기록입니다. “중간 피드백 미구현” 등은 당시 상태이며,
+> 현재는 `evaluation_agent/feedback/`, `evaluation_agent/final/`, `evaluation_agent/team/`과
+> 각각의 Worker가 있습니다. 현재 구조·명령은 [프로젝트 README](../README.md)를 기준으로 확인하세요.
+
 ## 팀원에게 전달할 설명
 
 기존 `work_classifier`는 업무 분류로 시작한 이름이지만 현재 기준 생성·평가·추적까지

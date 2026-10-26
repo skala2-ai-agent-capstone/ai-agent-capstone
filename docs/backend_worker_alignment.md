@@ -59,7 +59,7 @@ LangSmith 설정이 없으면 `--langsmith`를 뺀다. 화면에서 요청 한 �
 | 요청 | final_evaluation.requests | evaluation.requests |
 | 재시도 | final_evaluation.retry | evaluation.retry |
 | DLQ | final_evaluation.dlq | evaluation.dlq |
-| 완료 | final_evaluation.results | evaluation.results **새 제안** |
+| 완료 | final_evaluation.results | evaluation.results |
 | 입력 타입 | FINAL_EVALUATE | EVALUATE |
 | 완료 타입 | FINAL_EVALUATION_SAVED | FINAL_EVALUATION_SAVED |
 
@@ -88,7 +88,11 @@ LangSmith 설정이 없으면 `--langsmith`를 뺀다. 화면에서 요청 한 �
 기존 agent-v1 체크포인트와 backend-v1은 operation_id가 다르다. 처리 중인 평가의 계약을
 임의로 바꾸지 않는다. 이미 저장 결과가 있으면 기존 체크포인트로 마무리한 뒤 전환한다.
 
-### 백엔드 쪽 준비 — 구현됨(aworko-server 로컬 `fix/sync-mcp-schema`, 미배포)
+### 백엔드 쪽 준비 — main에 구현됨
+
+2026-10-26 백엔드 `b943709` 기준으로 아래 연결은 main에 있습니다.
+과거 브랜치명 `fix/sync-mcp-schema`는 하단의 당시 검증 기록에서만 사용합니다.
+배포 환경에는 해당 변경이 포함된 백엔드 이미지가 실행 중인지 별도로 확인합니다.
 
 1. `evaluation.results` 큐: 백엔드가 durable로 선언(`evaluation.exchange`에 `evaluation.results`
    키로도 바인딩). Worker는 기본 exchange로 큐 이름에 직접 발행한다.
