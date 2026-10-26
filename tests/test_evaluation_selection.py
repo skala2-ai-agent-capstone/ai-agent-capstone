@@ -108,6 +108,7 @@ async def test_unobserved_item_stays_without_score_or_fabricated_work_citation()
     wire = selected_result(valid_result(fixture, evidence, materials), payload)
     wire["items"][0].update(
         observation="unobserved", score=None, required_work_evidence_id=None, work_evidence_ids=[],
+        reason="[근거 없음] 관측된 행동의 근거가 없습니다.",
     )
     result = resolve_selection(wire, choices, fixture.request)
     checked = validate_evaluation_result(
@@ -198,7 +199,7 @@ async def test_unscored_states_remain_valid_with_null_score(state):
     choices, payload, _, _ = catalogs(fixture, evidence, materials)
     wire = selected_result(valid_result(fixture, evidence, materials), payload)
     wire["items"][3].update(
-        observation=state, score=None, required_work_evidence_id=None, work_evidence_ids=[],
+        observation=state, score=None,
         review_required=state == "needs_review",
     )
     model = selection_model(choices, fixture.request)
@@ -249,7 +250,8 @@ async def test_observed_zero_keeps_its_reason_and_original_reviewed_artifact():
     item = checked.items[4]
     assert item.score == 0
     assert item.observation == "observed"
-    assert item.reason == public.items[4].reason
+    assert item.reason.endswith(public.items[4].reason)
+    assert item.reason.startswith("「")
     assert all(proof.quote in sources[proof.source_id] for proof in item.work_evidence)
 
 

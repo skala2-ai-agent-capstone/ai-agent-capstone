@@ -13,7 +13,7 @@ from .contract import MISSING_WORK_MESSAGES, eligible_work_sources, score_issue
 from .models import AgentEvaluationOutput
 from .validation import EvaluationError
 
-SELECTION_VERSION = "evaluation-evidence-selection-v4-all-criteria"
+SELECTION_VERSION = "evaluation-evidence-selection-v5-grounded-reasons"
 MAX_CHOICES = 900
 PIECE_LENGTH = 500
 
@@ -245,13 +245,21 @@ def selection_model(choices: EvidenceChoices, request) -> type[StrictModel]:
             return create_model(
                 name, __base__=StrictModel,
                 criterion_id=(Literal[criterion_id], ...),
-                observation=(observation, ...),
-                score=(score, ...),
-                reason=(NonEmpty, ...),
                 required_work_evidence_id=(primary_work, ...),
                 work_evidence_ids=(extra_work, ...),
+                reason=(NonEmpty, Field(
+                    pattern=r"^(「[^」\r\n]{1,200}」|\[근거 없음\])",
+                    description=(
+                        "선택한 업무 근거의 짧은 원문을 「」로 인용하여 시작한 뒤, 그 사실을 "
+                        "승인 기준과 대조해 판단한다. 기준 문구를 업무 사실로 인용하지 않는다. "
+                        "해당 항목의 업무 근거가 없을 때만 [근거 없음]으로 시작하고 "
+                        "누락 자료를 명시한다."
+                    ),
+                )),
                 required_rule_evidence_id=(basis, ...),
                 rule_evidence_ids=(Annotated[list[rules], Field(max_length=3)], ...),
+                observation=(observation, ...),
+                score=(score, ...),
                 review_required=(review, ...),
             )
 

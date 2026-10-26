@@ -21,7 +21,7 @@ from ...shared.workflow_models import EvaluationInput
 from .contract import MISSING_WORK_MESSAGES
 from .materials import EvaluationMaterials, collect_evaluation_materials
 from .models import AgentEvaluationOutput
-from .payload import build_evaluation_payload
+from .payload import build_evaluation_payload, compact_evaluation_payload
 from .prompts import SYSTEM_PROMPT
 from .selection import (
     SELECTION_VERSION,
@@ -194,7 +194,7 @@ class OpenAIEvaluator:
         payload["missing_sources"] = sorted(
             set(payload["missing_sources"] + materials.missing_sources)
         )
-        encoded = json.dumps(payload, ensure_ascii=False)
+        encoded = json.dumps(compact_evaluation_payload(payload), ensure_ascii=False)
         if len(encoded) > MAX_INPUT_CHARS:
             raise EvaluationError("평가 입력이 크기 제한을 초과했습니다. 조회 범위를 줄여주세요.")
         messages = [

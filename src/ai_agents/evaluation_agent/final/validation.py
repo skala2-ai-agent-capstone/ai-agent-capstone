@@ -135,6 +135,24 @@ def validate_evaluation_result(
         raise EvaluationError("평가 항목이 승인된 기준과 다릅니다.")
     sources, kinds = evidence_catalog(request, evidence, materials)
     references = {key: ref.content for key, ref in reference_catalog(request, materials).items()}
+    # 한 번의 재시도에서 모든 조건 복사를 수정하도록 해당 항목을 함께 알린다.
+    copied_conditions = []
+    for item in result.items:
+        if item.observation == "observed":
+            continue
+        criterion = criteria[item.criterion_id]
+        explanation = re.sub(r"^(「[^」]+」|\[근거 없음\])\s*", "", item.reason)
+        reason = "".join(explanation.split()).rstrip(".。")
+        conditions = (criterion.unobserved_condition, criterion.review_condition)
+        if any(reason == "".join(text.split()).rstrip(".。") for text in conditions if text):
+            copied_conditions.append(item.criterion_id)
+    if copied_conditions:
+        raise EvaluationError(
+            f"{', '.join(copied_conditions)}: 기준의 조건 문장만으로 판단할 수 없습니다. "
+            "나열된 모든 항목을 수집된 업무 근거와 대조하여 해당 조건이 실제로 성립하는 "
+            "이유를 설명하세요. 조건이 성립하지 않으면 관측 상태와 점수도 다시 판단하세요."
+        )
+    grounding_issues = []
     for item in result.items:
         criterion = criteria[item.criterion_id]
         if (isinstance(request, StoredEvaluationInput) and item.review_required
@@ -163,13 +181,32 @@ def validate_evaluation_result(
             for proof in item.rule_evidence for approved in criterion.rule_evidence
         ):
             raise EvaluationError("해당 항목의 승인된 기준 근거가 없습니다.")
-        if item.observation != "observed":
-            continue
         key = item.criterion_id.rsplit(".", 1)[1]
         eligible = eligible_work_sources(
             key, kinds, request.work_record.work_id,
             policy_available=evidence.policy_check is not None,
         )
+        quote = re.match(r"^「([^」\r\n]{1,200})」", item.reason)
+        if quote and not any(quote[1] in proof.quote for proof in item.work_evidence):
+            grounding_issues.append(
+                f"{item.criterion_id}: 사유의 인용이 선택한 업무 원문에 없습니다",
+            )
+        if item.reason.startswith("[근거 없음]") and work_ids:
+            grounding_issues.append(
+                f"{item.criterion_id}: 선택한 업무 근거가 있는데 근거 없음으로 표시했습니다",
+            )
+        if item.observation != "observed":
+            if item.observation == "needs_review" and not work_ids:
+                raise EvaluationError(
+                    f"{item.criterion_id}: 검토 필요 판단에는 실제 업무의 상충·모호함 근거가 "
+                    "필요합니다. 조회하지 못한 자료는 insufficient_data로 구분하세요."
+                )
+            if key in {"quality", "security"} and eligible and not work_ids & eligible:
+                raise EvaluationError(
+                    f"{item.criterion_id}: 수집된 평가 대상 산출물 또는 정책 검사 근거를 "
+                    "확인하고 인용해야 합니다. 점수 없음도 해당 자료를 무시할 수 없습니다."
+                )
+            continue
         if not work_ids & eligible:
             raise EvaluationError(MISSING_WORK_MESSAGES[key])
         issue = score_issue(
@@ -179,6 +216,11 @@ def validate_evaluation_result(
         )
         if issue:
             raise EvaluationError(issue)
+    if grounding_issues:
+        raise EvaluationError(
+            "; ".join(grounding_issues) + ". 모든 해당 항목에서 실제 업무 구간의 짧은 원문을 "
+            "「」로 인용하고, 그 사실과 승인 기준을 대조하여 판단을 다시 작성하세요."
+        )
     coaching_ids = [entry.criterion_id for entry in result.coaching]
     if len(coaching_ids) != 5 or set(coaching_ids) != criteria.keys():
         raise EvaluationError("코칭은 평가 항목별로 중복 없이 하나씩 필요합니다.")

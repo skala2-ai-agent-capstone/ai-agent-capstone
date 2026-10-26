@@ -265,7 +265,7 @@ async def test_existing_server_draft_without_checkpoint_does_not_regenerate(tmp_
         ("insufficient_data", "검토 필요"),
     ],
 )
-async def test_unscored_items_keep_null_score_and_record_guidance(tmp_path, observation, status):
+async def test_unscored_items_keep_null_score_and_collected_evidence(tmp_path, observation, status):
     gateway, client = StoredGateway(), client_fixture()
     original = client.responses.parse.side_effect
 
@@ -276,8 +276,6 @@ async def test_unscored_items_keep_null_score_and_record_guidance(tmp_path, obse
             row.update(
                 observation=observation,
                 score=None,
-                required_work_evidence_id=None,
-                work_evidence_ids=[],
                 review_required=observation != "unobserved",
             )
         reply.output_parsed = kwargs["text_format"].model_validate(raw)
@@ -288,9 +286,12 @@ async def test_unscored_items_keep_null_score_and_record_guidance(tmp_path, obse
     await run.run(JOB)
     draft = next(a for _, t, a in gateway.calls if t == "save_evaluation_draft")
     coaching = next(a for _, t, a in gateway.calls if t == "save_coaching")
-    assert all(i["status"] == status and i["score"] is None for i in draft["items"])
     assert all(
-        c["kind"] == "기록 안내" and c["target_span_id"] is None for c in coaching["coaching"]
+        i["status"] == status and i["score"] is None and i["evidence_ids"]
+        for i in draft["items"]
+    )
+    assert all(
+        c["kind"] == "보완점" and c["target_span_id"] is not None for c in coaching["coaching"]
     )
 
 

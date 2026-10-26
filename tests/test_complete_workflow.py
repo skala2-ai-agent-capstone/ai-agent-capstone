@@ -155,13 +155,20 @@ def client_fixture():
         catalog = payload["work_evidence_catalog"]
         references = payload["reference_catalog"]
         items = []
-        for criterion in payload["criteria"]["items"]:
+        for criterion in payload["criteria"]:
             key = criterion["id"].rsplit(".", 1)[1]
             kind = {"quality": "target_artifact", "security": "policy_check"}.get(
                 key, "message:user"
             )
             proof = next(row for row in catalog if row["kind"] == kind)
-            rules = [criterion["rule_evidence"][0]]
+            approved_id = payload["criterion_requirements"][criterion["id"]][
+                "required_rule_choice_ids"
+            ][0]
+            approved = next(row for row in references if row["id"] == approved_id)
+            rules = [{
+                "document_id": approved["document_id"], "version": approved["version"],
+                "section_id": approved["section_id"], "quote": approved["content"],
+            }]
             additional = next(
                 (ref for ref in references if ref["document_id"] != rules[0]["document_id"]), None
             )
