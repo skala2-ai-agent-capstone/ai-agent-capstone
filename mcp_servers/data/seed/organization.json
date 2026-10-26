@@ -3,7 +3,7 @@
     {
       "company_id": "C-LGCNS-SALES",
       "name": "LG CNS 영업담당 (가상 테넌트)",
-      "min_aggregation_size": 5
+      "min_aggregation_size": 2
     },
     {
       "company_id": "C-OTHER-01",

@@ -28,6 +28,17 @@ class TeamEvaluationError(ValueError):
         super().__init__(code)
 
 
+def _drop_band_mismatch(decision, metrics):
+    """계산된 band와 반대쪽에 넣은 지표는 버린다. 지표가 한쪽 band에만 있으면 모델이 같은 지표를
+    양쪽에 넣는 일이 잦다. 모르는 ID·중복·활동 불일치는 그대로 두어 validate_decision이 거부한다."""
+    band = {m.metric_id: m.band for m in metrics}
+    return TeamDecision(
+        strengths=[k for k in decision.strengths if band.get(k, "strength") == "strength"],
+        improvements=[row for row in decision.improvements
+                      if band.get(row.metric_id, "improvement") == "improvement"],
+    )
+
+
 class TeamAgent:
     def __init__(self, client, model):
         self.client, self.model = client, model
@@ -66,7 +77,7 @@ class TeamAgent:
                 raw = reply.choices[0].message.content
                 if not isinstance(raw, str) or len(raw) > 30000:
                     raise ValueError("invalid response")
-                decision = TeamDecision.model_validate_json(raw)
+                decision = _drop_band_mismatch(TeamDecision.model_validate_json(raw), metrics)
                 validate_decision(decision, metrics)
                 return build_report(snapshot, decision)
             except (APIConnectionError, APITimeoutError):

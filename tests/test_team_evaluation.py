@@ -88,7 +88,7 @@ def transport(calls, *, fail_first=False, invalid=False, status=200, finish="sto
 
 @pytest.mark.parametrize("change", [
     lambda v: v.update(user_id="private"),
-    lambda v: v.update(min_members=4),
+    lambda v: v.update(min_members=1),
     lambda v: v.update(release_approved=False),
     lambda v: v.update(period_end=v["period_start"]),
     lambda v: v.update(min_members=9),
@@ -168,6 +168,35 @@ async def test_real_sdk_transport_retry_and_safe_errors():
     assert report.status == "generated" and len(calls) == 2
     assert "g999" not in json.dumps(calls[1])
     assert "개인의 역량" in report.limitations[0]
+
+
+@pytest.mark.asyncio
+async def test_drops_metric_placed_in_wrong_band():
+    # 강점 후보 하나뿐일 때 모델이 같은 지표를 개선에도 넣은 실제 응답(서버 llm_exchanges 376)
+    value = snapshot().model_dump(mode="json")
+    for cell in value["groups"][0]["cells"]:
+        if cell["criterion"] != "security":
+            cell["statistics"] = None
+    value = TeamSnapshot.model_validate(value)
+    reply = {"strengths": ["g1.security"], "improvements": [
+        {"metric_id": "g1.security", "action_id": "mask_before_input"},
+        {"metric_id": "g1.security", "action_id": "check_sharing_scope"}]}
+    calls = []
+
+    def handle(request):
+        calls.append(request)
+        return httpx.Response(200, json={
+            "id": "team-test-response", "object": "chat.completion", "created": 1,
+            "model": CONFIG.model, "choices": [{"index": 0, "finish_reason": "stop",
+            "message": {"role": "assistant", "content": json.dumps(reply)}}],
+        })
+
+    async with AsyncOpenAI(base_url=CONFIG.base_url, api_key="test-secret", max_retries=0,
+                           http_client=httpx.AsyncClient(
+                               transport=httpx.MockTransport(handle))) as client:
+        report = await TeamAgent(client, CONFIG.model).generate(value)
+    assert report.status == "generated" and len(calls) == 1
+    assert [s.metric_id for s in report.strengths] == ["g1.security"] and report.improvements == []
 
 
 @pytest.mark.asyncio

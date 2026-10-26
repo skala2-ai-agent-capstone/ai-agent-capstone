@@ -98,7 +98,8 @@ async def team_checks(expected: dict) -> None:
     check("빈 기간 → VALIDATION_ERROR", code(r) == "VALIDATION_ERROR", str(r)[:200])
 
     rid = str(uuid.uuid4())
-    body = {"company_id": COMPANY, "team_id": TEAM, "release_approved": True, "request_id": rid, "requested_by": "L-3001", **PERIOD}
+    body = {"company_id": COMPANY, "team_id": TEAM, "release_approved": True, "request_id": rid, "requested_by": "L-3001",
+            "min_members": 5, **PERIOD}   # 시드 회사는 2명 기준. 이 검증 데이터는 5명 기준으로 짰다
     r = internal("POST", "/internal/team-evaluations", body)
     ok = check("요청 생성 → created:true, 대기", r.get("ok") and r["data"]["created"] and r["data"]["status"] == "대기", str(r)[:300])
     if not ok:

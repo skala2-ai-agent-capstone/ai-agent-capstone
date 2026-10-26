@@ -471,7 +471,7 @@ CREATE TABLE IF NOT EXISTS team_evaluations (
   requested_by           text REFERENCES users,
   requested_at           timestamptz NOT NULL DEFAULT now(),
   release_approved       boolean NOT NULL,              -- 백엔드의 공개 승인. false면 스냅샷 groups=[]
-  min_members            int  NOT NULL CHECK (min_members BETWEEN 5 AND 100),
+  min_members            int  NOT NULL CHECK (min_members BETWEEN 2 AND 100),
   snapshot               jsonb NOT NULL,                -- Agent에 주는 TeamSnapshot 그대로(이름·평가 건 ID·개별 점수 없음)
   snapshot_sha256        text NOT NULL,
   source_evaluation_ids  text[] NOT NULL,              -- 집계에 고른 평가 건(업무별 최신 확정). Agent에 주지 않는다
