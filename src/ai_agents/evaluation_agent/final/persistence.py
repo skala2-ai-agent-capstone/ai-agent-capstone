@@ -42,7 +42,9 @@ def save_arguments(prepared):
             request.work_record.work_id,
             policy_available=prepared.evidence.policy_check is not None,
         )
-        target = next((eid for eid in evidence_ids if eid in eligible), None)
+        # 채점된 항목만 근거 구간을 코칭 대상으로 삼는다. 검토 필요·자료 부족·미관측은 기록 안내다.
+        target = next((eid for eid in evidence_ids if eid in eligible), None) \
+            if item.observation == "observed" else None
         # 점수만으로 코칭을 '강점'이라고 추정하지 않는다. 기존 모델 코칭은 개선 행동이다.
         coaching.append(
             {

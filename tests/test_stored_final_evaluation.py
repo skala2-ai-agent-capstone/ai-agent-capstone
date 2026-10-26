@@ -124,6 +124,11 @@ async def test_stored_criteria_to_final_draft_and_coaching(work_type, tmp_path):
     draft = next(a for _, t, a in gateway.calls if t == "save_evaluation_draft")
     assert {i["item_id"] for i in draft["items"]} == {i["item_id"] for i in original["items"]}
     assert all(i["status"] == "채점" and i["evidence_ids"] for i in draft["items"])
+    coaching = next(a for _, t, a in gateway.calls if t == "save_coaching")
+    # 채점된 항목의 코칭은 근거 구간을 대상으로 하는 보완점이다.
+    assert all(
+        c["kind"] == "보완점" and c["target_span_id"] for c in coaching["coaching"]
+    )
     assert not any(
         t in {"save_rubric", "get_current_rubric", "finalize"} for _, t, _ in gateway.calls
     )
@@ -272,11 +277,14 @@ async def test_unscored_items_keep_null_score_and_record_guidance(tmp_path, obse
     async def unscored(**kwargs):
         reply = await original(**kwargs)
         raw = reply.output_parsed.model_dump(mode="json")
+        requirements = json.loads(kwargs["input"][1]["content"])["criterion_requirements"]
         for row in raw["items"]:
+            # 검토 필요는 상충·모호함을 보여 주는 업무 근거를 함께 고른다.
+            review_work = requirements[row["criterion_id"]]["required_work_choice_ids"][0]
             row.update(
                 observation=observation,
                 score=None,
-                required_work_evidence_id=None,
+                required_work_evidence_id=review_work if observation == "needs_review" else None,
                 work_evidence_ids=[],
                 review_required=observation != "unobserved",
             )
@@ -289,6 +297,9 @@ async def test_unscored_items_keep_null_score_and_record_guidance(tmp_path, obse
     draft = next(a for _, t, a in gateway.calls if t == "save_evaluation_draft")
     coaching = next(a for _, t, a in gateway.calls if t == "save_coaching")
     assert all(i["status"] == status and i["score"] is None for i in draft["items"])
+    reviewed = observation == "needs_review"
+    assert all(bool(i["evidence_ids"]) == reviewed for i in draft["items"])
+    # 검토 필요는 근거를 남기지만 코칭은 점수 없는 항목과 같이 기록 안내다.
     assert all(
         c["kind"] == "기록 안내" and c["target_span_id"] is None for c in coaching["coaching"]
     )
