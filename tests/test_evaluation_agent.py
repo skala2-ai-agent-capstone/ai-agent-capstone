@@ -12,7 +12,11 @@ from test_mcp_adapter import CASES, approved_request, inputs, policy_response, r
 from ai_agents.evaluation_agent.final.agent import OpenAIEvaluator, render_evaluation_report
 from ai_agents.evaluation_agent.final.materials import collect_evaluation_materials
 from ai_agents.evaluation_agent.final.models import AgentEvaluationOutput
-from ai_agents.evaluation_agent.final.validation import EvaluationError, validate_evaluation_result
+from ai_agents.evaluation_agent.final.validation import (
+    VISIBLE_SECRET,
+    EvaluationError,
+    validate_evaluation_result,
+)
 from ai_agents.integrations.mcp_adapter import collect_evaluation_evidence
 from ai_agents.shared.llm_trace import work_scope
 from ai_agents.shared.workflow_models import content_hash
@@ -239,6 +243,13 @@ def selected_result(result, payload):
         item["work_evidence_ids"] = [key for key in work_ids if key != primary_work]
         item["required_rule_evidence_id"] = primary_rule
         item["rule_evidence_ids"] = [key for key in rule_ids if key != primary_rule]
+        if primary_work:
+            text = next(row["text"] for row in payload["work_evidence_catalog"]
+                        if row["id"] == primary_work)
+            excerpt = next(part.strip() for part in VISIBLE_SECRET.split(text) if part.strip())[:80]
+            item["reason"] = f"「{excerpt}」 {item['reason']}"
+        else:
+            item["reason"] = f"[근거 없음] {item['reason']}"
         items.append(item)
     return {"items": items, "coaching": checked["coaching"]}
 

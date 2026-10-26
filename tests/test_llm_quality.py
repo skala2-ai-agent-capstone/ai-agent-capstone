@@ -51,10 +51,13 @@ def mock_output(body):
     items = []
     for criterion, spec in payload["criterion_requirements"].items():
         can_score = spec["can_score"]
+        text = next((row["text"] for row in payload["work_evidence_catalog"]
+                     if row["id"] in spec["required_work_choice_ids"]), None)
+        reason = f"「{text[:80]}」" if text else "[근거 없음]"
         items.append({
             "criterion_id": criterion, "observation": "observed" if can_score else "unobserved",
             "score": spec["allowed_scores"][0] if can_score else None,
-            "reason": "테스트 전송 대역 응답", "review_required": False,
+            "reason": reason + " 테스트 전송 대역 응답", "review_required": False,
             "required_work_evidence_id": spec["required_work_choice_ids"][0] if can_score else None,
             "work_evidence_ids": [],
             "required_rule_evidence_id": spec["required_rule_choice_ids"][0],

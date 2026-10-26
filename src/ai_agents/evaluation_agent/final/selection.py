@@ -11,9 +11,9 @@ from ...shared.models import NonEmpty, StrictModel
 from ...shared.workflow_models import content_hash
 from .contract import MISSING_WORK_MESSAGES, eligible_work_sources, score_issue
 from .models import AgentEvaluationOutput
-from .validation import EvaluationError
+from .validation import VISIBLE_SECRET, EvaluationError
 
-SELECTION_VERSION = "evaluation-evidence-selection-v5-reason-first"
+SELECTION_VERSION = "evaluation-evidence-selection-v7-restored-reason-quote"
 MAX_CHOICES = 900
 PIECE_LENGTH = 500
 
@@ -183,6 +183,14 @@ def _item_problem(row, requirements):
         required = requirement["required_work_choice_ids"]
         if required and row.get("required_work_evidence_id") not in required:
             return "검토 필요 항목에는 상충·모호함을 보여 주는 이 항목의 업무 근거가 필요합니다."
+        if not row.get("required_work_evidence_id"):
+            return "검토 필요 판단에는 실제 업무 근거가 필요합니다."
+    key = criterion.rsplit(".", 1)[1]
+    eligible = requirement["required_work_choice_ids"]
+    if (state != "observed" and eligible
+            and (state in {"needs_review", "insufficient_data"} or key in {"quality", "security"})
+            and row.get("required_work_evidence_id") not in eligible):
+        return MISSING_WORK_MESSAGES[key]
     if row.get("required_rule_evidence_id") not in requirement["required_rule_choice_ids"]:
         return "해당 항목의 승인된 기준 근거를 선택해야 합니다."
     return "선택 ID·필수 필드·자료형이 평가 응답 형식과 맞지 않습니다."
@@ -219,9 +227,11 @@ def _item_diagnostic(row, choices, requirements):
     }
 
 
-def selection_model(choices: EvidenceChoices, request) -> type[StrictModel]:
+def selection_model(choices: EvidenceChoices, request, *, criterion_id=None) -> type[StrictModel]:
     """각 항목의 필수 업무·승인 기준 근거를 API 출력 스키마에도 반영한다."""
     requirements = choice_requirements(choices, request)
+    if criterion_id is not None:
+        requirements = {criterion_id: requirements[criterion_id]}
     criteria = Enum(
         "EvaluationCriterionId", {f"C{i}": key for i, key in enumerate(requirements)}, type=str,
     )
@@ -246,30 +256,33 @@ def selection_model(choices: EvidenceChoices, request) -> type[StrictModel]:
         )
 
         def variant(name, observation, score, primary_work, review):
-            # 구조화 출력은 속성 순서대로 생성된다. 판단 이유를 상태·점수보다 먼저 쓰게 한다.
+            # 판단 이유를 상태·점수보다 먼저 쓰되, 그 전에 실제 업무 근거를 선택한다.
             return create_model(
                 name, __base__=StrictModel,
                 criterion_id=(Literal[criterion_id], ...),
-                reason=(NonEmpty, ...),
-                observation=(observation, ...),
-                score=(score, ...),
                 required_work_evidence_id=(primary_work, ...),
                 work_evidence_ids=(extra_work, ...),
+                reason=(NonEmpty, Field(
+                    description=(
+                        "선택한 업무 근거에서 확인한 사실과 승인 기준을 비교한 판단 설명. "
+                        "원문 인용은 프로그램이 붙이므로 「」 인용을 직접 작성하지 않는다. "
+                        "기준의 조건문을 업무 사실로 추정하지 않는다. 자료가 없으면 "
+                        "확인하지 못한 자료를 구체적으로 설명한다."
+                    ),
+                )),
                 required_rule_evidence_id=(basis, ...),
                 rule_evidence_ids=(Annotated[list[rules], Field(max_length=3)], ...),
+                observation=(observation, ...),
+                score=(score, ...),
                 review_required=(review, ...),
             )
 
-        required_work = Enum(
-            f"RequiredWorkChoice{number}",
-            {key: key for key in requirement["required_work_choice_ids"]}, type=str,
-        ) if requirement["required_work_choice_ids"] else None
-        # 검토 필요는 상충·모호함을 보여 주는 업무 근거를 골라야 한다.
-        # 업무 근거 후보가 하나도 없을 때만 null이다.
-        if required_work is not None:
-            review_work = required_work
-        else:
-            review_work = work if choices.work else type(None)
+        required_work = unscored_work
+        if requirement["required_work_choice_ids"]:
+            required_work = Enum(
+                f"RequiredWorkChoice{number}",
+                {key: key for key in requirement["required_work_choice_ids"]}, type=str,
+            )
         if requirement["can_score"] and requirement["allowed_scores"]:
             score_values = tuple(requirement["allowed_scores"])
             variants.append(variant(
@@ -278,11 +291,18 @@ def selection_model(choices: EvidenceChoices, request) -> type[StrictModel]:
                 Annotated[bool, Field(strict=True)],
             ))
         variants.extend([
-            variant(f"UnscoredEvaluationItem{number}", Literal["unobserved", "insufficient_data"],
-                    type(None), unscored_work, Annotated[bool, Field(strict=True)]),
-            variant(f"ReviewEvaluationItem{number}", Literal["needs_review"], type(None),
-                    review_work, Annotated[Literal[True], BeforeValidator(_strict_review)]),
+            variant(f"UnobservedEvaluationItem{number}", Literal["unobserved"], type(None),
+                    required_work if criterion_id.rsplit(".", 1)[1] in {"quality", "security"}
+                    else unscored_work, Annotated[bool, Field(strict=True)]),
+            variant(f"InsufficientEvaluationItem{number}", Literal["insufficient_data"],
+                    type(None), required_work, Annotated[bool, Field(strict=True)]),
         ])
+        if choices.work:
+            variants.append(variant(
+                f"ReviewEvaluationItem{number}", Literal["needs_review"], type(None),
+                required_work if requirement["required_work_choice_ids"] else work,
+                Annotated[Literal[True], BeforeValidator(_strict_review)],
+            ))
 
     def check_item(row, handler):
         try:
@@ -300,8 +320,10 @@ def selection_model(choices: EvidenceChoices, request) -> type[StrictModel]:
     )
     return create_model(
         "SelectedEvaluation", __base__=StrictModel,
-        items=(Annotated[list[item], Field(min_length=5, max_length=5)], ...),
-        coaching=(Annotated[list[coaching], Field(min_length=5, max_length=5)], ...),
+        items=(Annotated[list[item], Field(min_length=len(requirements),
+                                          max_length=len(requirements))], ...),
+        coaching=(Annotated[list[coaching], Field(min_length=len(requirements),
+                                                max_length=len(requirements))], ...),
     )
 
 
@@ -327,6 +349,17 @@ def resolve_selection(raw, choices: EvidenceChoices, request) -> AgentEvaluation
         item["work_evidence"] = [
             {"source_id": work[key]["source_id"], "quote": work[key]["text"]} for key in work_ids
         ]
+        # 원문 복사는 모델에게 맡기지 않는다. 이미 작성한 인용·부재 주장은 검증에 남긴다.
+        if not item["reason"].startswith(("「", "[근거 없음]")):
+            if work_ids:
+                text = work[work_ids[0]]["text"]
+                excerpt = next(
+                    (part.strip()[:160] for part in VISIBLE_SECRET.split(text) if part.strip()), "",
+                )
+                if excerpt:
+                    item["reason"] = f"「{excerpt}」 {item['reason']}"
+            else:
+                item["reason"] = f"[근거 없음] {item['reason']}"
         item["rule_evidence"] = [
             {
                 "document_id": rules[key]["document_id"], "version": rules[key]["version"],

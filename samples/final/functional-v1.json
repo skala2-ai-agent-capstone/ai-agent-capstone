@@ -863,7 +863,7 @@
                   "item": "문제 정의",
                   "status": "채점",
                   "score": 0,
-                  "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+                  "reason": "「첨부한 RFP 원문(RFP-HB-2026-01 v1.0)에서 요구사항을 하나도 빠짐없이 추출해서 대응표로 정리해줘.」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
                   "evidence_ids": [
                     "W-E2E-RFP-01-M01"
                   ]
@@ -873,7 +873,7 @@
                   "item": "지시 품질",
                   "status": "채점",
                   "score": 0,
-                  "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+                  "reason": "「첨부한 RFP 원문(RFP-HB-2026-01 v1.0)에서 요구사항을 하나도 빠짐없이 추출해서 대응표로 정리해줘.」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
                   "evidence_ids": [
                     "W-E2E-RFP-01-M01"
                   ]
@@ -883,7 +883,7 @@
                   "item": "결과 검증",
                   "status": "채점",
                   "score": 0,
-                  "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+                  "reason": "「첨부한 RFP 원문(RFP-HB-2026-01 v1.0)에서 요구사항을 하나도 빠짐없이 추출해서 대응표로 정리해줘.」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
                   "evidence_ids": [
                     "W-E2E-RFP-01-M01"
                   ]
@@ -893,7 +893,7 @@
                   "item": "보안 준수",
                   "status": "채점",
                   "score": 0,
-                  "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+                  "reason": "「{\"checked_at\": \"2026-10-05T09:20:00+09:00\", \"evidence_id\": \"W-E2E-RFP-01:policy_」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
                   "evidence_ids": [
                     "W-E2E-RFP-01:policy_check"
                   ]
@@ -903,7 +903,7 @@
                   "item": "결과물 품질",
                   "status": "채점",
                   "score": 0,
-                  "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+                  "reason": "「| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
                   "evidence_ids": [
                     "ART-E2E-RFP-01:v2:HEADER"
                   ]
@@ -1019,7 +1019,7 @@
               "criterion_id": "rfp_analysis.problem_definition",
               "observation": "observed",
               "score": 0,
-              "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+              "reason": "「첨부한 RFP 원문(RFP-HB-2026-01 v1.0)에서 요구사항을 하나도 빠짐없이 추출해서 대응표로 정리해줘.」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
               "required_work_evidence_id": "w0018",
               "work_evidence_ids": [],
               "required_rule_evidence_id": "r0001",
@@ -1030,7 +1030,7 @@
               "criterion_id": "rfp_analysis.instruction_quality",
               "observation": "observed",
               "score": 0,
-              "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+              "reason": "「첨부한 RFP 원문(RFP-HB-2026-01 v1.0)에서 요구사항을 하나도 빠짐없이 추출해서 대응표로 정리해줘.」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
               "required_work_evidence_id": "w0018",
               "work_evidence_ids": [],
               "required_rule_evidence_id": "r0003",
@@ -1041,7 +1041,7 @@
               "criterion_id": "rfp_analysis.verification",
               "observation": "observed",
               "score": 0,
-              "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+              "reason": "「첨부한 RFP 원문(RFP-HB-2026-01 v1.0)에서 요구사항을 하나도 빠짐없이 추출해서 대응표로 정리해줘.」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
               "required_work_evidence_id": "w0018",
               "work_evidence_ids": [],
               "required_rule_evidence_id": "r0005",
@@ -1052,7 +1052,7 @@
               "criterion_id": "rfp_analysis.security",
               "observation": "observed",
               "score": 0,
-              "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+              "reason": "「{\"checked_at\": \"2026-10-05T09:20:00+09:00\", \"evidence_id\": \"W-E2E-RFP-01:policy_」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
               "required_work_evidence_id": "w0017",
               "work_evidence_ids": [],
               "required_rule_evidence_id": "r0007",
@@ -1063,7 +1063,7 @@
               "criterion_id": "rfp_analysis.quality",
               "observation": "observed",
               "score": 0,
-              "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+              "reason": "「| 번호 | 원문 위치 | 요구사항 | 구분 | 대응 수준 | 대응 근거 | 사유 |」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
               "required_work_evidence_id": "w0009",
               "work_evidence_ids": [],
               "required_rule_evidence_id": "r0009",
@@ -2095,7 +2095,7 @@
                   "item": "문제 정의",
                   "status": "채점",
                   "score": 0,
-                  "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+                  "reason": "「동해물류 제안서 초안 작성해줘.」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
                   "evidence_ids": [
                     "W-E2E-PR-01-M01"
                   ]
@@ -2105,7 +2105,7 @@
                   "item": "지시 품질",
                   "status": "채점",
                   "score": 0,
-                  "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+                  "reason": "「동해물류 제안서 초안 작성해줘.」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
                   "evidence_ids": [
                     "W-E2E-PR-01-M01"
                   ]
@@ -2115,7 +2115,7 @@
                   "item": "결과 검증",
                   "status": "채점",
                   "score": 0,
-                  "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+                  "reason": "「동해물류 제안서 초안 작성해줘.」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
                   "evidence_ids": [
                     "W-E2E-PR-01-M01"
                   ]
@@ -2125,7 +2125,7 @@
                   "item": "보안 준수",
                   "status": "채점",
                   "score": 0,
-                  "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+                  "reason": "「{\"checked_at\": \"2026-10-08T09:21:00+09:00\", \"evidence_id\": \"W-E2E-PR-01:policy_c」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
                   "evidence_ids": [
                     "W-E2E-PR-01:policy_check"
                   ]
@@ -2135,7 +2135,7 @@
                   "item": "결과물 품질",
                   "status": "채점",
                   "score": 0,
-                  "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+                  "reason": "「[제안서] 동해물류(가상) AI 컨택센터 도입 제안」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
                   "evidence_ids": [
                     "ART-E2E-PR-01:v2:L01"
                   ]
@@ -2267,7 +2267,7 @@
               "criterion_id": "proposal.problem_definition",
               "observation": "observed",
               "score": 0,
-              "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+              "reason": "「동해물류 제안서 초안 작성해줘.」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
               "required_work_evidence_id": "w0018",
               "work_evidence_ids": [],
               "required_rule_evidence_id": "r0001",
@@ -2278,7 +2278,7 @@
               "criterion_id": "proposal.instruction_quality",
               "observation": "observed",
               "score": 0,
-              "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+              "reason": "「동해물류 제안서 초안 작성해줘.」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
               "required_work_evidence_id": "w0018",
               "work_evidence_ids": [],
               "required_rule_evidence_id": "r0003",
@@ -2289,7 +2289,7 @@
               "criterion_id": "proposal.verification",
               "observation": "observed",
               "score": 0,
-              "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+              "reason": "「동해물류 제안서 초안 작성해줘.」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
               "required_work_evidence_id": "w0018",
               "work_evidence_ids": [],
               "required_rule_evidence_id": "r0005",
@@ -2300,7 +2300,7 @@
               "criterion_id": "proposal.security",
               "observation": "observed",
               "score": 0,
-              "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+              "reason": "「{\"checked_at\": \"2026-10-08T09:21:00+09:00\", \"evidence_id\": \"W-E2E-PR-01:policy_c」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
               "required_work_evidence_id": "w0017",
               "work_evidence_ids": [],
               "required_rule_evidence_id": "r0007",
@@ -2311,7 +2311,7 @@
               "criterion_id": "proposal.quality",
               "observation": "observed",
               "score": 0,
-              "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+              "reason": "「[제안서] 동해물류(가상) AI 컨택센터 도입 제안」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
               "required_work_evidence_id": "w0010",
               "work_evidence_ids": [],
               "required_rule_evidence_id": "r0009",
@@ -3996,7 +3996,7 @@
                   "item": "문제 정의",
                   "status": "채점",
                   "score": 0,
-                  "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+                  "reason": "「누리유통 견적서 작성해줘.」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
                   "evidence_ids": [
                     "W-E2E-QT-01-M01"
                   ]
@@ -4006,7 +4006,7 @@
                   "item": "지시 품질",
                   "status": "채점",
                   "score": 0,
-                  "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+                  "reason": "「누리유통 견적서 작성해줘.」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
                   "evidence_ids": [
                     "W-E2E-QT-01-M01"
                   ]
@@ -4016,7 +4016,7 @@
                   "item": "결과 검증",
                   "status": "채점",
                   "score": 0,
-                  "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+                  "reason": "「누리유통 견적서 작성해줘.」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
                   "evidence_ids": [
                     "W-E2E-QT-01-M01"
                   ]
@@ -4026,7 +4026,7 @@
                   "item": "보안 준수",
                   "status": "채점",
                   "score": 0,
-                  "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+                  "reason": "「{\"checked_at\": \"2026-10-09T10:20:00+09:00\", \"evidence_id\": \"W-E2E-QT-01:policy_c」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
                   "evidence_ids": [
                     "W-E2E-QT-01:policy_check"
                   ]
@@ -4036,7 +4036,7 @@
                   "item": "결과물 품질",
                   "status": "채점",
                   "score": 0,
-                  "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+                  "reason": "「[견적서] Q-2026-0523 / 고객사: 누리유통(가상)」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
                   "evidence_ids": [
                     "ART-E2E-QT-01:v3:L01"
                   ]
@@ -4160,7 +4160,7 @@
               "criterion_id": "quotation.problem_definition",
               "observation": "observed",
               "score": 0,
-              "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+              "reason": "「누리유통 견적서 작성해줘.」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
               "required_work_evidence_id": "w0033",
               "work_evidence_ids": [],
               "required_rule_evidence_id": "r0001",
@@ -4171,7 +4171,7 @@
               "criterion_id": "quotation.instruction_quality",
               "observation": "observed",
               "score": 0,
-              "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+              "reason": "「누리유통 견적서 작성해줘.」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
               "required_work_evidence_id": "w0033",
               "work_evidence_ids": [],
               "required_rule_evidence_id": "r0003",
@@ -4182,7 +4182,7 @@
               "criterion_id": "quotation.verification",
               "observation": "observed",
               "score": 0,
-              "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+              "reason": "「누리유통 견적서 작성해줘.」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
               "required_work_evidence_id": "w0033",
               "work_evidence_ids": [],
               "required_rule_evidence_id": "r0005",
@@ -4193,7 +4193,7 @@
               "criterion_id": "quotation.security",
               "observation": "observed",
               "score": 0,
-              "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+              "reason": "「{\"checked_at\": \"2026-10-09T10:20:00+09:00\", \"evidence_id\": \"W-E2E-QT-01:policy_c」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
               "required_work_evidence_id": "w0032",
               "work_evidence_ids": [],
               "required_rule_evidence_id": "r0007",
@@ -4204,7 +4204,7 @@
               "criterion_id": "quotation.quality",
               "observation": "observed",
               "score": 0,
-              "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+              "reason": "「[견적서] Q-2026-0523 / 고객사: 누리유통(가상)」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
               "required_work_evidence_id": "w0022",
               "work_evidence_ids": [],
               "required_rule_evidence_id": "r0009",
@@ -5148,7 +5148,7 @@
                   "item": "문제 정의",
                   "status": "채점",
                   "score": 0,
-                  "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+                  "reason": "「동해물류 고객 질문에 회신 메일 초안 써줘.」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
                   "evidence_ids": [
                     "W-E2E-IQ-01-M01"
                   ]
@@ -5158,7 +5158,7 @@
                   "item": "지시 품질",
                   "status": "채점",
                   "score": 0,
-                  "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+                  "reason": "「동해물류 고객 질문에 회신 메일 초안 써줘.」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
                   "evidence_ids": [
                     "W-E2E-IQ-01-M01"
                   ]
@@ -5168,7 +5168,7 @@
                   "item": "결과 검증",
                   "status": "채점",
                   "score": 0,
-                  "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+                  "reason": "「동해물류 고객 질문에 회신 메일 초안 써줘.」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
                   "evidence_ids": [
                     "W-E2E-IQ-01-M01"
                   ]
@@ -5178,7 +5178,7 @@
                   "item": "보안 준수",
                   "status": "채점",
                   "score": 0,
-                  "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+                  "reason": "「{\"checked_at\": \"2026-10-16T09:19:00+09:00\", \"evidence_id\": \"W-E2E-IQ-01:policy_c」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
                   "evidence_ids": [
                     "W-E2E-IQ-01:policy_check"
                   ]
@@ -5188,7 +5188,7 @@
                   "item": "결과물 품질",
                   "status": "채점",
                   "score": 0,
-                  "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+                  "reason": "「[회신 메일]」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
                   "evidence_ids": [
                     "ART-E2E-IQ-01:v2:L01"
                   ]
@@ -5312,7 +5312,7 @@
               "criterion_id": "customer_response.problem_definition",
               "observation": "observed",
               "score": 0,
-              "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+              "reason": "「동해물류 고객 질문에 회신 메일 초안 써줘.」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
               "required_work_evidence_id": "w0025",
               "work_evidence_ids": [],
               "required_rule_evidence_id": "r0001",
@@ -5323,7 +5323,7 @@
               "criterion_id": "customer_response.instruction_quality",
               "observation": "observed",
               "score": 0,
-              "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+              "reason": "「동해물류 고객 질문에 회신 메일 초안 써줘.」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
               "required_work_evidence_id": "w0025",
               "work_evidence_ids": [],
               "required_rule_evidence_id": "r0003",
@@ -5334,7 +5334,7 @@
               "criterion_id": "customer_response.verification",
               "observation": "observed",
               "score": 0,
-              "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+              "reason": "「동해물류 고객 질문에 회신 메일 초안 써줘.」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
               "required_work_evidence_id": "w0025",
               "work_evidence_ids": [],
               "required_rule_evidence_id": "r0005",
@@ -5345,7 +5345,7 @@
               "criterion_id": "customer_response.security",
               "observation": "observed",
               "score": 0,
-              "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+              "reason": "「{\"checked_at\": \"2026-10-16T09:19:00+09:00\", \"evidence_id\": \"W-E2E-IQ-01:policy_c」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
               "required_work_evidence_id": "w0024",
               "work_evidence_ids": [],
               "required_rule_evidence_id": "r0007",
@@ -5356,7 +5356,7 @@
               "criterion_id": "customer_response.quality",
               "observation": "observed",
               "score": 0,
-              "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+              "reason": "「[회신 메일]」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
               "required_work_evidence_id": "w0016",
               "work_evidence_ids": [],
               "required_rule_evidence_id": "r0009",
@@ -10280,7 +10280,7 @@
               "criterion_id": "proposal.problem_definition",
               "observation": "observed",
               "score": 0,
-              "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+              "reason": "[근거 없음] 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
               "required_work_evidence_id": "w99999",
               "work_evidence_ids": [],
               "required_rule_evidence_id": "r0001",
@@ -10291,7 +10291,7 @@
               "criterion_id": "proposal.instruction_quality",
               "observation": "observed",
               "score": 0,
-              "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+              "reason": "「동해물류 제안서 초안 작성해줘.」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
               "required_work_evidence_id": "w0018",
               "work_evidence_ids": [],
               "required_rule_evidence_id": "r0003",
@@ -10302,7 +10302,7 @@
               "criterion_id": "proposal.verification",
               "observation": "observed",
               "score": 0,
-              "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+              "reason": "「동해물류 제안서 초안 작성해줘.」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
               "required_work_evidence_id": "w0018",
               "work_evidence_ids": [],
               "required_rule_evidence_id": "r0005",
@@ -10313,7 +10313,7 @@
               "criterion_id": "proposal.security",
               "observation": "observed",
               "score": 0,
-              "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+              "reason": "「{\"checked_at\": \"2026-10-08T09:21:00+09:00\", \"evidence_id\": \"W-E2E-PR-01:policy_c」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
               "required_work_evidence_id": "w0017",
               "work_evidence_ids": [],
               "required_rule_evidence_id": "r0007",
@@ -10324,7 +10324,7 @@
               "criterion_id": "proposal.quality",
               "observation": "observed",
               "score": 0,
-              "reason": "고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
+              "reason": "「[제안서] 동해물류(가상) AI 컨택센터 도입 제안」 고정된 테스트 결과이며 실제 업무 점수로 사용하지 않습니다.",
               "required_work_evidence_id": "w0010",
               "work_evidence_ids": [],
               "required_rule_evidence_id": "r0009",

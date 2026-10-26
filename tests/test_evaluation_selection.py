@@ -1,5 +1,6 @@
 import json
 from copy import deepcopy
+from types import SimpleNamespace
 
 import pytest
 from jsonschema import Draft202012Validator
@@ -7,6 +8,7 @@ from pydantic import ValidationError
 from test_evaluation_agent import ToolFixture, collect, selected_result, valid_result
 from test_mcp_adapter import CASES
 
+from ai_agents.evaluation_agent.final.agent import OpenAIEvaluator
 from ai_agents.evaluation_agent.final.selection import (
     build_choices,
     choice_requirements,
@@ -15,7 +17,12 @@ from ai_agents.evaluation_agent.final.selection import (
     security_choice_ids,
     selection_model,
 )
-from ai_agents.evaluation_agent.final.validation import evidence_catalog, validate_evaluation_result
+from ai_agents.evaluation_agent.final.validation import (
+    EvaluationError,
+    evidence_catalog,
+    validate_evaluation_result,
+)
+from ai_agents.shared.workflow_models import content_hash
 
 
 def catalogs(fixture, evidence, materials):
@@ -108,6 +115,7 @@ async def test_unobserved_item_stays_without_score_or_fabricated_work_citation()
     wire = selected_result(valid_result(fixture, evidence, materials), payload)
     wire["items"][0].update(
         observation="unobserved", score=None, required_work_evidence_id=None, work_evidence_ids=[],
+        reason="[근거 없음] 관측된 행동의 근거가 없습니다.",
     )
     result = resolve_selection(wire, choices, fixture.request)
     checked = validate_evaluation_result(
@@ -197,13 +205,8 @@ async def test_unscored_states_remain_valid_with_null_score(state):
     evidence, materials = await collect(fixture)
     choices, payload, _, _ = catalogs(fixture, evidence, materials)
     wire = selected_result(valid_result(fixture, evidence, materials), payload)
-    row = wire["items"][3]
-    # 검토 필요는 상충·모호함을 보여 주는 업무 근거를 함께 골라야 한다.
-    requirement = payload["criterion_requirements"][row["criterion_id"]]
-    review_work = requirement["required_work_choice_ids"][0]
-    row.update(
-        observation=state, score=None, work_evidence_ids=[],
-        required_work_evidence_id=review_work if state == "needs_review" else None,
+    wire["items"][3].update(
+        observation=state, score=None,
         review_required=state == "needs_review",
     )
     model = selection_model(choices, fixture.request)
@@ -214,6 +217,81 @@ async def test_unscored_states_remain_valid_with_null_score(state):
     )
     assert checked.items[3].score is None
     assert checked.items[3].observation == state
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("state", ["needs_review", "insufficient_data"])
+@pytest.mark.parametrize("index", range(5))
+@pytest.mark.parametrize("primary", ["missing", "unrelated"])
+async def test_unscored_schema_requires_available_criterion_evidence(state, index, primary):
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    choices, payload, _, _ = catalogs(fixture, evidence, materials)
+    wire = selected_result(valid_result(fixture, evidence, materials), payload)
+    assistant = next(row["id"] for row in choices.work if row["kind"] == "message:assistant")
+    wire["items"][index].update(
+        observation=state, score=None, review_required=True,
+        required_work_evidence_id=None if primary == "missing" else assistant,
+        work_evidence_ids=[],
+    )
+    model = selection_model(choices, fixture.request)
+    assert not Draft202012Validator(model.model_json_schema()).is_valid(wire)
+    with pytest.raises(ValidationError, match="근거"):
+        model.model_validate(wire)
+
+
+@pytest.mark.asyncio
+async def test_insufficient_data_can_omit_evidence_when_criterion_sources_are_absent():
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    choices, payload, _, _ = catalogs(fixture, evidence, materials)
+    wire = selected_result(valid_result(fixture, evidence, materials), payload)
+    choices.work = [row for row in choices.work if row["kind"] != "policy_check"]
+    choices.policy_available = False
+    wire["items"][3].update(
+        observation="insufficient_data", score=None, review_required=False,
+        required_work_evidence_id=None, work_evidence_ids=[],
+        reason="[근거 없음] 서버 정책 검사 결과를 조회하지 못했습니다.",
+    )
+    model = selection_model(choices, fixture.request)
+    assert Draft202012Validator(model.model_json_schema()).is_valid(wire)
+    model.model_validate(wire)
+
+
+@pytest.mark.asyncio
+async def test_no_work_choices_cannot_claim_an_evidenced_conflict():
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    choices, payload, _, _ = catalogs(fixture, evidence, materials)
+    wire = selected_result(valid_result(fixture, evidence, materials), payload)
+    choices.work = []
+    for item in wire["items"]:
+        item.update(
+            observation="needs_review", score=None, review_required=True,
+            required_work_evidence_id=None, work_evidence_ids=[],
+            reason="[근거 없음] 업무 근거 없이 충돌이 있다고 주장합니다.",
+        )
+    model = selection_model(choices, fixture.request)
+    assert not Draft202012Validator(model.model_json_schema()).is_valid(wire)
+    with pytest.raises(ValidationError, match="근거"):
+        model.model_validate(wire)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("state", ["needs_review", "insufficient_data"])
+@pytest.mark.parametrize("index", range(5))
+async def test_public_validation_rejects_unscored_items_ignoring_available_evidence(state, index):
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    result = valid_result(fixture, evidence, materials)
+    item = result.items[index]
+    item.observation, item.score, item.review_required = state, None, True
+    item.work_evidence = []
+    item.reason = "[근거 없음] 존재하는 업무 근거를 무시한 판단입니다."
+    with pytest.raises(EvaluationError, match="근거"):
+        validate_evaluation_result(
+            fixture.request, result, evidence=evidence, materials=materials,
+        )
 
 
 @pytest.mark.asyncio
@@ -243,7 +321,8 @@ async def test_reason_is_generated_before_observation_and_score():
     schema = selection_model(choices, fixture.request).model_json_schema()
     for branch in schema["properties"]["items"]["items"]["anyOf"]:
         fields = list(schema["$defs"][branch["$ref"].rsplit("/", 1)[1]]["properties"])
-        assert fields[:4] == ["criterion_id", "reason", "observation", "score"]
+        assert fields.index("reason") < fields.index("observation") < fields.index("score")
+        assert fields.index("required_work_evidence_id") < fields.index("reason")
 
 
 @pytest.mark.asyncio
@@ -284,8 +363,104 @@ async def test_observed_zero_keeps_its_reason_and_original_reviewed_artifact():
     item = checked.items[4]
     assert item.score == 0
     assert item.observation == "observed"
-    assert item.reason == public.items[4].reason
+    assert item.reason.endswith(public.items[4].reason)
+    assert item.reason.startswith("「")
     assert all(proof.quote in sources[proof.source_id] for proof in item.work_evidence)
+
+
+@pytest.mark.asyncio
+async def test_plain_reason_gets_exact_original_quote_without_model_copying():
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    choices, payload, _, _ = catalogs(fixture, evidence, materials)
+    wire = selected_result(valid_result(fixture, evidence, materials), payload)
+    item = wire["items"][0]
+    item["reason"] = "직원이 전달한 요구를 승인된 문제 정의 조건과 비교했습니다."
+    selected = next(row for row in choices.work if row["id"] == item["required_work_evidence_id"])
+    result = resolve_selection(wire, choices, fixture.request)
+    checked = validate_evaluation_result(
+        fixture.request, result, evidence=evidence, materials=materials,
+    )
+    assert checked.items[0].reason == f"「{selected['text'][:160]}」 {item['reason']}"
+
+
+@pytest.mark.asyncio
+async def test_model_fabricated_quote_is_still_rejected_instead_of_overwritten():
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    choices, payload, _, _ = catalogs(fixture, evidence, materials)
+    wire = selected_result(valid_result(fixture, evidence, materials), payload)
+    wire["items"][0]["reason"] = "「선택한 원문에 없는 문장」 기준을 충족했습니다."
+    result = resolve_selection(wire, choices, fixture.request)
+    with pytest.raises(EvaluationError, match="사유의 인용"):
+        validate_evaluation_result(
+            fixture.request, result, evidence=evidence, materials=materials,
+        )
+
+
+@pytest.mark.asyncio
+async def test_restored_quote_does_not_hide_copied_review_condition():
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    choices, payload, _, _ = catalogs(fixture, evidence, materials)
+    wire = selected_result(valid_result(fixture, evidence, materials), payload)
+    criterion = fixture.request.approved_criteria.items[0]
+    criterion.review_condition = "실제 업무 자료 사이에 충돌이 있음."
+    fixture.request.approval.criteria_sha256 = content_hash(fixture.request.approved_criteria)
+    wire["items"][0].update(
+        observation="needs_review", score=None, review_required=True,
+        reason=fixture.request.approved_criteria.items[0].review_condition,
+    )
+    result = resolve_selection(wire, choices, fixture.request)
+    with pytest.raises(EvaluationError, match="조건 문장"):
+        validate_evaluation_result(
+            fixture.request, result, evidence=evidence, materials=materials,
+        )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("audit_score", [0, 2, None])
+async def test_quality_full_marks_are_rechecked_against_saved_artifact(audit_score):
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    calls = []
+    initial = None
+
+    async def generate(messages, response_format):
+        nonlocal initial
+        payload = json.loads(messages[1]["content"])
+        calls.append(payload)
+        if len(calls) == 1:
+            initial = selected_result(valid_result(fixture, evidence, materials), payload)
+            initial["items"][4]["score"] = 2
+            raw = initial
+        else:
+            assert len(payload["criteria"]) == 1
+            assert payload["criteria"][0]["id"].endswith(".quality")
+            assert all(row["kind"] == "target_artifact"
+                       for row in payload["work_evidence_catalog"])
+            target = next(a for a in evidence.artifacts if a.is_evaluation_target)
+            assert payload["saved_artifact"]["content"] == target.content
+            item = {**initial["items"][4], "score": audit_score,
+                    "observation": "observed" if audit_score is not None else "insufficient_data",
+                    "reason": "저장본과 승인 기준을 비교한 재검증 결과입니다."}
+            raw = {"items": [item], "coaching": [initial["coaching"][4]]}
+        return SimpleNamespace(
+            status="completed", output=[], output_parsed=response_format.model_validate(raw),
+        )
+
+    agent = OpenAIEvaluator(
+        None, context=fixture.context, business_call=fixture.business, rag_call=fixture.rag,
+    )
+    agent.generate = generate
+    result = await agent.evaluate_collected(fixture.request, evidence=evidence, materials=materials)
+    assert len(calls) == 2
+    assert result.items[4].score == audit_score
+    assert "재검증 결과" in result.items[4].reason
+    assert len(result.items) == 5
+    assert [item.score for item in result.items[:4]] == [
+        item["score"] for item in initial["items"][:4]
+    ]
 
 
 @pytest.mark.asyncio
