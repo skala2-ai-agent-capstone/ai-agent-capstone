@@ -13,7 +13,7 @@ from .contract import MISSING_WORK_MESSAGES, eligible_work_sources, score_issue
 from .models import AgentEvaluationOutput
 from .validation import EvaluationError
 
-SELECTION_VERSION = "evaluation-evidence-selection-v4-all-criteria"
+SELECTION_VERSION = "evaluation-evidence-selection-v5-reason-first"
 MAX_CHOICES = 900
 PIECE_LENGTH = 500
 
@@ -177,8 +177,12 @@ def _item_problem(row, requirements):
             )
     elif score is not None:
         return "미관측·자료 부족 항목에는 점수를 부여할 수 없습니다."
-    if state == "needs_review" and row.get("review_required") is not True:
-        return "검토 필요 항목은 review_required가 true여야 합니다."
+    if state == "needs_review":
+        if row.get("review_required") is not True:
+            return "검토 필요 항목은 review_required가 true여야 합니다."
+        required = requirement["required_work_choice_ids"]
+        if required and row.get("required_work_evidence_id") not in required:
+            return "검토 필요 항목에는 상충·모호함을 보여 주는 이 항목의 업무 근거가 필요합니다."
     if row.get("required_rule_evidence_id") not in requirement["required_rule_choice_ids"]:
         return "해당 항목의 승인된 기준 근거를 선택해야 합니다."
     return "선택 ID·필수 필드·자료형이 평가 응답 형식과 맞지 않습니다."
@@ -242,12 +246,13 @@ def selection_model(choices: EvidenceChoices, request) -> type[StrictModel]:
         )
 
         def variant(name, observation, score, primary_work, review):
+            # 구조화 출력은 속성 순서대로 생성된다. 판단 이유를 상태·점수보다 먼저 쓰게 한다.
             return create_model(
                 name, __base__=StrictModel,
                 criterion_id=(Literal[criterion_id], ...),
+                reason=(NonEmpty, ...),
                 observation=(observation, ...),
                 score=(score, ...),
-                reason=(NonEmpty, ...),
                 required_work_evidence_id=(primary_work, ...),
                 work_evidence_ids=(extra_work, ...),
                 required_rule_evidence_id=(basis, ...),
@@ -255,11 +260,17 @@ def selection_model(choices: EvidenceChoices, request) -> type[StrictModel]:
                 review_required=(review, ...),
             )
 
+        required_work = Enum(
+            f"RequiredWorkChoice{number}",
+            {key: key for key in requirement["required_work_choice_ids"]}, type=str,
+        ) if requirement["required_work_choice_ids"] else None
+        # 검토 필요는 상충·모호함을 보여 주는 업무 근거를 골라야 한다.
+        # 업무 근거 후보가 하나도 없을 때만 null이다.
+        if required_work is not None:
+            review_work = required_work
+        else:
+            review_work = work if choices.work else type(None)
         if requirement["can_score"] and requirement["allowed_scores"]:
-            required_work = Enum(
-                f"RequiredWorkChoice{number}",
-                {key: key for key in requirement["required_work_choice_ids"]}, type=str,
-            )
             score_values = tuple(requirement["allowed_scores"])
             variants.append(variant(
                 f"ScoredEvaluationItem{number}", Literal["observed"],
@@ -270,7 +281,7 @@ def selection_model(choices: EvidenceChoices, request) -> type[StrictModel]:
             variant(f"UnscoredEvaluationItem{number}", Literal["unobserved", "insufficient_data"],
                     type(None), unscored_work, Annotated[bool, Field(strict=True)]),
             variant(f"ReviewEvaluationItem{number}", Literal["needs_review"], type(None),
-                    unscored_work, Annotated[Literal[True], BeforeValidator(_strict_review)]),
+                    review_work, Annotated[Literal[True], BeforeValidator(_strict_review)]),
         ])
 
     def check_item(row, handler):

@@ -197,8 +197,13 @@ async def test_unscored_states_remain_valid_with_null_score(state):
     evidence, materials = await collect(fixture)
     choices, payload, _, _ = catalogs(fixture, evidence, materials)
     wire = selected_result(valid_result(fixture, evidence, materials), payload)
-    wire["items"][3].update(
-        observation=state, score=None, required_work_evidence_id=None, work_evidence_ids=[],
+    row = wire["items"][3]
+    # 검토 필요는 상충·모호함을 보여 주는 업무 근거를 함께 골라야 한다.
+    requirement = payload["criterion_requirements"][row["criterion_id"]]
+    review_work = requirement["required_work_choice_ids"][0]
+    row.update(
+        observation=state, score=None, work_evidence_ids=[],
+        required_work_evidence_id=review_work if state == "needs_review" else None,
         review_required=state == "needs_review",
     )
     model = selection_model(choices, fixture.request)
@@ -209,6 +214,36 @@ async def test_unscored_states_remain_valid_with_null_score(state):
     )
     assert checked.items[3].score is None
     assert checked.items[3].observation == state
+
+
+@pytest.mark.asyncio
+async def test_needs_review_without_work_evidence_is_rejected_with_retry_reason():
+    from ai_agents.evaluation_agent.final.agent import validation_feedback
+
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    choices, payload, _, _ = catalogs(fixture, evidence, materials)
+    wire = selected_result(valid_result(fixture, evidence, materials), payload)
+    wire["items"][3].update(
+        observation="needs_review", score=None, required_work_evidence_id=None,
+        work_evidence_ids=[], review_required=True,
+    )
+    model = selection_model(choices, fixture.request)
+    assert not Draft202012Validator(model.model_json_schema()).is_valid(wire)
+    with pytest.raises(ValidationError) as caught:
+        model.model_validate(wire)
+    assert "상충·모호함을 보여 주는 이 항목의 업무 근거" in validation_feedback(caught.value)
+
+
+@pytest.mark.asyncio
+async def test_reason_is_generated_before_observation_and_score():
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    choices, _, _, _ = catalogs(fixture, evidence, materials)
+    schema = selection_model(choices, fixture.request).model_json_schema()
+    for branch in schema["properties"]["items"]["items"]["anyOf"]:
+        fields = list(schema["$defs"][branch["$ref"].rsplit("/", 1)[1]]["properties"])
+        assert fields[:4] == ["criterion_id", "reason", "observation", "score"]
 
 
 @pytest.mark.asyncio
