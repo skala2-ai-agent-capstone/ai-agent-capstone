@@ -143,6 +143,34 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # 평가 기준 초안 생성 Worker: rubric_generation.requests의 RUBRIC_GENERATE(내규 업로드·다시 생성)를 받아
+  # 업무 유형마다 기준을 만들어 save_rubric(초안)으로 저장하고 rubric_generation.results로 알린다.
+  # 토큰은 회사 하나 범위(kind=rubric, 기본 30일)라 그 회사의 요청만 처리한다(다른 회사는 TOKEN_SCOPE_MISMATCH로 실패).
+  # 기본으로는 뜨지 않는다: --profile rubric. 토큰 발급 절차는 ../docs/rubric_generation_worker.md 「실행」
+  rubric-worker:
+    image: ax-eval/feedback-worker:${WORKER_TAG:-local}   # feedback-worker와 같은 이미지(Dockerfile.worker)
+    profiles: ["rubric"]
+    command: ["python", "-m", "ai_agents.cli.rubric_worker", "worker", "--trace-dir", "outputs/rubric-traces"]
+    environment:
+      RUBRIC_AMQP_URL: amqp://${RABBITMQ_USERNAME:-axeval}:${RABBITMQ_PASSWORD:?.env에 RABBITMQ_PASSWORD 필요}@rabbitmq:5672/
+      RUBRIC_BUSINESS_MCP_URL: http://business-mcp:8001/mcp
+      RUBRIC_RAG_MCP_URL: http://rag-mcp:8002/mcp
+      # business-mcp /internal/rubric-runs로 회사마다 발급. profile을 안 쓸 때도 compose가 읽으므로 필수 표시는 하지 않는다
+      RUBRIC_MCP_TOKEN: ${RUBRIC_MCP_TOKEN:-}
+      # llm-proxy를 거쳐 X-Stage: rubric으로 부른다(OPENAI_STAGES에 있으면 OpenAI, llm_exchanges에 기록)
+      RUBRIC_LLM_BASE_URL: ${RUBRIC_LLM_BASE_URL:-http://llm-proxy:4000/v1}
+      RUBRIC_LLM_MODEL: ${RUBRIC_LLM_MODEL:-${OPENAI_MODEL:-gpt-4o-mini}}
+      # PROXY_KEYS에 rubric-worker:<이 값>으로 같이 넣는다
+      RUBRIC_LLM_API_KEY: ${RUBRIC_LLM_API_KEY:-}
+    volumes:
+      - rubric-worker-traces:/app/outputs/rubric-traces
+    depends_on:
+      backend:   # rubric_generation.* 큐는 백엔드가 선언한다
+        condition: service_healthy
+      business-mcp:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
   rabbitmq-data:
   feedback-traces:
@@ -151,3 +179,4 @@ volumes:
   final-worker-traces:
   team-checkpoints:
   team-worker-traces:
+  rubric-worker-traces:
