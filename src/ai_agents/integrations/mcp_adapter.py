@@ -18,6 +18,12 @@ from ..shared.evidence_models import (
 from ..shared.models import NonEmpty, StrictModel
 from .parallel_reads import read_in_parallel
 
+# 고정된 검증 스키마만 재사용한다. 응답·실행 범위·검증 결과는 캐시하지 않는다.
+# TypeAdapter 생성은 재귀 JsonValue 스키마를 컴파일하므로 매 MCP 호출마다 만들지 않는다.
+_JSON_OBJECT_ADAPTER = TypeAdapter(dict[str, JsonValue])
+_ARTIFACT_REFERENCES_ADAPTER = TypeAdapter(list[ArtifactReference])
+_SOURCE_DOCUMENTS_ADAPTER = TypeAdapter(list[dict[str, JsonValue]])
+
 
 class MCPMeta(StrictModel):
     """조회 결과가 어느 실행과 스냅샷에 속하는지."""
@@ -91,7 +97,7 @@ def decode_mcp_result(result: object) -> dict[str, JsonValue]:
             value = json.loads(texts[0])
     if isinstance(value, dict) and set(value) == {"result"}:
         value = value["result"]
-    return TypeAdapter(dict[str, JsonValue]).validate_python(value)
+    return _JSON_OBJECT_ADAPTER.validate_python(value)
 
 
 def _canonical(value: dict[str, JsonValue]) -> str:
@@ -183,9 +189,9 @@ def parse_work_case_response(
         work_id=context.work_id,
         registration=registration,
         source_message=message,
-        artifact_refs=TypeAdapter(list[ArtifactReference]).validate_python(data["artifact_refs"]),
+        artifact_refs=_ARTIFACT_REFERENCES_ADAPTER.validate_python(data["artifact_refs"]),
         source_documents=(
-            TypeAdapter(list[dict[str, JsonValue]]).validate_python(data["source_documents"])
+            _SOURCE_DOCUMENTS_ADAPTER.validate_python(data["source_documents"])
             if "source_documents" in data
             else None
         ),

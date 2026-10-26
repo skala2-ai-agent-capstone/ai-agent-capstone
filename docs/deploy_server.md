@@ -1,4 +1,7 @@
-# 서버 배포: MCP + 백엔드 + 중간 피드백 Worker
+# 서버 배포: MCP + 백엔드 + 평가 Worker
+
+2026-10-26 코드 기준 안내입니다. 기준 생성·중간 피드백·최종·팀 평가 Worker가 구현되어 있습니다.
+아래는 배포 구성과 절차이며, 현재 서버에서 어떤 이미지가 실행 중인지 보증하는 목록은 아닙니다.
 
 한 서버(GPU VM)에 Docker Compose로 다음을 같이 올립니다. 모두 한 내부망에서 서비스 이름으로 붙습니다.
 
@@ -7,6 +10,7 @@
 | postgres · chroma · db-init · business-mcp · rag-mcp | ai-agent-capstone | `mcp_servers/docker-compose.yml` | 8001 · 8002 (Postgres·Chroma는 127.0.0.1) |
 | vllm · llm-proxy (`--profile llm`) | ai-agent-capstone | 같은 파일 | 4000 (vLLM은 127.0.0.1) |
 | rabbitmq · backend · feedback-worker | aworko-server · ai-agent-capstone | `mcp_servers/docker-compose.app.yml` | 8080 (RabbitMQ는 127.0.0.1) |
+| final-worker · team-worker · rubric-worker | ai-agent-capstone | 같은 파일의 `final` · `team` · `rubric` 프로필 | 없음 |
 
 기동 순서는 compose가 지킵니다: postgres → db-init(스키마·적재) → business-mcp → rabbitmq → backend(큐 선언·Flyway) → feedback-worker.
 
@@ -20,7 +24,8 @@ git clone https://github.com/skala2-ai-agent-capstone/ai-agent-capstone.git
 git clone https://github.com/skala2-ai-agent-capstone/aworko-server.git
 ```
 
-- 백엔드는 main이 아니라 `fix/sync-mcp-schema` 브랜치로 배포합니다(백엔드 작업은 이 브랜치에서만 이어가고 main에는 합치지 않음). `git -C aworko-server switch fix/sync-mcp-schema`가 원격 브랜치를 따라가는 로컬 브랜치를 만듭니다. main은 중간 피드백 요청이 모두 실패합니다(대화 스냅샷 없음).
+- 과거 `fix/sync-mcp-schema` 작업은 백엔드 `main`에 통합됐습니다. 새 환경에서는 `main`을 사용하고,
+  배포할 Agent·백엔드 커밋을 함께 기록합니다. 이 안내 대조 기준은 Agent `1c2dedb`, 백엔드 `b943709`입니다.
 - Worker 이미지는 시작할 때 git으로 코드 출처를 기록하므로 **일반 clone**에서 빌드합니다(git worktree는 안 됨).
 - 이미지 빌드 중 의존성 저장소(Maven Central·PyPI)에 접속하지 못하면 빌드가 실패합니다. 잠시 뒤 다시 빌드합니다.
 
@@ -86,16 +91,23 @@ RabbitMQ 관리 화면은 서버 안에만 열려 있습니다: `ssh -L 15672:lo
 - **db-init**은 `up` 때마다 다시 돕니다. 시드 업무의 대화·산출물은 시드로 되돌리고(시드 업무에 쌓인 Agent·팀원 LLM 호출 기록도 지워짐), 앱에서 만든 업무는 건드리지 않습니다. 운영 중인 서버에서 코드만 바꿀 때는 `docker compose up -d --no-deps <서비스>`로 db-init을 건너뜁니다. `--reset`은 백엔드 테이블(아웃박스·DLQ 기록·집계 승인)까지 비우므로 백엔드를 멈추고 RabbitMQ 큐를 비운 뒤 씁니다.
 - **기존 DB**에 올릴 때: `db/postgres/002_live_feedback_snapshot.sql`(중간 피드백 스냅샷)과 `003_frontend_upload.sql`(고객 미지정 업무, 고객 자료 원본 파일), `004_team_evaluation.sql`(팀 평가 요청·리포트)을 적용합니다. db-init이 매번 같이 적용하며, db-init 없이 올릴 때는 `docker exec -i ax-eval-mcp-postgres-1 psql -U axeval -d axeval < db/postgres/003_frontend_upload.sql`(004도 같은 방식). 예전 백엔드의 Flyway V2(역할 제한을 넓히던 임시 파일)가 적용된 DB는 볼륨을 지우고 새로 만듭니다(`docker compose down -v`).
 - **포트**: 방화벽에서는 8080(백엔드)만 엽니다. ax-eval-gpu는 VM 태그 `aworko-backend` + 규칙 `allow-aworko-backend-8080`(tcp:8080, 0.0.0.0/0)으로 열려 있습니다(HTTP, 개발용). 8001·8002·4000은 팀원 개발용이며 `/internal/*`은 `X-Internal-Key`로만 보호되므로 팀 IP로 제한합니다.
-- **업데이트**: 두 저장소에서 `git pull`(백엔드는 `fix/sync-mcp-schema`에서) 뒤 `docker compose --profile llm up -d --build`. MCP 의존성(내규 PDF용 `pdfplumber`)이 바뀌면 `--build`가 있어야 이미지에 들어갑니다.
+- **업데이트**: 로컬 변경과 배포 대상 브랜치를 확인한 뒤 두 저장소의 합의한 커밋을 받습니다.
+  MCP 의존성이 바뀌면 이미지 재빌드가 필요합니다. 운영 중에는 위 `db-init` 주의사항에 따라
+  변경한 서비스만 `--no-deps`로 갱신하고, 필요한 Worker 프로필도 명시합니다.
 - **검증 프로필은 운영 DB에서 돌리지 않습니다**: `docker compose --profile test run --rm verify`는 평가 건 상태·초안을 바꾸고 현행 내규·평가 기준을 새 버전으로 바꿉니다(`verify_live_rubric`·`verify_documents`). 새로 만든 DB(`down -v` 뒤)에서만 씁니다. 운영 서버에서 새 내부 API가 떴는지는 데이터를 바꾸지 않는 요청으로 봅니다: `POST /internal/documents`에 `{"company_id":"NOPE"}` → `NOT_FOUND`.
 
-## 아직 배포해도 동작하지 않는 것
+## 추가 Worker 활성화
 
-| 기능 | 이유 | 맡을 쪽 |
+| 기능 | 구현된 연결 | 실행 전 준비 |
 | --- | --- | --- |
-| 최종 평가(EVALUATE → 확인 대기) | 코드는 맞춰 둠: Agent `backend-v1` Worker, 백엔드 완료 큐 소비자·RESUME 폐지(이의·검토는 백엔드가 바로 처리)·평가별 토큰 파일 공급, compose `final-worker`(`--profile final`). 아직 서버에 안 올라감. 켜기 전 확인(쌓인 RESUME 비우기, `PROXY_KEYS`의 final-worker 키): [backend_worker_alignment.md](backend_worker_alignment.md) 5절 | 배포 |
-| 팀 평가(팀 코칭 리포트) | 코드는 맞춰 둠: MCP 팀 도구·내부 API, Agent 큐 Worker(`ai_agents.cli.team_worker`), 백엔드 요청·목록·상세 API·공개 승인 판단·요청별 team 토큰 파일 공급·DLQ 기록, compose `team-worker`(`--profile team`). 아직 서버에 안 올라감, 관리자 화면 없음. 켜는 절차: [team_evaluation.md](team_evaluation.md) 「서버에서 켜기」 | 배포·프론트 |
-| 운영 설정: 자료 업로드 → 평가 기준 자동 생성·승인 | MCP는 준비됨(`/internal/documents` 내규 적재, `/internal/rubrics/drafts`·`drafts/items`·`approve`·`discard`). 백엔드 쓰기 API(조회만 있음)와 평가 기준 생성 Agent Worker·요청 큐가 없음 | Agent·백엔드 |
-| 대화 중 사내 자료 자동 참고(RAG) | rag-mcp가 Agent 토큰으로만 열려 있음 | MCP |
-| 브라우저에서 백엔드 호출 | CORS 설정이 없어 프론트가 다른 출처면 막힘 | 백엔드 |
-| 형식이 깨진 피드백 이벤트 | Worker가 `live_eval_id` 없이 DLQ로 보내 요청이 `대기`로 남음 | Agent |
+| 최종 평가 | `EVALUATE` 수신, MCP 초안·코칭 저장, `evaluation.results` 소비, 평가별 토큰 파일 | `--profile final`, 프록시 키, 백엔드 토큰 공급. [백엔드 연결](backend_worker_alignment.md) 5절 |
+| 팀 평가 | 팀 집계 조회·리포트 저장, `TEAM_EVALUATE` 수신, 요청별 토큰 파일 | `--profile team`, 프록시 키, 팀 토큰 공급. [팀 평가](team_evaluation.md)의 서버 실행 절차 |
+| 기준 생성 | 내규 업로드 API, `RUBRIC_GENERATE` 수신, 기준 초안 저장·승인 | `--profile rubric`, 회사 범위 rubric 토큰, 프록시 키. [기준 생성 Worker](rubric_generation_worker.md) |
+
+추가 Worker는 `feedback-worker`와 같은 이미지를 사용합니다. 먼저 해당 커밋으로 이미지를 빌드하고,
+각 프로필의 환경변수와 토큰을 준비한 뒤 필요한 서비스만 켭니다. `COMPOSE_FILE` 또는 두 `-f` 옵션을
+사용해야 앱 구성을 함께 읽습니다. 일반 `up`이 시드 적재기를 재실행하는 점에 주의합니다.
+
+기능 코드는 있으나 배포 여부와 서버 통합 검증은 별도로 확인해야 합니다.
+`docker compose ps`, Worker 로그, 요청 한 건의 저장 결과를 함께 확인하세요.
+프론트가 다른 출처에서 백엔드에 접근한다면 개발 프록시 또는 해당 배포의 CORS 설정도 확인합니다.

@@ -5,11 +5,20 @@
 완료 큐 소비자·RESUME 분리 등 서버 선행 작업은
 [백엔드 연동 계약](backend_worker_alignment.md)을 먼저 확인하세요.
 
-브랜치: `feat/final-evaluation-worker`. 기반: `2b14be1`.
+초기 구현 브랜치: `feat/final-evaluation-worker`. 당시 기반: `2b14be1`.
 평가 기준 생성 로직을 변경하지 않고 기존 최종 평가 워크플로를 실행한다.
-이벤트/큐 이름은 새 연동 제안이며 백엔드 구현이 완료됐다는 의미는 아니다.
+현재 백엔드는 `backend-v1` 계약을 사용한다. 아래 `agent-v1` 예시는 독립 계약 설명이며,
+현재 백엔드에 연결할 때는 다음처럼 평가별 토큰 파일과 계약을 지정한다.
 
-## 흐름
+```bash
+python -m ai_agents.cli.final_worker worker --contract backend-v1 \
+  --token-file /path/to/final-tokens.json
+```
+
+토큰 파일은 백엔드가 발급·갱신한다. 해당 형식과 `evaluation.*` 큐는
+[백엔드 연결 문서](backend_worker_alignment.md)를 참고한다.
+
+## 독립 agent-v1 계약의 흐름
 
 1. 백엔드가 사용자 본인 권한을 확인하고 평가 건과 고정 스냅샷을 만든다.
 2. 신뢰하는 백엔드 producer가 `final_evaluation.requests`에 ID만 발행한다.
@@ -20,8 +29,9 @@
 7. 백엔드가 알림을 중복 제거해 처리하고 사용자 조회 API 상태에 반영한다.
 
 Agent는 DB나 백엔드 내부 API를 직접 호출하지 않는다. token provider는 배포 애플리케이션이
-주입하는 신뢰하는 인증 어댑터이며 모델이 선택하는 도구가 아니다. 현 단계에는 실제 토큰
-발급 어댑터를 구현하지 않았다. 토큰 발급/재발급 API 계약은 백엔드 담당자와 연결해야 한다.
+주입하는 신뢰하는 인증 어댑터이며 모델이 선택하는 도구가 아니다.
+현재 제공하는 `--token-file` 어댑터는 백엔드가 만든 토큰 파일을 읽는다.
+아래 사용자 정의 `--token-provider` 방식은 별도 통합 환경을 위한 선택지다.
 
 ## 요청과 결과
 
