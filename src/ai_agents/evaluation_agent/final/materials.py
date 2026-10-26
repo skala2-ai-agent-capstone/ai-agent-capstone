@@ -11,6 +11,7 @@ from ...integrations.mcp_adapter import (
     decode_mcp_result,
     read_mcp_response,
 )
+from ...integrations.parallel_reads import read_in_parallel
 from ...shared.evidence_models import EvaluationEvidence, EvaluationRun
 from ...shared.models import NonEmpty, StrictModel
 from ...shared.workflow_models import CriteriaDraft, Reference, content_hash
@@ -74,7 +75,6 @@ async def collect_evaluation_materials(
             return read_mcp_response(result, context=context).data
         except MCPToolError as exc:
             if optional and exc.code == "NOT_FOUND":
-                missing.append(f"{name}:{_json(arguments)}")
                 return None
             raise
 
@@ -122,32 +122,34 @@ async def collect_evaluation_materials(
     details["messages"] = messages
 
     # 참고 열람만으로 직원의 검증 행동을 인정하지 않도록 종류를 구분한다.
-    for tool, field, id_field, date_field, kind in [
+    record_tools = [
         ("get_reference_access_log", "accesses", "access_id", "accessed_at", "access"),
         ("get_evidence_links", "links", "link_id", "created_at", "evidence_link"),
         ("get_approval_requests", "requests", "approval_id", "submitted_at", "approval_request"),
-    ]:
-        data = await call(business_call, tool, {"work_id": context.work_id})
+    ]
+
+    async def read_records(spec):
+        return await call(business_call, spec[0], {"work_id": context.work_id})
+
+    record_data = await read_in_parallel(read_records, record_tools)
+    span_ids = {span.span_id for artifact in evidence.artifacts for span in artifact.spans}
+    versions = {artifact.version for artifact in evidence.artifacts}
+    for (_, field, id_field, date_field, kind), data in zip(record_tools, record_data, strict=True):
         if data.get("work_id") != context.work_id:
             raise ValueError("다른 업무의 추가 기록입니다.")
         records = [r for r in data[field] if _before_cutoff(r[date_field], context)]
         details[field] = records
         for record in records:
-            if kind == "evidence_link" and record["span_id"] not in {
-                span.span_id for artifact in evidence.artifacts for span in artifact.spans
-            }:
+            if kind == "evidence_link" and record["span_id"] not in span_ids:
                 raise ValueError("변경 근거 링크가 이번 업무의 산출물 구간에 없습니다.")
-            if kind == "approval_request" and record["artifact_version"] not in {
-                artifact.version for artifact in evidence.artifacts
-            }:
+            if kind == "approval_request" and record["artifact_version"] not in versions:
                 raise ValueError("승인 요청이 이번 업무의 허용 산출물 버전에 없습니다.")
             add(record[id_field], _json(record), kind)
 
     artifacts = sorted(evidence.artifacts, key=lambda artifact: artifact.saved_at)
-    diffs = []
-    for before, after in zip(artifacts, artifacts[1:]):
-        if before.artifact_id != after.artifact_id:
-            continue
+
+    async def read_diff(pair):
+        before, after = pair
         diff = await call(
             business_call,
             "get_artifact_diff",
@@ -163,17 +165,20 @@ async def collect_evaluation_materials(
             after.version,
         ):
             raise ValueError("변경 비교의 산출물 또는 버전이 다릅니다.")
-        diffs.append(diff)
-    details["artifact_diffs"] = diffs
+        return diff
+
+    details["artifact_diffs"] = await read_in_parallel(
+        read_diff,
+        [(before, after) for before, after in zip(artifacts, artifacts[1:])
+         if before.artifact_id == after.artifact_id],
+    )
 
     if criteria.work_type == "quotation":
+        quote_arguments = {"work_id": context.work_id, "artifact_version": context.target.version}
         data = await call(
             business_call,
             "compute_reference_quote",
-            {
-                "work_id": context.work_id,
-                "artifact_version": context.target.version,
-            },
+            quote_arguments,
             optional=True,
         )
         if data is not None:
@@ -185,6 +190,8 @@ async def collect_evaluation_materials(
                 raise ValueError("기준 견적의 업무 또는 버전이 다릅니다.")
             add(data["evidence_id"], _json(data), "reference_quote")
             details["reference_quote"] = data
+        else:
+            missing.append(f"compute_reference_quote:{_json(quote_arguments)}")
 
     # 고객 첨부 원문: 페이지를 모두 읽고 줄 ID를 그대로 사용한다.
     documents = evidence.work_case.source_documents
@@ -224,7 +231,7 @@ async def collect_evaluation_materials(
             line = next_line
 
     # 승인된 기준의 출처는 검색 유사도로 대체하지 않고 정확 조회해 원문을 대조한다.
-    for approved in criteria.references:
+    async def read_approved(approved):
         data = await call(
             rag_call,
             "get_reference",
@@ -249,13 +256,18 @@ async def collect_evaluation_materials(
             approved.content,
         ):
             raise ValueError("승인된 평가기준의 출처 원문·버전이 RAG와 다릅니다.")
+        return approved
+
+    for approved in await read_in_parallel(read_approved, criteria.references):
         references[(approved.document_id, approved.version, approved.section_id)] = approved
 
     # 허용된 자료 및 연결 업무의 문서만 정확 조회한다. 폐기·초안은 사실 기준으로 쓰지 않는다.
     reference_details = []
     allowed = context.snapshot["reference_refs"] + context.snapshot["linked_doc_refs"]
-    for ref in {f"{r['doc_id']}@{r['version']}": r for r in allowed}.values():
-        data = await call(
+    allowed = list({f"{r['doc_id']}@{r['version']}": r for r in allowed}.values())
+
+    async def read_reference(ref):
+        return await call(
             rag_call,
             "get_reference",
             {
@@ -264,7 +276,12 @@ async def collect_evaluation_materials(
             },
             optional=True,
         )
+
+    retrieved = await read_in_parallel(read_reference, allowed)
+    for ref, data in zip(allowed, retrieved, strict=True):
         if data is None:
+            arguments = {"doc_id": ref["doc_id"], "version": ref["version"]}
+            missing.append(f"get_reference:{_json(arguments)}")
             continue
         if (data.get("doc_id"), data.get("version")) != (ref["doc_id"], ref["version"]):
             raise ValueError("허용 목록과 다른 참조 자료가 반환되었습니다.")

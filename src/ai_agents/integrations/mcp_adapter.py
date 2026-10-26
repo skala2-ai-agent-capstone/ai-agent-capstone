@@ -16,6 +16,7 @@ from ..shared.evidence_models import (
     WorkCaseEvidence,
 )
 from ..shared.models import NonEmpty, StrictModel
+from .parallel_reads import read_in_parallel
 
 
 class MCPMeta(StrictModel):
@@ -262,16 +263,17 @@ async def collect_evaluation_evidence(
         )
     )
     work_case, _ = parse_work_case_response(work_response, context=context)
-    artifact_responses = []
-    for ref in work_case.artifact_refs:
-        artifact_responses.append(
-            decode_mcp_result(
-                await call_tool(
-                    "get_artifact_version",
-                    {"artifact_id": ref.artifact_id, "version": ref.version},
-                )
+    async def read_artifact(ref):
+        result = decode_mcp_result(
+            await call_tool(
+                "get_artifact_version",
+                {"artifact_id": ref.artifact_id, "version": ref.version},
             )
         )
+        read_mcp_response(result, context=context)
+        return result
+
+    artifact_responses = await read_in_parallel(read_artifact, work_case.artifact_refs)
     policy_response = decode_mcp_result(
         await call_tool(
             "get_policy_check_result",
