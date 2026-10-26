@@ -312,6 +312,54 @@ def test_malformed_responses_are_rejected(result):
         read_mcp_response(decode_mcp_result(result))
 
 
+def test_repeated_decoding_preserves_raw_text_without_sharing_mutable_results():
+    raw = {"data": {"lines": [{"text": "  고객 원문\n"}], "values": [None, True, 1, 1.5]}}
+    first = decode_mcp_result(raw)
+    first["data"]["lines"][0]["text"] = "수정된 결과"
+    first["data"]["values"].append("다른 요청")
+
+    # 검증기를 공유하더라도 이전 결과나 입력 객체를 다음 요청에 재사용하지 않는다.
+    with pytest.raises(ValidationError):
+        decode_mcp_result({"data": {"invalid": object()}})
+    second = decode_mcp_result(raw)
+    assert second == raw
+    assert second["data"]["lines"][0]["text"] == "  고객 원문\n"
+    assert second["data"]["values"] == [None, True, 1, 1.5]
+
+
+@pytest.mark.parametrize("invalid_flag", [1, "true", None])
+def test_repeated_work_parsing_still_rejects_invalid_artifact_flags(responses, invalid_flag):
+    original = responses["work_case_response"]
+    first, _ = parse_work_case_response(original, context=responses["context"])
+    invalid = deepcopy(original)
+    invalid["data"]["artifact_refs"][0]["is_evaluation_target"] = invalid_flag
+    with pytest.raises(ValidationError):
+        parse_work_case_response(invalid, context=responses["context"])
+    second, _ = parse_work_case_response(original, context=responses["context"])
+    assert second.model_dump_json() == first.model_dump_json()
+    first.artifact_refs[0].version = "modified-result"
+    assert second.artifact_refs[0].version != "modified-result"
+
+
+def test_repeated_work_parsing_keeps_document_presence_and_content_separate(responses):
+    original = responses["work_case_response"]
+    context = responses["context"]
+    missing, _ = parse_work_case_response(original, context=context)
+    assert missing.source_documents is None
+    present = deepcopy(original)
+    present["data"]["source_documents"] = [{"attachment_id": "ATT-1", "text": "  원문\n"}]
+    populated, _ = parse_work_case_response(present, context=context)
+    # 첨부 메타데이터는 기존 WorkCaseEvidence의 공백 정규화를 유지한다.
+    assert populated.source_documents[0]["text"] == "원문"
+    assert present["data"]["source_documents"][0]["text"] == "  원문\n"
+    present["data"]["source_documents"] = []
+    empty, _ = parse_work_case_response(present, context=context)
+    assert empty.source_documents == []
+    again, _ = parse_work_case_response(original, context=context)
+    assert again.source_documents is None
+    assert populated.source_documents == [{"attachment_id": "ATT-1", "text": "원문"}]
+
+
 def approved_request(context):
     # 분류·승인 모듈의 확정 분류와 사람의 승인을 테스트에서만 대체한다.
     work = WorkContext(

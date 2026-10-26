@@ -38,6 +38,7 @@ API 스냅샷과 실제 서비스의 최신 Schema가 다를 수 있습니다. �
 - [중간 피드백 검증 절차](recent_five_feedback_verification.md)
 - [MCP 연동 검증 기록](mcp_live_test_results.md)
 - [자료 수집 성능 비교 기록](agent_performance.md)
+- [MCP 응답 검증기 재사용 성능 비교](mcp_response_performance.md)
 
 실행기·평가셋·문서는 Git으로 관리하지만 `outputs/` 아래 원시 실행 결과·리포트는
 `.gitignore`에 따라 제외됩니다. 검증결과서의 수치는 실행 환경·버전·모의/실제 호출 여부를 함께 기록합니다.
