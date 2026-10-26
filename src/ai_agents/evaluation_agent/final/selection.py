@@ -11,9 +11,9 @@ from ...shared.models import NonEmpty, StrictModel
 from ...shared.workflow_models import content_hash
 from .contract import MISSING_WORK_MESSAGES, eligible_work_sources, score_issue
 from .models import AgentEvaluationOutput
-from .validation import EvaluationError
+from .validation import VISIBLE_SECRET, EvaluationError
 
-SELECTION_VERSION = "evaluation-evidence-selection-v6-unscored-evidence"
+SELECTION_VERSION = "evaluation-evidence-selection-v7-restored-reason-quote"
 MAX_CHOICES = 900
 PIECE_LENGTH = 500
 
@@ -261,12 +261,11 @@ def selection_model(choices: EvidenceChoices, request) -> type[StrictModel]:
                 required_work_evidence_id=(primary_work, ...),
                 work_evidence_ids=(extra_work, ...),
                 reason=(NonEmpty, Field(
-                    pattern=r"^(「[^」\r\n]{1,200}」|\[근거 없음\])",
                     description=(
-                        "선택한 업무 근거의 짧은 원문을 「」로 인용하여 시작한 뒤, 그 사실을 "
-                        "승인 기준과 대조해 판단한다. 기준 문구를 업무 사실로 인용하지 않는다. "
-                        "해당 항목의 업무 근거가 없을 때만 [근거 없음]으로 시작하고 "
-                        "누락 자료를 명시한다."
+                        "선택한 업무 근거에서 확인한 사실과 승인 기준을 비교한 판단 설명. "
+                        "원문 인용은 프로그램이 붙이므로 「」 인용을 직접 작성하지 않는다. "
+                        "기준의 조건문을 업무 사실로 추정하지 않는다. 자료가 없으면 "
+                        "확인하지 못한 자료를 구체적으로 설명한다."
                     ),
                 )),
                 required_rule_evidence_id=(basis, ...),
@@ -346,6 +345,17 @@ def resolve_selection(raw, choices: EvidenceChoices, request) -> AgentEvaluation
         item["work_evidence"] = [
             {"source_id": work[key]["source_id"], "quote": work[key]["text"]} for key in work_ids
         ]
+        # 원문 복사는 모델에게 맡기지 않는다. 이미 작성한 인용·부재 주장은 검증에 남긴다.
+        if not item["reason"].startswith(("「", "[근거 없음]")):
+            if work_ids:
+                text = work[work_ids[0]]["text"]
+                excerpt = next(
+                    (part.strip()[:160] for part in VISIBLE_SECRET.split(text) if part.strip()), "",
+                )
+                if excerpt:
+                    item["reason"] = f"「{excerpt}」 {item['reason']}"
+            else:
+                item["reason"] = f"[근거 없음] {item['reason']}"
         item["rule_evidence"] = [
             {
                 "document_id": rules[key]["document_id"], "version": rules[key]["version"],

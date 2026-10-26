@@ -20,6 +20,7 @@ from ai_agents.evaluation_agent.final.validation import (
     evidence_catalog,
     validate_evaluation_result,
 )
+from ai_agents.shared.workflow_models import content_hash
 
 
 def catalogs(fixture, evidence, materials):
@@ -363,6 +364,56 @@ async def test_observed_zero_keeps_its_reason_and_original_reviewed_artifact():
     assert item.reason.endswith(public.items[4].reason)
     assert item.reason.startswith("「")
     assert all(proof.quote in sources[proof.source_id] for proof in item.work_evidence)
+
+
+@pytest.mark.asyncio
+async def test_plain_reason_gets_exact_original_quote_without_model_copying():
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    choices, payload, _, _ = catalogs(fixture, evidence, materials)
+    wire = selected_result(valid_result(fixture, evidence, materials), payload)
+    item = wire["items"][0]
+    item["reason"] = "직원이 전달한 요구를 승인된 문제 정의 조건과 비교했습니다."
+    selected = next(row for row in choices.work if row["id"] == item["required_work_evidence_id"])
+    result = resolve_selection(wire, choices, fixture.request)
+    checked = validate_evaluation_result(
+        fixture.request, result, evidence=evidence, materials=materials,
+    )
+    assert checked.items[0].reason == f"「{selected['text'][:160]}」 {item['reason']}"
+
+
+@pytest.mark.asyncio
+async def test_model_fabricated_quote_is_still_rejected_instead_of_overwritten():
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    choices, payload, _, _ = catalogs(fixture, evidence, materials)
+    wire = selected_result(valid_result(fixture, evidence, materials), payload)
+    wire["items"][0]["reason"] = "「선택한 원문에 없는 문장」 기준을 충족했습니다."
+    result = resolve_selection(wire, choices, fixture.request)
+    with pytest.raises(EvaluationError, match="사유의 인용"):
+        validate_evaluation_result(
+            fixture.request, result, evidence=evidence, materials=materials,
+        )
+
+
+@pytest.mark.asyncio
+async def test_restored_quote_does_not_hide_copied_review_condition():
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    choices, payload, _, _ = catalogs(fixture, evidence, materials)
+    wire = selected_result(valid_result(fixture, evidence, materials), payload)
+    criterion = fixture.request.approved_criteria.items[0]
+    criterion.review_condition = "실제 업무 자료 사이에 충돌이 있음."
+    fixture.request.approval.criteria_sha256 = content_hash(fixture.request.approved_criteria)
+    wire["items"][0].update(
+        observation="needs_review", score=None, review_required=True,
+        reason=fixture.request.approved_criteria.items[0].review_condition,
+    )
+    result = resolve_selection(wire, choices, fixture.request)
+    with pytest.raises(EvaluationError, match="조건 문장"):
+        validate_evaluation_result(
+            fixture.request, result, evidence=evidence, materials=materials,
+        )
 
 
 @pytest.mark.asyncio

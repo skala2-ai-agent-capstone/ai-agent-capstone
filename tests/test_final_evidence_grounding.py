@@ -43,6 +43,10 @@ async def test_stored_payload_identifies_collected_target_instead_of_empty_metad
     assert {item["id"] for item in payload["criteria"]} == {
         item.id for item in prepared.request.approved_criteria.items
     }
+    definitions = {row.item_id: row.criterion for row in prepared.request.stored_rubric.items}
+    item_ids = prepared.request.stored_rubric.item_ids()
+    assert all(item["criterion"] == definitions[item_ids[item["id"]]]
+               for item in payload["criteria"])
     sources = {**prepared.evidence.evidence_sources(), **prepared.materials.work_sources}
     assert {row["source_id"] for row in payload["work_evidence_catalog"]} == {
         key for key, text in sources.items() if text.strip()
@@ -63,7 +67,7 @@ async def test_internal_output_selects_evidence_before_reason_and_score(tmp_path
         assert fields.index("required_work_evidence_id") < fields.index("reason")
         assert fields.index("reason") < fields.index("observation") < fields.index("score")
         assert "「」" in variant["properties"]["reason"]["description"]
-        assert "pattern" in variant["properties"]["reason"]
+        assert "프로그램이 붙이므로" in variant["properties"]["reason"]["description"]
         assert set(fields) == {
             "criterion_id", "observation", "score", "reason", "required_work_evidence_id",
             "work_evidence_ids", "required_rule_evidence_id", "rule_evidence_ids",

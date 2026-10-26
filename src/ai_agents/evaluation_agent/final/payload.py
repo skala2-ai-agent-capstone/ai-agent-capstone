@@ -28,6 +28,10 @@ def build_evaluation_payload(
         payload["work_record"] = checked.work_record.model_dump(
             mode="json", include={"work_id", "title"},
         )
+        definitions = {row.item_id: row.criterion for row in checked.stored_rubric.items}
+        payload["criterion_definitions"] = {
+            key: definitions[item_id] for key, item_id in checked.stored_rubric.item_ids().items()
+        }
     if evidence is not None:
         evidence = EvaluationEvidence.model_validate(evidence.model_dump(mode="json"))
         _check_run(checked, evidence.context)
@@ -76,8 +80,12 @@ def compact_evaluation_payload(payload: dict) -> dict:
         "security_evidence": payload["security_evidence"],
         "missing_sources": payload["missing_sources"],
         "criteria": [
-            {key: value for key, value in item.items()
-             if key not in {"rule_evidence", "evidence_sources"}}
+            {
+                **{key: value for key, value in item.items()
+                   if key not in {"rule_evidence", "evidence_sources"}},
+                **({"criterion": payload["criterion_definitions"][item["id"]]}
+                   if item["id"] in payload.get("criterion_definitions", {}) else {}),
+            }
             for item in payload["criteria"]["items"]
         ],
         "criterion_requirements": payload["criterion_requirements"],
