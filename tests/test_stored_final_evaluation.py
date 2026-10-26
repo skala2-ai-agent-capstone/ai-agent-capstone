@@ -124,6 +124,11 @@ async def test_stored_criteria_to_final_draft_and_coaching(work_type, tmp_path):
     draft = next(a for _, t, a in gateway.calls if t == "save_evaluation_draft")
     assert {i["item_id"] for i in draft["items"]} == {i["item_id"] for i in original["items"]}
     assert all(i["status"] == "채점" and i["evidence_ids"] for i in draft["items"])
+    coaching = next(a for _, t, a in gateway.calls if t == "save_coaching")
+    # 채점된 항목의 코칭은 근거 구간을 대상으로 하는 보완점이다.
+    assert all(
+        c["kind"] == "보완점" and c["target_span_id"] for c in coaching["coaching"]
+    )
     assert not any(
         t in {"save_rubric", "get_current_rubric", "finalize"} for _, t, _ in gateway.calls
     )
@@ -291,7 +296,7 @@ async def test_unscored_items_keep_null_score_and_collected_evidence(tmp_path, o
         for i in draft["items"]
     )
     assert all(
-        c["kind"] == "보완점" and c["target_span_id"] is not None for c in coaching["coaching"]
+        c["kind"] == "기록 안내" and c["target_span_id"] is None for c in coaching["coaching"]
     )
 
 

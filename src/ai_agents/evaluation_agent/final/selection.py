@@ -177,10 +177,14 @@ def _item_problem(row, requirements):
             )
     elif score is not None:
         return "미관측·자료 부족 항목에는 점수를 부여할 수 없습니다."
-    if state == "needs_review" and row.get("review_required") is not True:
-        return "검토 필요 항목은 review_required가 true여야 합니다."
-    if state == "needs_review" and not row.get("required_work_evidence_id"):
-        return "검토 필요 판단에는 실제 업무 근거가 필요합니다."
+    if state == "needs_review":
+        if row.get("review_required") is not True:
+            return "검토 필요 항목은 review_required가 true여야 합니다."
+        required = requirement["required_work_choice_ids"]
+        if required and row.get("required_work_evidence_id") not in required:
+            return "검토 필요 항목에는 상충·모호함을 보여 주는 이 항목의 업무 근거가 필요합니다."
+        if not row.get("required_work_evidence_id"):
+            return "검토 필요 판단에는 실제 업무 근거가 필요합니다."
     key = criterion.rsplit(".", 1)[1]
     eligible = requirement["required_work_choice_ids"]
     if (state != "observed" and eligible
@@ -250,6 +254,7 @@ def selection_model(choices: EvidenceChoices, request) -> type[StrictModel]:
         )
 
         def variant(name, observation, score, primary_work, review):
+            # 판단 이유를 상태·점수보다 먼저 쓰되, 그 전에 실제 업무 근거를 선택한다.
             return create_model(
                 name, __base__=StrictModel,
                 criterion_id=(Literal[criterion_id], ...),

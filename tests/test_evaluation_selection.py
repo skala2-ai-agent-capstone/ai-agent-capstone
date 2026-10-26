@@ -292,6 +292,37 @@ async def test_public_validation_rejects_unscored_items_ignoring_available_evide
 
 
 @pytest.mark.asyncio
+async def test_needs_review_without_work_evidence_is_rejected_with_retry_reason():
+    from ai_agents.evaluation_agent.final.agent import validation_feedback
+
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    choices, payload, _, _ = catalogs(fixture, evidence, materials)
+    wire = selected_result(valid_result(fixture, evidence, materials), payload)
+    wire["items"][3].update(
+        observation="needs_review", score=None, required_work_evidence_id=None,
+        work_evidence_ids=[], review_required=True,
+    )
+    model = selection_model(choices, fixture.request)
+    assert not Draft202012Validator(model.model_json_schema()).is_valid(wire)
+    with pytest.raises(ValidationError) as caught:
+        model.model_validate(wire)
+    assert "상충·모호함을 보여 주는 이 항목의 업무 근거" in validation_feedback(caught.value)
+
+
+@pytest.mark.asyncio
+async def test_reason_is_generated_before_observation_and_score():
+    fixture = ToolFixture()
+    evidence, materials = await collect(fixture)
+    choices, _, _, _ = catalogs(fixture, evidence, materials)
+    schema = selection_model(choices, fixture.request).model_json_schema()
+    for branch in schema["properties"]["items"]["items"]["anyOf"]:
+        fields = list(schema["$defs"][branch["$ref"].rsplit("/", 1)[1]]["properties"])
+        assert fields.index("reason") < fields.index("observation") < fields.index("score")
+        assert fields.index("required_work_evidence_id") < fields.index("reason")
+
+
+@pytest.mark.asyncio
 async def test_no_work_choices_cannot_produce_scored_results_or_fabricated_ids():
     fixture = ToolFixture()
     evidence, materials = await collect(fixture)
