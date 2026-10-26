@@ -52,7 +52,7 @@ services:
   db-init:
     <<: *app
     # 002~004는 이전 DB에 칸·테이블을 더하는 변경이라 매번 같이 돌려도 결과가 같다
-    command: ["sh", "-c", "python -m db.loader.load_postgres --data /app/data --schema db/postgres/001_schema.sql --schema db/postgres/002_live_feedback_snapshot.sql --schema db/postgres/003_frontend_upload.sql --schema db/postgres/004_team_evaluation.sql $${LOAD_ARGS:-} && python -m db.loader.load_chroma"]
+    command: ["sh", "-c", "python -m db.loader.load_postgres --data /app/data --schema db/postgres/001_schema.sql --schema db/postgres/002_live_feedback_snapshot.sql --schema db/postgres/003_frontend_upload.sql --schema db/postgres/004_team_evaluation.sql --schema db/postgres/005_team_min_members.sql $${LOAD_ARGS:-} && python -m db.loader.load_chroma"]
     depends_on:
       postgres:
         condition: service_healthy

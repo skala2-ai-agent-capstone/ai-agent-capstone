@@ -5,7 +5,7 @@ get_team_evaluation_snapshot → save_team_evaluation_report 순서로 부른다
 - 집계: [period_start, period_end)(KST)에 완료된 팀 업무마다 최신 '확정' 평가 하나. 업무 유형·기준 버전·기준 내용 해시로 묶고,
   최신 초안에서 '채점'이고 점수가 유효한 항목만 합계·분모에 넣는다(미관측·검토 필요는 빠진다). 구성원 수는 서로 다른 담당자 수다.
 - 기준 항목은 이름으로 계약의 공통 5개 항목에 맞춘다. 맞지 않는 기준이나 초안이 섞이면 집계하지 않고 VALIDATION_ERROR.
-- 공개: 구성원이 min_members(5 이상, 회사 min_aggregation_size 이상) 미만인 그룹은 빼고, 항목 관측 구성원이 미만이면 statistics=null.
+- 공개: 구성원이 min_members(2 이상, 회사 min_aggregation_size 이상) 미만인 그룹은 빼고, 항목 관측 구성원이 미만이면 statistics=null.
   공개 승인(release_approved)은 백엔드가 정해 보낸다. false면 groups=[].
 - Agent에는 팀 ID 대신 회사·팀으로 만든 고정 UUID를 준다. 이름·평가 건 ID·개별 점수는 스냅샷에 넣지 않는다.
 - 저장: 요청 하나에 리포트 하나. 요청·스냅샷·해시와 지표 수치를 고정한 스냅샷으로 다시 계산해 대조한다.
@@ -41,7 +41,7 @@ ACTION_CRITERION = {
     "mask_before_input": "security", "check_sharing_scope": "security",
     "use_review_checklist": "output_quality", "validate_deliverable": "output_quality",
 }
-MIN_MEMBERS = 5                      # 개발 기본 공개 기준. 회사 설정으로 올릴 수만 있다
+MIN_MEMBERS = 2                      # 계약 하한(시연 데이터 규모). 실제 공개 기준은 회사 min_aggregation_size로 올린다
 MAX_MEMBERS = 100                    # 계약 min_members 상한
 MAX_DAYS = 366
 MAX_GROUPS = 100

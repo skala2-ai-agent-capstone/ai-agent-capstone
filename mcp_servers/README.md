@@ -266,7 +266,7 @@ Agent는 해당 버전의 `search_rubric`을 조회하고 검증 후 `save_evalu
 | 대상 | 팀 업무 중 `work_cases.completed_at`이 `[period_start, period_end)`(KST)인 업무마다 최신 `확정` 평가 하나. 확정 전·기간 밖·다른 팀은 세지 않음 |
 | 그룹 | 업무 유형·평가 기준 버전·기준 내용 해시(`rubric_sha256`)별. 기준 항목은 이름으로 공통 5개 항목에 맞추고, 맞지 않는 기준·초안이 섞이면 요청 생성이 400 |
 | 집계 | 최신 초안에서 `채점`이고 점수가 유효한 항목만 `score_sum`·`scored_evaluations`에 넣음(미관측·검토 필요 제외). 구성원 수는 서로 다른 담당자 수 |
-| 공개 | `min_members` = max(5, 회사 `min_aggregation_size`, 요청 값). 구성원이 그보다 적은 그룹은 빼고, 항목 관측 구성원이 적으면 `statistics: null`. `release_approved:false`면 `groups: []` |
+| 공개 | `min_members` = max(2, 회사 `min_aggregation_size`, 요청 값). 구성원이 그보다 적은 그룹은 빼고, 항목 관측 구성원이 적으면 `statistics: null`. `release_approved:false`면 `groups: []` |
 | 식별자 | Agent에는 팀 코드 대신 회사·팀으로 만든 고정 UUID(`team_id`). 이름·평가 건 ID·개별 점수는 스냅샷에 없음(쓴 평가 건 ID는 `source_evaluation_ids`에만) |
 | 저장 검증 | `report_sha256` = report의 키 정렬 JSON SHA-256. 요청·스냅샷 ID·`snapshot_sha256`·기간이 고정값과 같고, `metrics`는 스냅샷으로 다시 계산한 값과 같아야 함. 강점/개선 지표의 band, 개선 활동과 항목의 짝, 문장의 민감정보 패턴도 확인 |
 | 중복 | 요청 하나에 리포트 하나. 같은 키·같은 내용은 처음 영수증(`meta.duplicate`), 다른 내용은 `VERSION_CONFLICT`. 다시 만들려면 새 요청 |

@@ -506,7 +506,7 @@ async def issue_rubric_run(request: Request) -> dict:
 async def team_create(request: Request) -> dict:
     """팀 평가 요청 행 생성(백엔드가 관리자 권한·공개 정책을 확인한 뒤 부른다). 이때 확정 평가를 집계해 스냅샷으로 고정한다.
     body: {company_id, team_id, period_start, period_end(미포함, YYYY-MM-DD), release_approved(bool), request_id?(UUID),
-    requested_by?, min_members?(5~100, 회사 min_aggregation_size보다 작으면 회사 값)}.
+    requested_by?, min_members?(2~100, 회사 min_aggregation_size보다 작으면 회사 값)}.
     같은 request_id·같은 범위면 기존 행(created:false), 다른 범위면 VERSION_CONFLICT. 맞출 수 없는 기준·초안이 섞이면 400.
     응답: {request_id, snapshot_id, company_id, team_id, period_start, period_end, release_approved, min_members, status,
     snapshot_sha256, snapshot, created, …}."""

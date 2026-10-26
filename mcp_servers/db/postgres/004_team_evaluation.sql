@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS team_evaluations (
   requested_by           text REFERENCES users,
   requested_at           timestamptz NOT NULL DEFAULT now(),
   release_approved       boolean NOT NULL,
-  min_members            int  NOT NULL CHECK (min_members BETWEEN 5 AND 100),
+  min_members            int  NOT NULL CHECK (min_members BETWEEN 2 AND 100),
   snapshot               jsonb NOT NULL,
   snapshot_sha256        text NOT NULL,
   source_evaluation_ids  text[] NOT NULL,

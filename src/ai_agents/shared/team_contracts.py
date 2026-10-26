@@ -23,8 +23,8 @@ MetricId = Annotated[str, Field(pattern=(
 
 
 class TeamStatistics(StrictModel):
-    scored_members: int = Field(ge=5, strict=True)
-    scored_evaluations: int = Field(ge=5, strict=True)
+    scored_members: int = Field(ge=2, strict=True)
+    scored_evaluations: int = Field(ge=2, strict=True)
     score_sum: int = Field(ge=0, strict=True)
 
     @model_validator(mode="after")
@@ -45,8 +45,8 @@ class TeamGroup(StrictModel):
     work_type: CanonicalWorkType
     rubric_version: Version
     rubric_sha256: Digest
-    members: int = Field(ge=5, strict=True)
-    finalized_evaluations: int = Field(ge=5, strict=True)
+    members: int = Field(ge=2, strict=True)
+    finalized_evaluations: int = Field(ge=2, strict=True)
     cells: list[TeamCell] = Field(min_length=5, max_length=5)
 
     @model_validator(mode="after")
@@ -76,7 +76,7 @@ class TeamSnapshot(StrictModel):
     source_status: Literal["finalized"] = "finalized"
     deduplication: Literal["latest_final_per_work"] = "latest_final_per_work"
     privacy_policy_version: Version
-    min_members: int = Field(default=5, ge=5, le=100, strict=True)
+    min_members: int = Field(default=5, ge=2, le=100, strict=True)
     release_approved: bool = Field(strict=True)
     groups: list[TeamGroup] = Field(max_length=100)
 
