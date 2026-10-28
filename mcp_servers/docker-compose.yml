@@ -48,6 +48,8 @@ services:
     restart: unless-stopped
 
   # 데이터 적재 (멱등). 업무 데이터는 업무 단위로 교체하고 평가 결과는 유지한다.
+  # 사내 문서는 시드에 있는 버전만 교체하고 앱이 올린 내규·평가 기준은 남긴다.
+  # 다른 서비스를 up 할 때마다 같이 다시 돌므로, 운영 중에는 up -d --no-deps <서비스>로 건너뛴다.
   # 전부 비우고 다시 넣으려면: docker compose run --rm -e LOAD_ARGS=--reset db-init
   db-init:
     <<: *app

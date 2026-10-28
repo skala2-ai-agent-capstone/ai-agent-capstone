@@ -10,7 +10,9 @@
 - 시드 사용자는 사번(user_id의 숫자)·역할(member/team_lead)로 바꿔 넣는다. 비밀번호는 SEED_USER_PASSWORD 값.
 - work.completed 이벤트를 중복 키로 묶어 평가 건(evaluations)을 만든다 (백엔드가 하는 일의 테스트용 재현).
 - 다시 실행해도 같은 결과가 나오도록 업무 단위로 지우고 넣는다. 평가 결과 테이블은 --reset일 때만 비운다.
-- --reset은 같은 DB의 백엔드 테이블(outbox_events·evaluation_failures·aggregation_approvals)도 비운다.
+- 사내 문서는 시드에 있는 (doc_id, version)만 교체한다. 앱이 같은 표에 쓴 문서(관리자가 올린 내규, 평가 기준 초안·승인본)는
+  남기고, 앱이 폐기로 바꾼 시드 문서는 다시 현행으로 되돌리지 않는다.
+- --reset은 같은 DB의 백엔드 테이블(BACKEND_TABLES)도 비운다.
   백엔드를 멈추고 RabbitMQ 큐를 비운 뒤 실행한다.
 """
 from __future__ import annotations
@@ -44,8 +46,9 @@ EXCHANGE_COLUMNS = ["created_at", "member", "endpoint", "stage", "work_id", "use
 SEED_TABLES = ["historical_works", "rubric_items", "document_chunks", "documents", "policy_meta", "policy_rules", "pricing_policy",
                "exception_rules", "approval_tiers", "discount_components", "price_table_items", "price_tables", "products",
                "customers", "users", "teams", "companies"]
-# 백엔드(aworko-server Flyway)가 같은 DB에 만드는 테이블. --reset일 때만 같이 비운다(flyway_backend_history는 남긴다)
-BACKEND_TABLES = ["outbox_events", "evaluation_failures", "aggregation_approvals"]
+# 백엔드(aworko-server Flyway V1·V4~V6)가 같은 DB에 만드는 테이블. --reset일 때만 같이 비운다(flyway_backend_history는 남긴다)
+BACKEND_TABLES = ["outbox_events", "evaluation_failures", "aggregation_approvals", "rubric_generations",
+                  "evaluation_result_receipts", "team_evaluation_failures"]
 
 
 def resolve_data(path: str) -> str:
@@ -125,8 +128,8 @@ def load(conn: psycopg.Connection, root: str, reset: bool) -> dict:
 
     backend_cleared: list[str] = []
     if reset:
-        # CASCADE만 믿으면 FK가 있는 evaluation_failures·aggregation_approvals만 비고 outbox_events는 남아,
-        # 다시 만든 같은 ID의 평가 건으로 이전 메시지가 발행된다. 백엔드를 아직 안 띄운 DB에는 테이블이 없다
+        # CASCADE만 믿으면 FK가 있는 표만 빈다. outbox_events가 남으면 다시 만든 같은 ID의 평가 건으로 이전 메시지가 발행되고,
+        # evaluation_result_receipts가 남으면 같은 평가 건의 완료 알림이 중복으로 버려진다. 백엔드를 아직 안 띄운 DB에는 테이블이 없다
         backend_cleared = [t for t in BACKEND_TABLES if conn.execute("SELECT to_regclass(%s)", (t,)).fetchone()[0]]
         ex("TRUNCATE " + ", ".join(RESULT_TABLES + WORK_TABLES + SEED_TABLES + backend_cleared) + " CASCADE")
 
@@ -175,14 +178,21 @@ def load(conn: psycopg.Connection, root: str, reset: bool) -> dict:
     if policy.get("scope_note"):
         ex("INSERT INTO policy_meta VALUES ('scope_note', %s)", (policy["scope_note"],))
 
-    ex("DELETE FROM documents")  # chunks·rubric_items는 CASCADE
+    # documents에는 business-mcp가 쓴 앱 문서(관리자 업로드 내규, 평가 기준 초안·승인본)도 있으므로 시드에 있는 버전만 교체한다.
+    # 앱이 새 버전을 올리면 이전 현행을 폐기로 바꾸므로, DB에서 폐기된 시드 문서는 폐기로 둔다(되살리면 현행이 둘이 된다)
+    seed_keys = ([d["doc_id"] for d in documents], [d["version"] for d in documents])
+    in_seed = "(doc_id, version) IN (SELECT * FROM unnest(%s::text[], %s::text[]))"
+    retired = {tuple(r) for r in conn.execute(f"SELECT doc_id, version FROM documents WHERE status='폐기' AND {in_seed}",
+                                              seed_keys).fetchall()}
+    ex(f"DELETE FROM documents WHERE {in_seed}", seed_keys)  # chunks·rubric_items는 CASCADE
     for d in documents:
         content = d.get("content")
         if d.get("collection") == "coaching_examples":
             content = d.get("text")
+        status = "폐기" if (d["doc_id"], d["version"]) in retired else d["status"]
         ex("INSERT INTO documents VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
            (d["doc_id"], d["version"], d.get("company_id", tenant), d["title"], d["grade"], d.get("collection"), d["indexed"],
-            d["status"], d.get("effective_from"), content, d.get("work_type"), d.get("item"), d.get("score_level"),
+            status, d.get("effective_from"), content, d.get("work_type"), d.get("item"), d.get("score_level"),
             d.get("source_file"), d.get("note")))
         for i, c in enumerate(d.get("chunks") or [], 1):
             ex("INSERT INTO document_chunks VALUES (%s,%s,%s,%s,%s,%s,%s)",

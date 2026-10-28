@@ -87,8 +87,8 @@ RabbitMQ 관리 화면은 서버 안에만 열려 있습니다: `ssh -L 15672:lo
 ## 운영 메모
 
 - **LLM 나눠 쓰기**: 업무 공간 대화(백엔드)만 서버 vLLM, 나머지 단계(중간 피드백 Worker 포함)는 llm-proxy가 OpenAI로 보냅니다(`OPENAI_STAGES`, [llm_proxy/README.md](../llm_proxy/README.md)). 모든 호출이 프록시를 거치므로 `llm_exchanges`에 기록됩니다. 피드백도 vLLM으로 돌리려면 `OPENAI_STAGES`에서 `live_evaluate`를 빼고 `FEEDBACK_LLM_MODEL`을 `SERVED_MODEL_NAME`으로 바꾼 뒤 `docker compose up -d --no-deps llm-proxy feedback-worker`.
-- **Worker 토큰**은 회사 1곳 범위이고 기본 30일 뒤 만료됩니다. 만료되거나 `RUN_TOKEN_SECRET`을 바꾸면 2단계 `curl`로 다시 발급하고 `docker compose up -d feedback-worker`.
-- **db-init**은 `up` 때마다 다시 돕니다. 시드 업무의 대화·산출물은 시드로 되돌리고(시드 업무에 쌓인 Agent·팀원 LLM 호출 기록도 지워짐), 앱에서 만든 업무는 건드리지 않습니다. 운영 중인 서버에서 코드만 바꿀 때는 `docker compose up -d --no-deps <서비스>`로 db-init을 건너뜁니다. `--reset`은 백엔드 테이블(아웃박스·DLQ 기록·집계 승인)까지 비우므로 백엔드를 멈추고 RabbitMQ 큐를 비운 뒤 씁니다.
+- **Worker 토큰**은 회사 1곳 범위이고 기본 30일 뒤 만료됩니다. 만료되거나 `RUN_TOKEN_SECRET`을 바꾸면 2단계 `curl`로 다시 발급하고 `docker compose up -d --no-deps feedback-worker`.
+- **db-init**은 `--no-deps` 없이 `up` 할 때마다 다시 돕니다. 시드 업무의 대화·산출물은 시드로 되돌리고(시드 업무에 쌓인 Agent·팀원 LLM 호출 기록도 지워짐), 앱에서 만든 업무는 건드리지 않습니다. 사내 문서도 시드에 있는 버전만 시드 내용으로 다시 넣고, 관리자가 올린 내규와 평가 기준 초안·승인본은 남깁니다(앱이 폐기한 시드 문서는 폐기로 둠). 운영 중인 서버에서 코드만 바꿀 때는 `docker compose up -d --no-deps <서비스>`로 db-init을 건너뜁니다. `--reset`은 앱이 올린 문서와 백엔드 테이블(아웃박스·DLQ 기록·집계 승인·기준 생성 요청·결과 영수증·팀 평가 실패 기록)까지 비우므로 백엔드를 멈추고 RabbitMQ 큐를 비운 뒤 씁니다.
 - **기존 DB**에 올릴 때: `db/postgres/002_live_feedback_snapshot.sql`(중간 피드백 스냅샷)과 `003_frontend_upload.sql`(고객 미지정 업무, 고객 자료 원본 파일), `004_team_evaluation.sql`(팀 평가 요청·리포트), `005_team_min_members.sql`(팀 평가 공개 기준 하한 2명)을 적용합니다. db-init이 매번 같이 적용하며, db-init 없이 올릴 때는 `docker exec -i ax-eval-mcp-postgres-1 psql -U axeval -d axeval < db/postgres/003_frontend_upload.sql`(004도 같은 방식). 예전 백엔드의 Flyway V2(역할 제한을 넓히던 임시 파일)가 적용된 DB는 볼륨을 지우고 새로 만듭니다(`docker compose down -v`).
 - **포트**: 방화벽에서는 8080(백엔드)만 엽니다. ax-eval-gpu는 VM 태그 `aworko-backend` + 규칙 `allow-aworko-backend-8080`(tcp:8080, 0.0.0.0/0)으로 열려 있습니다(HTTP, 개발용). 8001·8002·4000은 팀원 개발용이며 `/internal/*`은 `X-Internal-Key`로만 보호되므로 팀 IP로 제한합니다.
 - **업데이트**: 로컬 변경과 배포 대상 브랜치를 확인한 뒤 두 저장소의 합의한 커밋을 받습니다.
@@ -106,7 +106,7 @@ RabbitMQ 관리 화면은 서버 안에만 열려 있습니다: `ssh -L 15672:lo
 
 추가 Worker는 `feedback-worker`와 같은 이미지를 사용합니다. 먼저 해당 커밋으로 이미지를 빌드하고,
 각 프로필의 환경변수와 토큰을 준비한 뒤 필요한 서비스만 켭니다. `COMPOSE_FILE` 또는 두 `-f` 옵션을
-사용해야 앱 구성을 함께 읽습니다. 일반 `up`이 시드 적재기를 재실행하는 점에 주의합니다.
+사용해야 앱 구성을 함께 읽습니다. 일반 `up`은 시드 적재기(db-init)를 다시 돌리므로 Worker는 `--no-deps`로 켭니다.
 
 기능 코드는 있으나 배포 여부와 서버 통합 검증은 별도로 확인해야 합니다.
 `docker compose ps`, Worker 로그, 요청 한 건의 저장 결과를 함께 확인하세요.

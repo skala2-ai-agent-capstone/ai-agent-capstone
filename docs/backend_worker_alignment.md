@@ -207,7 +207,7 @@ worker는 큐를 선언하거나 배포를 바꾸지 않는다. 완료 큐를 �
 3. 이전 브로커에 남은 `resume → evaluation.requests` 바인딩은 무해하다(보내는 곳이 없음). 지우려면
    `rabbitmqadmin delete binding source=evaluation.exchange destination=evaluation.requests destination_type=queue properties_key=resume`.
 4. llm-proxy `PROXY_KEYS`에 `final-worker:<FINAL_LLM_API_KEY 값>`을 넣고, `.env`에 `FINAL_LLM_API_KEY`를 둔다.
-5. `docker compose --profile final up -d final-worker`. 백엔드 로그의 `Final run tokens: … issued=…`와
+5. `docker compose --profile final up -d --no-deps final-worker`. 백엔드 로그의 `Final run tokens: … issued=…`와
    Worker 로그를 보고, 화면에서 업무 완료 한 건이 `평가 중 → 확인 대기`로 바뀌는지 확인한다.
 
 ## 검증 기록 — 2026-10-23
