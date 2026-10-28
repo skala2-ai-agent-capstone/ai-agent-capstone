@@ -7,7 +7,7 @@ import base64
 import json
 
 from ..observability.tracing import trace_span
-from .mcp_client import MCPError, MCPGateway
+from .mcp_client import MCPError, MCPGateway, UnwrapTaskGroupErrors
 
 RUBRIC_TOOLS = {"rag": frozenset({"search_policy"}), "business": frozenset({"save_rubric"})}
 
@@ -23,18 +23,7 @@ def token_claims(token: str) -> dict:
     return claims if isinstance(claims, dict) else {}
 
 
-class RubricMCPGateway(MCPGateway):
-    async def __aexit__(self, *exc):
-        try:
-            return await super().__aexit__(*exc)
-        except BaseExceptionGroup as group:
-            # MCP 클라이언트의 task group이 블록 안 예외를 ExceptionGroup으로 감싼다.
-            # Worker가 오류 코드·재시도 여부를 잃지 않도록 안쪽 예외 하나를 꺼내 올린다.
-            inner = group
-            while isinstance(inner, BaseExceptionGroup):
-                inner = inner.exceptions[0]
-            raise inner from None
-
+class RubricMCPGateway(UnwrapTaskGroupErrors, MCPGateway):
     async def call(self, server: str, tool: str, arguments: dict) -> dict:
         if tool not in RUBRIC_TOOLS.get(server, ()):
             raise MCPError("TOOL_NOT_ALLOWED", tool)

@@ -6,7 +6,10 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import httpx
+import httpx2
 import pytest
+from mcp.server.mcpserver import MCPServer
+from mcp.server.transport_security import TransportSecuritySettings
 from openai import APIConnectionError
 from pydantic import ValidationError
 from test_criteria_mcp_input import policy_reply
@@ -254,6 +257,35 @@ async def test_gateway_allows_only_policy_search_and_rubric_save():
         with pytest.raises(MCPError) as caught:
             await gateway.call(server, tool, {})
         assert caught.value.code == "TOOL_NOT_ALLOWED"
+
+
+@pytest.mark.asyncio
+async def test_real_gateway_keeps_model_failure_cause(monkeypatch):
+    """MCP 클라이언트 블록을 지나도 RubricError의 원인(APIError)이 남아야 모델 장애로 기록된다."""
+    server = MCPServer("rubric-test")
+
+    @server.tool()
+    async def search_policy(query: str) -> dict:
+        return {"ok": True}
+
+    app = server.streamable_http_app(
+        json_response=True, stateless_http=True,
+        transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
+    )
+    monkeypatch.setattr(
+        "ai_agents.integrations.mcp_client.create_mcp_http_client",
+        lambda headers: httpx2.AsyncClient(transport=httpx2.ASGITransport(app=app),
+                                           headers=headers))
+    request = httpx.Request("POST", "http://llm.test/v1/responses")
+    async with app.router.lifespan_context(app):
+        with pytest.raises(RubricError) as caught:
+            async with RubricMCPGateway("token", business_url="http://testserver/mcp",
+                                        rag_url="http://testserver/mcp"):
+                try:
+                    raise APIConnectionError(request=request)
+                except APIConnectionError as exc:
+                    raise RubricError("기준 생성 API 연결 또는 시간 초과 오류입니다.") from exc
+    assert classify(caught.value).code == "LLM_UNAVAILABLE"
 
 
 def rubric_token(**claims):

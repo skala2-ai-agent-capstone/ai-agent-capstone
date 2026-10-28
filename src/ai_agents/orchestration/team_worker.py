@@ -26,6 +26,7 @@ from ..shared.team_contracts import TeamReport, TeamSnapshot
 from ..shared.team_job_contracts import DLQ, RETRY_QUEUE, TeamEvaluateEvent
 from .team_evaluation import TeamEvaluationWorkflow
 
+MAX_EVENT_BYTES = 16384
 # MCP 오류 코드 → (Worker 오류 코드, 재시도 여부). 없는 코드는 MCP_REJECTED로 멈춘다.
 MCP_ERRORS = {
     "TEMPORARY_FAILURE": ("MCP_UNAVAILABLE", True),
@@ -164,7 +165,7 @@ class TeamWorker:
 
     async def handle(self, body: bytes, *, publish, ack):
         try:
-            if len(body) > 16384:
+            if len(body) > MAX_EVENT_BYTES:
                 raise ValueError("oversized event")
             event = TeamEvaluateEvent.model_validate_json(body)
         except (ValidationError, ValueError):
@@ -215,8 +216,11 @@ class TeamWorker:
 
 
 def _request_id(body: bytes) -> str | None:
+    # 크기 초과·깊은 중첩 본문을 다시 파싱하다 예외가 밖으로 나가면 nack·재전달이 끝없이 반복된다
+    if len(body) > MAX_EVENT_BYTES:
+        return None
     try:
         value = json.loads(body).get("request_id")
         return str(UUID(value)) if isinstance(value, str) else None
-    except (ValueError, AttributeError, TypeError):
+    except (ValueError, AttributeError, TypeError, RecursionError):
         return None
