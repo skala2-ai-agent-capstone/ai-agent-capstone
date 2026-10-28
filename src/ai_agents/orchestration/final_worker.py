@@ -5,7 +5,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from openai import APIConnectionError, APIStatusError
-from pydantic import SecretStr, ValidationError
+from pydantic import SecretStr, TypeAdapter, ValidationError
 
 from ..evaluation_agent.final.validation import EvaluationError
 from ..integrations.final_mcp import FinalMCPGateway
@@ -19,8 +19,11 @@ from ..shared.final_job_contracts import (
     FinalEvaluationEvent,
     FinalEvaluationSaved,
 )
+from ..shared.live_feedback_contracts import ID
 from .final_evaluation import FinalEvaluationJob, FinalEvaluationWorkflow
 
+_ID = TypeAdapter(ID)
+MAX_EVENT_BYTES = 16384
 REQUEST_QUEUE = "final_evaluation.requests"
 RETRY_QUEUE = "final_evaluation.retry"
 DLQ = "final_evaluation.dlq"
@@ -60,6 +63,15 @@ def failure_code(exc):
     if isinstance(exc, ValidationError):
         return "INVALID_RESULT", False
     return "EXECUTION_FAILED", False
+
+
+def _evaluation_id(body: bytes) -> str | None:
+    if len(body) > MAX_EVENT_BYTES:
+        return None
+    try:
+        return _ID.validate_python(json.loads(body).get("evaluation_id"))
+    except (ValueError, AttributeError, TypeError, RecursionError):
+        return None
 
 
 def saved_notification(event, result):
@@ -132,7 +144,7 @@ class FinalEvaluationWorker:
 
     async def handle(self, body: bytes, *, publish, ack):
         try:
-            if len(body) > 16384:
+            if len(body) > MAX_EVENT_BYTES:
                 raise ValueError("oversized event")
             wire = json.loads(body)
             if self.queues.name == "backend-v1":
@@ -144,10 +156,14 @@ class FinalEvaluationWorker:
                 source = event = FinalEvaluationEvent.model_validate(wire)
         except LifecycleEventRequiresBackend:
             raise
-        except (ValidationError, ValueError):
-            await publish(self.queues.dlq, {
-                "message_id": str(uuid4()), "type": "INVALID_FINAL_EVALUATE",
-            }, "INVALID_EVENT")
+        except (ValidationError, ValueError, RecursionError):
+            # RecursionError: 깊게 중첩된 JSON. 밖으로 내보내면 nack·재전달이 끝없이 반복된다
+            # 원본은 DLQ에 복사하지 않는다. 평가 건 ID만 읽히면 백엔드가 처리 실패로 기록할 수
+            # 있게 남긴다(없으면 백엔드가 버려 평가 건이 '평가 중'에 남는다).
+            diagnostic = {"message_id": str(uuid4()), "type": "INVALID_FINAL_EVALUATE"}
+            if evaluation_id := _evaluation_id(body):
+                diagnostic["evaluation_id"] = evaluation_id
+            await publish(self.queues.dlq, diagnostic, "INVALID_EVENT")
             await ack()
             return {"status": "dlq", "code": "INVALID_EVENT"}
 

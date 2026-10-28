@@ -58,7 +58,9 @@ def storage(db, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_final_sdk_saves_real_draft_and_coaching_once(db, storage, tmp_path, monkeypatch):
+async def test_final_sdk_saves_real_draft_and_coaching_once_per_run(
+    db, storage, tmp_path, monkeypatch,
+):
     writes, store, data, claims = storage
     server = MCPServer("final-storage-test")
 
@@ -132,14 +134,24 @@ async def test_final_sdk_saves_real_draft_and_coaching_once(db, storage, tmp_pat
             )
             result = await workflow.run(job)
             assert await workflow.run(job) == result
-    client.responses.parse.assert_awaited_once()
+            client.responses.parse.assert_awaited_once()
+            detail = writes.detail(job.evaluation_id)
+            assert detail["draft"]["revision"] == detail["coaching"]["revision"] == 1
+            # 팀장 재처리(새 message_id → 새 실행): 이전 판이 있어도 다시 평가해 새 판을 저장한다
+            retry = FinalEvaluationJob(evaluation_id=job.evaluation_id,
+                                       operation_id="test-db-retry")
+            again = await workflow.run(retry)
+    assert client.responses.parse.await_count == 2
+    assert again["receipts"]["save_evaluation_draft"]["draft_revision"] == 2
+    assert again["receipts"]["save_coaching"]["coaching_revision"] == 2
     assert all(h == {"Authorization": "Bearer test-secret"} for h in headers_seen)
     detail = writes.detail(job.evaluation_id)
-    assert detail["draft"]["revision"] == detail["coaching"]["revision"] == 1
+    assert detail["draft"]["revision"] == detail["coaching"]["revision"] == 2
     assert len(detail["draft"]["items"]) == len(detail["coaching"]["items"]) == 5
     assert detail["status"] == "대기"  # Agent는 서버의 확정·확인 대기 상태를 만들지 않는다.
     keys = db.q("SELECT tool FROM idempotency_keys WHERE evaluation_id=%s", (job.evaluation_id,))
-    assert {r["tool"] for r in keys} == {"save_evaluation_draft", "save_coaching"}
+    assert sorted(r["tool"] for r in keys) == ["save_coaching", "save_coaching",
+                                               "save_evaluation_draft", "save_evaluation_draft"]
 
 
 def test_context_rejects_another_evaluation_and_company(storage):

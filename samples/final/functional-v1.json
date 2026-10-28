@@ -909,7 +909,7 @@
                   ]
                 }
               ],
-              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:draft"
+              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:draft:cd599c770ca8b844"
             },
             "reply": {
               "ok": true,
@@ -979,7 +979,7 @@
                   "text": "검증 과정을 기록하세요."
                 }
               ],
-              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:coaching"
+              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:coaching:8fb0c80164f48335"
             },
             "reply": {
               "ok": true,
@@ -2141,7 +2141,7 @@
                   ]
                 }
               ],
-              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:draft"
+              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:draft:29e08d25b4ca9eee"
             },
             "reply": {
               "ok": true,
@@ -2219,7 +2219,7 @@
                   "text": "검증 과정을 기록하세요."
                 }
               ],
-              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:coaching"
+              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:coaching:543bf1b10af68eb0"
             },
             "reply": {
               "ok": true,
@@ -4042,7 +4042,7 @@
                   ]
                 }
               ],
-              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:draft"
+              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:draft:90e97e8174dce82a"
             },
             "reply": {
               "ok": true,
@@ -4116,7 +4116,7 @@
                   "text": "검증 과정을 기록하세요."
                 }
               ],
-              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:coaching"
+              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:coaching:819fb19faa85b103"
             },
             "reply": {
               "ok": true,
@@ -5194,7 +5194,7 @@
                   ]
                 }
               ],
-              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:draft"
+              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:draft:80fa2eba3da3aae7"
             },
             "reply": {
               "ok": true,
@@ -5268,7 +5268,7 @@
                   "text": "검증 과정을 기록하세요."
                 }
               ],
-              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:coaching"
+              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:coaching:ef690ce29691f2c1"
             },
             "reply": {
               "ok": true,
@@ -6434,7 +6434,7 @@
                   ]
                 }
               ],
-              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:draft"
+              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:draft:38cfcb5a2db293b6"
             },
             "reply": {
               "ok": true,
@@ -6512,7 +6512,7 @@
                   "text": "검증 과정을 기록하세요."
                 }
               ],
-              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:coaching"
+              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:coaching:543bf1b10af68eb0"
             },
             "reply": {
               "ok": true,
@@ -7674,7 +7674,7 @@
                   ]
                 }
               ],
-              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:draft"
+              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:draft:38cfcb5a2db293b6"
             },
             "reply": {
               "ok": true,
@@ -7752,7 +7752,7 @@
                   "text": "검증 과정을 기록하세요."
                 }
               ],
-              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:coaching"
+              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:coaching:543bf1b10af68eb0"
             },
             "reply": {
               "ok": true,
@@ -8914,7 +8914,7 @@
                   ]
                 }
               ],
-              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:draft"
+              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:draft:38cfcb5a2db293b6"
             },
             "reply": {
               "ok": true,
@@ -8992,7 +8992,7 @@
                   "text": "검증 과정을 기록하세요."
                 }
               ],
-              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:coaching"
+              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:coaching:543bf1b10af68eb0"
             },
             "reply": {
               "ok": true,
@@ -10154,7 +10154,7 @@
                   ]
                 }
               ],
-              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:draft"
+              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:draft:38cfcb5a2db293b6"
             },
             "reply": {
               "ok": true,
@@ -10232,7 +10232,7 @@
                   "text": "검증 과정을 기록하세요."
                 }
               ],
-              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:coaching"
+              "idempotency_key": "final:b72b38aa8875ea4b52b306b3241de62e15bc7648645cee6e3fbcd4c84413914b:coaching:543bf1b10af68eb0"
             },
             "reply": {
               "ok": true,

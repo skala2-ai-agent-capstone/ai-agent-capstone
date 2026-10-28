@@ -149,13 +149,9 @@ class FinalEvaluationWorkflow:
                 raise EvaluationError("평가 건과 실행 토큰의 산출물 버전이 다릅니다.")
             prepared = checkpoint.read()
             if prepared is None:
-                if (
-                    target.get("draft_revision") is not None
-                    or target.get("coaching_revision") is not None
-                ):
-                    raise EvaluationError(
-                        "이미 저장된 결과가 있습니다. 기존 체크포인트로 재개하세요."
-                    )
+                # 저장된 판이 있어도 서버가 대기면 새 실행이다(팀장 재처리). 같은 실행이
+                # 체크포인트를 잃은 경우에도 저장 키에 결과 내용이 들어가(save_arguments)
+                # 이전 판을 돌려받지 않고 초안·코칭을 짝으로 새로 저장한다.
                 if target["status"] not in WRITABLE:
                     raise EvaluationError("현재 서버 상태에서는 초안을 생성할 수 없습니다.")
                 prepared = await self.prepare(job, context, target)
