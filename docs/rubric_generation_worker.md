@@ -101,7 +101,7 @@ python -m ai_agents.cli.rubric_worker worker --langsmith   # LangSmith 설정이
 1. 위 `curl`로 회사 토큰을 받아 `.env`의 `RUBRIC_MCP_TOKEN`에 넣는다(값은 출력하지 않는다).
 2. llm-proxy `PROXY_KEYS`에 `rubric-worker:<RUBRIC_LLM_API_KEY 값>`을 넣고 `.env`에 `RUBRIC_LLM_API_KEY`를 둔다.
    `OPENAI_STAGES`에 `rubric`이 있어야 OpenAI로 간다.
-3. `docker compose --profile rubric up -d rubric-worker` 뒤 `docker compose run --rm rubric-worker python -m ai_agents.cli.rubric_worker check-config`.
+3. `docker compose --profile rubric up -d --no-deps rubric-worker` 뒤 `docker compose run --rm rubric-worker python -m ai_agents.cli.rubric_worker check-config`.
 
 토큰이 회사 하나 범위라 다른 회사의 업로드는 `TOKEN_SCOPE_MISMATCH`로 실패한다. 회사가 늘면 회사별 Worker를 따로 띄워야 한다.
 

@@ -82,12 +82,12 @@ docker compose --profile test run --rm verify
 
 ## 2. 데이터 적재
 
-`db-init`은 `up` 할 때마다 실행되며 여러 번 돌려도 결과가 같습니다.
+`db-init`은 `up` 할 때마다 실행되며 여러 번 돌려도 결과가 같습니다. 사내 문서(`documents`)는 시드에 있는 버전만 교체하므로, 앱에서 올린 내규와 평가 기준 초안·승인본은 남고 앱이 폐기한 시드 문서도 다시 현행이 되지 않습니다.
 
 | 하고 싶은 일 | 방법 |
 | --- | --- |
 | 데이터 교체 (평가 결과 유지) | `data/`를 바꾼 뒤 `docker compose run --rm db-init`. 업무는 업무 단위로 교체되고 평가 건은 새 `work.completed`만 추가됨 |
-| 전부 비우고 다시 적재 | `docker compose run --rm -e LOAD_ARGS=--reset db-init`. 같은 DB의 백엔드 테이블(아웃박스·DLQ 기록·팀 집계 승인)도 비워지므로 백엔드를 멈추고 RabbitMQ 큐를 비운 뒤 실행 |
+| 전부 비우고 다시 적재 | `docker compose run --rm -e LOAD_ARGS=--reset db-init`. 앱에서 올린 문서와 같은 DB의 백엔드 테이블(아래 '백엔드 테이블')도 비워지므로 백엔드를 멈추고 RabbitMQ 큐를 비운 뒤 실행 |
 | 서버 재시작 없이 반영 | business-mcp는 업무 데이터를 매번 DB에서 읽으므로 바로 반영됨. 기준 데이터(가격·정책 규칙 등)를 바꿨다면 `POST :8001/internal/reload`. rag-mcp는 컬렉션이 다시 만들어진 것을 스스로 감지해 다시 연결하고, `POST :8002/internal/reload`로도 갱신할 수 있음 |
 | zip을 바로 적재 | `python -m db.loader.load_postgres --data e2e_raw_40.zip` (zip 안에서 `seed/`를 찾음) |
 
@@ -112,8 +112,8 @@ docker compose --profile test run --rm verify
   - 고객 없이 만든 업무는 `work_cases.customer_id`를 NULL로 둡니다. 이때 `get_work_case`의 `customer`는 `{customer_id: null, name: null}`이고, 정책 검사는 어느 고객사가 '다른' 고객사인지 정할 수 없어 `V-OTHER-CUSTOMER`만 건너뛰고 `scope.note`에 그렇게 적습니다.
   - 앱에서 올린 고객 자료 원본은 `source_documents.file_name`·`content_type`(MIME)·`size_bytes`·`file_data`에 둡니다. business-mcp는 꺼낸 텍스트(`content`·`content_masked`)만 읽고 원본 칸은 응답에 넣지 않습니다(응답의 `content_type: "data"`는 데이터 표시로, MIME 칸과 이름만 같습니다). `tests/verify_app_work.py`가 확인합니다.
   - 기존 DB는 `db/postgres/003_frontend_upload.sql`(비파괴, 여러 번 실행해도 같음)을 먼저 적용한 뒤 백엔드를 올립니다. 새 DB는 `001_schema.sql`에 포함돼 있습니다.
-- **백엔드 테이블**: `outbox_events`·`evaluation_failures`·`aggregation_approvals`는 백엔드(aworko-server)의 Flyway가 같은 DB에 만듭니다. 이 스키마에는 넣지 않았습니다.
-  - 적재기는 `--reset`일 때만 이 셋을 같이 비웁니다(`flyway_backend_history`는 남김). 평가 건 ID(`EVAL-{업무}-{버전}`)는 다시 적재해도 같아서, `outbox_events`가 남으면 이전 메시지가 새로 만든 평가 건으로 발행되기 때문입니다.
+- **백엔드 테이블**: `outbox_events`·`evaluation_failures`·`aggregation_approvals`(V1), `rubric_generations`(V4), `evaluation_result_receipts`(V5), `team_evaluation_failures`(V6)는 백엔드(aworko-server)의 Flyway가 같은 DB에 만듭니다. 이 스키마에는 넣지 않았습니다.
+  - 적재기는 `--reset`일 때만 이 테이블들을 같이 비웁니다(`flyway_backend_history`는 남김). 평가 건 ID(`EVAL-{업무}-{버전}`)는 다시 적재해도 같아서, `outbox_events`가 남으면 이전 메시지가 새로 만든 평가 건으로 발행되고 `evaluation_result_receipts`가 남으면 같은 평가 건의 완료 알림이 중복으로 버려지기 때문입니다. 백엔드에 테이블이 늘면 `db/loader/load_postgres.py`의 `BACKEND_TABLES`에도 넣습니다.
 
 ### PostgreSQL에서 볼 만한 테이블
 

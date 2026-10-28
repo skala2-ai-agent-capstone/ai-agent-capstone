@@ -263,7 +263,7 @@ python -m ai_agents.cli.team_worker worker --token-file outputs/run-tokens/team-
 
 1. 백엔드(이 변경 포함)를 올린다. Flyway V6이 돌고 `team_evaluation.*` 큐가 생긴다. V4·V5와 함께 올린다(번호 순서).
 2. llm-proxy `PROXY_KEYS`에 `team-worker:<TEAM_LLM_API_KEY 값>`을 넣고 `.env`에 `TEAM_LLM_API_KEY`를 둔다.
-3. `docker compose --profile team up -d team-worker`. 팀 대시보드에서 유형별 집계를 승인한 뒤 같은 기간으로 팀 평가를 요청하고,
+3. `docker compose --profile team up -d --no-deps team-worker`. 팀 대시보드에서 유형별 집계를 승인한 뒤 같은 기간으로 팀 평가를 요청하고,
    목록이 `대기 → 완료`로 바뀌는지 본다.
 
 ## 백엔드·큐 Worker 연결 검증 기록 — 2026-10-23
