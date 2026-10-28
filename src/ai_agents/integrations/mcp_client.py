@@ -54,6 +54,37 @@ def unpack_result(result) -> dict:
     return value
 
 
+class UnwrapTaskGroupErrors:
+    """MCP 클라이언트의 task group은 블록 안 예외를 ExceptionGroup으로 감싼다.
+
+    그대로 내보내면 Worker가 오류 코드·재시도 여부를 잃고 처리할 수 없는 오류로 DLQ에 보내므로
+    블록에서 난 예외를 원인(__cause__)과 함께 그대로 다시 올린다.
+    도구 호출 중 연결이 끊기면 SDK 작업이 먼저 실패하고 블록은 CancelledError만 받는다.
+    블록이 끝난 뒤 정리 중에 실패할 때도 블록 예외가 없다. 이 두 경우 원인은 묶음 안의 전송
+    오류이므로 재시도할 수 있는 TRANSPORT_ERROR로 올린다. 바깥에서 작업을 취소했으면 그대로 둔다.
+    """
+
+    async def __aexit__(self, *exc):
+        try:
+            return await super().__aexit__(*exc)
+        except BaseExceptionGroup as group:
+            inner = exc[1]
+            task = asyncio.current_task()
+            cancelled_outside = task is not None and task.cancelling() > 0
+            if inner is None or (isinstance(inner, asyncio.CancelledError)
+                                 and not cancelled_outside):
+                leaf = group
+                while isinstance(leaf, BaseExceptionGroup):
+                    leaf = leaf.exceptions[0]
+                if isinstance(leaf, MCPError) or not isinstance(leaf, Exception):
+                    raise leaf from None
+                raise MCPError("TRANSPORT_ERROR", "call_tool") from None
+            while isinstance(inner, BaseExceptionGroup):
+                inner = inner.exceptions[0]
+            # rubric_worker는 원인으로 모델 장애(APIError)를 가리므로 __cause__를 남긴다
+            raise inner from inner.__cause__
+
+
 class MCPGateway:
     def __init__(self, token: str, *, business_url: str, rag_url: str, sleep=asyncio.sleep):
         if not token.strip():
