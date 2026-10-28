@@ -37,8 +37,11 @@ class BackendEvaluationEvent(BackendEvaluationScope):
         scope = BackendEvaluationScope.model_validate(self.model_dump(include={
             "company_id", "task_id", "deliverable_version", "rubric_version",
         }))
-        # 재발행 message_id나 재시도 횟수가 바뀌어도 같은 업무/평가/기준은 같은 실행이다.
-        identity = {"evaluation_id": self.evaluation_id, **scope.model_dump()}
+        # 재시도 큐·재전달은 message_id를 그대로 두므로 attempt가 바뀌어도 같은 실행이다
+        # (체크포인트로 이어 간다). 백엔드 재처리(retry)는 새 message_id로 보내므로 새 실행이
+        # 되고, 다시 평가해 새 판을 저장한다.
+        identity = {"evaluation_id": self.evaluation_id, "message_id": self.message_id,
+                    **scope.model_dump()}
         key = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
         return BackendFinalEvaluationEvent(
             message_id=self.message_id, evaluation_id=self.evaluation_id,

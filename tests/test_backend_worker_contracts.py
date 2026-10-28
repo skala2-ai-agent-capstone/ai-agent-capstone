@@ -39,12 +39,14 @@ def worker(execute, tmp_path):
                                  code_provenance={}, contract="backend-v1")
 
 
-def test_stable_identity_excludes_delivery_and_retry_but_includes_scope():
+def test_identity_keeps_retries_of_a_message_but_separates_backend_reprocessing():
     first = event_for()
-    for change in ({"message_id": "outbox-2"}, {"attempt": 3}):
-        second = first.model_copy(update=change)
-        assert first.normalized().operation_id == second.normalized().operation_id
-    for key in ("company_id", "task_id", "deliverable_version", "rubric_version", "evaluation_id"):
+    # 재시도 큐는 message_id를 그대로 두고 attempt만 올린다: 같은 실행(체크포인트로 이어 감)
+    assert first.normalized().operation_id == first.model_copy(
+        update={"attempt": 3}).normalized().operation_id
+    # 팀장 재처리는 백엔드가 새 message_id로 보낸다: 새 실행(다시 평가)
+    for key in ("message_id", "company_id", "task_id", "deliverable_version", "rubric_version",
+                "evaluation_id"):
         other = first.model_copy(update={key: "different"})
         assert first.normalized().operation_id != other.normalized().operation_id
 
@@ -81,7 +83,7 @@ async def test_backend_redelivery_reuses_checkpoint_and_notification(tmp_path):
     with pytest.raises(ConnectionError):
         await instance.handle(event.model_dump_json().encode(), publish=publish, ack=ack)
     ack.assert_not_awaited()
-    event.message_id = "outbox-republished"
+    # ack 전이라 브로커가 같은 메시지(같은 message_id)를 다시 준다. 아웃박스 재발행도 같은 본문이다
     result = await instance.handle(event.model_dump_json().encode(), publish=publish, ack=ack)
     assert result["status"] == "draft_and_coaching_saved"
     assert sent[0] == sent[1] and sent[1][0] == "evaluation.results"
@@ -144,6 +146,28 @@ async def test_bad_backend_event_dlq_is_sanitized(tmp_path):
     )
     assert sent.await_args.args[0] == "evaluation.dlq"
     assert "PRIVATE" not in repr(sent.await_args)
+
+
+@pytest.mark.asyncio
+async def test_bad_backend_event_dlq_keeps_only_a_readable_evaluation_id(tmp_path):
+    """평가 건 ID가 없으면 백엔드가 진단 메시지를 버려 평가가 '평가 중'에 남는다."""
+    sent = AsyncMock()
+    await worker(AsyncMock(), tmp_path).handle(
+        json.dumps({**event_for().model_dump(), "extra": "PRIVATE"}).encode(),
+        publish=sent, ack=AsyncMock(),
+    )
+    assert sent.await_args.args[1]["evaluation_id"] == JOB.evaluation_id
+    assert "PRIVATE" not in repr(sent.await_args)
+
+    deep = b"[" * 20000 + b"]" * 20000
+    bodies = (b'{"evaluation_id": "bad id with spaces"}', b'[1]', b'not json', deep, deep[:12000])
+    for body in bodies:
+        sent, ack = AsyncMock(), AsyncMock()
+        # 깊게 중첩된 본문도 예외로 빠져나가지 않고 DLQ로 보낸 뒤 ack한다(아니면 무한 재전달)
+        result = await worker(AsyncMock(), tmp_path).handle(body, publish=sent, ack=ack)
+        assert result == {"status": "dlq", "code": "INVALID_EVENT"}
+        assert "evaluation_id" not in sent.await_args.args[1]
+        ack.assert_awaited_once()
 
 
 @pytest.mark.asyncio

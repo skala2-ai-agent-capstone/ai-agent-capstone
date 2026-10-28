@@ -8,6 +8,7 @@ import pytest
 from pydantic import ValidationError
 from test_complete_workflow import UnifiedGateway, client_fixture
 
+from ai_agents.evaluation_agent.final.persistence import save_arguments
 from ai_agents.evaluation_agent.final.stored_rubric import StoredRubric
 from ai_agents.evaluation_agent.final.validation import EvaluationError
 from ai_agents.integrations.final_mcp import FinalMCPGateway
@@ -252,13 +253,50 @@ async def test_resumed_scope_change_is_rejected(tmp_path, field, value):
 
 
 @pytest.mark.asyncio
-async def test_existing_server_draft_without_checkpoint_does_not_regenerate(tmp_path):
+async def test_reprocessing_after_saved_result_evaluates_again_as_a_new_run(tmp_path):
+    """팀장 재처리는 새 message_id라 새 실행이다. 이전 판이 있어도 다시 평가해 새 판을 저장한다."""
     gateway = StoredGateway()
-    gateway.target["draft_revision"] = 1
     run, client = workflow(gateway, tmp_path)
-    with pytest.raises(EvaluationError, match="체크포인트"):
+    first = await run.run(JOB)
+    gateway.calls.clear()
+
+    again = FinalEvaluationJob(evaluation_id=JOB.evaluation_id, operation_id="final-v1-retry")
+    second = await run.run(again)
+
+    assert client.responses.parse.await_count == 2
+    keys = {t: a["idempotency_key"] for _, t, a in gateway.calls if t.startswith("save_")}
+    assert set(keys) == {"save_evaluation_draft", "save_coaching"}
+    assert all(again.key() in k and JOB.key() not in k for k in keys.values())
+    assert first["checkpoint"] != second["checkpoint"]
+
+
+@pytest.mark.asyncio
+async def test_result_is_not_regenerated_once_the_server_left_the_writable_states(tmp_path):
+    gateway = StoredGateway()
+    gateway.target.update(status="확인 대기", draft_revision=1, coaching_revision=1)
+    run, client = workflow(gateway, tmp_path)
+    with pytest.raises(EvaluationError, match="서버 상태"):
         await run.run(JOB)
     client.responses.parse.assert_not_awaited()
+    assert not gateway.saved
+
+
+@pytest.mark.asyncio
+async def test_save_keys_follow_content_so_a_lost_checkpoint_saves_a_matching_pair(tmp_path):
+    """체크포인트를 잃고 다시 평가해 내용이 달라지면 이전 판을 돌려받지 않고 짝을 새로 저장한다."""
+    gateway = StoredGateway()
+    run, _ = workflow(gateway, tmp_path)
+    result = await run.run(JOB)
+    prepared = PreparedFinalEvaluation.model_validate_json(Path(result["checkpoint"]).read_text())
+
+    same = save_arguments(prepared)
+    assert same == save_arguments(prepared)
+    changed = prepared.model_copy(deep=True)
+    changed.report.coaching[0].action = changed.report.coaching[0].action + " 다시 확인하세요."
+    other = save_arguments(changed)
+    assert other["save_coaching"]["idempotency_key"] != same["save_coaching"]["idempotency_key"]
+    assert other["save_evaluation_draft"]["idempotency_key"] == same["save_evaluation_draft"][
+        "idempotency_key"]
 
 
 @pytest.mark.asyncio
